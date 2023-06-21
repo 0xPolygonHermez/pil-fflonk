@@ -21,8 +21,11 @@ endif
 TARGET_PFP := pilFflonkProver
 TARGET_TEST := pilFflonkProverTest
 
+INC_DIRS := ./build ./depends/ffiasm/c
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+
 # Files
-SRCS_PFP := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.asm -or -name *.cc)
+SRCS_PFP := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.asm)
 OBJS_PFP := $(SRCS_PFP:%=$(BUILD_DIR)/%.o)
 DEPS_PFP := $(OBJS_PFP:.o=.d)
 
@@ -36,11 +39,8 @@ $(BUILD_DIR)/$(TARGET_PFP): $(OBJS_PFP)
 # Object file rules
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(MKDIR_P) $(dir $@)
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(INC_FLAGS) $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ 
 
-$(BUILD_DIR)/%.cc.o: %.cc
-	$(MKDIR_P) $(dir $@)
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.asm.o: %.asm
 	$(MKDIR_P) $(dir $@)

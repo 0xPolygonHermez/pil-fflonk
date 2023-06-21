@@ -2,6 +2,7 @@
 #include <string.h>
 // #include <stdio.h>
 // #include <stdlib.h>
+#include <alt_bn128.hpp>    
 
 #define PILFFLONK_PROVER_VERSION "v0.0.1"
 
@@ -32,6 +33,9 @@ int main(int argc, char **argv)
 
     cout << endl << "> PIL-FFLONK PROVER STARTED" << endl;
 
+    RawFr fr;
+
+    auto one = fr.set(1);
 //     TimerStart(WHOLE_PROCESS);
 
 //     // Parse the name of the configuration file

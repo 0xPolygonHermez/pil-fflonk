@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "task": "node ./tasksfile.js"
+  },
+  "dependencies": {
+    "tasksfile": "^5.1.1"
+  }
+}
