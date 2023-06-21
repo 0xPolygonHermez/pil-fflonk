@@ -1,0 +1,3 @@
+[submodule "depends/ffiasm"]
+	path = depends/ffiasm
+	url = https://github.com/iden3/ffiasm.git
