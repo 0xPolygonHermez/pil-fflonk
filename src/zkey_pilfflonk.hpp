@@ -1,7 +1,10 @@
 #ifndef ZKEY_PILFFLONK_H
 #define ZKEY_PILFFLONK_H
 
+#include <string>
+#include <map>
 #include <gmp.h>
+#include "binfile_utils.hpp"
 
 struct shPlonkStagePol {
     std::string name;
@@ -38,6 +41,9 @@ namespace Zkey {
     const int ZKEY_PF_PTAU_SECTION = 9;
 
     class PilFflonkZkeyHeader  {
+
+    using FrElement = typename Engine::FrElement;
+
     public:
         int protocolId;
 
@@ -57,7 +63,7 @@ namespace Zkey {
 
         std::map<u_int32_t, shPlonkPol *> f;
 
-        std::map<std::string, FrElement *> committedF;
+        std::map<std::string, G1Point *> committedConstants;
 
         std::map<std::string, std::map< u_int32_t,std::string> > polsMap;
 
@@ -66,9 +72,7 @@ namespace Zkey {
         std::map<u_int32_t, std::string* > polsNamesStage;
 
         std::map<std::string, FrElement *> omegas;
-
-
-       
+   
 
         PilFflonkZkeyHeader();
 

@@ -1,6 +1,5 @@
 #include <stdexcept>
 
-#include "zkey.hpp"
 #include "zkey_pilfflonk.hpp"
 
 namespace Zkey {
@@ -83,10 +82,10 @@ namespace Zkey {
 
         u_int32_t lenCommits = f->readU32LE();
 
-        pilFflonkZkeyHeader->committedF = new std::map<std::string, FrElement *>();
+        pilFflonkZkeyHeader->committedConstants = new std::map<std::string, FrElement *>();
         for(u_int32_t i = 0; i < lenCommits; ++i) {
             std::string name = f->readString();
-            (*pilFflonkZkeyHeader->committedF)[name] = f->read(pilFflonkZkeyHeader->n8q * 2);
+            (*pilFflonkZkeyHeader->committedConstants)[name] = f->read(pilFflonkZkeyHeader->n8q * 2);
         }
 
         f->endReadSection();
