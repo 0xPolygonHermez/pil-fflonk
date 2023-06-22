@@ -36,6 +36,12 @@ int main(int argc, char **argv)
     RawFr fr;
 
     auto one = fr.set(1);
+    auto two = fr.add(one, one);
+    if(fr.eq(two, one)) {
+        cout << "1 + 1 = 1" << endl;
+    } else {
+        cout << "1 + 1 != 1" << endl;
+    }
 //     TimerStart(WHOLE_PROCESS);
 
 //     // Parse the name of the configuration file
