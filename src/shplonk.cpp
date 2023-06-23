@@ -11,48 +11,38 @@ namespace ShPlonk {
         // this->reset();
     }
 
-    Polynomial<AltBn128::Engine> * ShPlonkProver::computeRi(u_int32_t degree, FrElement* rootsRi, Polynomial<AltBn128::Engine> * polynomialFi) {
-
-        FrElement* evals = new FrElement[degree];
-
-        for(u_int32_t i = 0; i < degree; ++i) {
-            evals[i] = polynomialFi->fastEvaluate(rootsRi[i]);
-        }
-
-        Polynomial<AltBn128::Engine> * polynomialRi = Polynomial<AltBn128::Engine>::lagrangePolynomialInterpolation(rootsRi, evals, degree);
-        
-        // Check the degree of R0(X) < (degree - 1)
-        if (polynomialRi->getDegree() > (degree - 1))
-        {
-            throw std::runtime_error("Polynomial is not well calculated");
-        }
-
-        delete[] evals;
-
-        return polynomialRi;
-    }
-
-    std::map<std::string, Polynomial<AltBn128::Engine> *> ShPlonkProver::computeR(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, FrElement *> rootsMap, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsF) {
+    void ShPlonkProver::computeR(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk) {
         u_int32_t* degrees = new u_int32_t[zkeyFflonk->f.size()]; 
 
         for(auto const& x : zkeyFflonk->f) {
             degrees[x.second->index] = x.second->nPols;
         }
         
-        std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsR;
-
         for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
             std::string log = "> Computing R" + std::to_string(i) + " polynomial"; 
             LOG_TRACE(log);
-            polynomialsR["R" + std::to_string(i)] = computeRi(degrees[i], rootsMap["f" + std::to_string(i)], polynomialsF["f" + std::to_string(i)]);
+
+            FrElement* evals = new FrElement[degrees[i]];
+
+            for(u_int32_t j = 0; j < degrees[i]; ++j) {
+                evals[i] = polynomialsShPlonk["f" + std::to_string(i)]->fastEvaluate(rootsMap["f" + std::to_string(i)][j]);
+            }
+
+            polynomialsShPlonk["R" + std::to_string(i)] = Polynomial<AltBn128::Engine>::lagrangePolynomialInterpolation(rootsMap["f" + std::to_string(i)], evals, degrees[i]);
+            
+            // Check the degree of R0(X) < (degree - 1)
+            if (polynomialsShPlonk["R" + std::to_string(i)]->getDegree() > (degrees[i] - 1))
+            {
+                throw std::runtime_error("Polynomial is not well calculated");
+            }
+
+            delete[] evals;
         }
 
         delete[] degrees;
-
-        return polynomialsR;
     }
 
-    Polynomial<AltBn128::Engine>* ShPlonkProver::computeZT(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, FrElement *> rootsMap)
+    void ShPlonkProver::computeZT(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk)
     {
         u_int32_t* degrees = new u_int32_t[zkeyFflonk->f.size()]; 
 
@@ -75,15 +65,13 @@ namespace ShPlonk {
 
         }
 
-        Polynomial<AltBn128::Engine> * zt = Polynomial<AltBn128::Engine>::zerofierPolynomial(arr, nRoots);
+        polynomialsShPlonk["ZT"] = Polynomial<AltBn128::Engine>::zerofierPolynomial(arr, nRoots);
 
         delete[] arr;
         delete[] degrees;
-
-        return zt;
     }
 
-    Polynomial<AltBn128::Engine> * ShPlonkProver::computeL(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, FrElement challengeY, FrElement challengeAlpha, std::map<std::string, FrElement *> rootsMap, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsF, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsR, Polynomial<AltBn128::Engine> * polynomialW)
+    void ShPlonkProver::computeL(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk)
     {
         LOG_TRACE("··· Computing L polynomial");
 
@@ -119,7 +107,7 @@ namespace ShPlonk {
         }
 
         for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
-           evalRiY[i] = polynomialsR["R" + std::to_string(i)]->fastEvaluate(challengeY);
+           evalRiY[i] = polynomialsShPlonk["R" + std::to_string(i)]->fastEvaluate(challengeY);
         }
 
         u_int64_t maxDegree = 0;
@@ -134,7 +122,7 @@ namespace ShPlonk {
         // COMPUTE L(X)
         Polynomial<AltBn128::Engine>* polynomialL = new Polynomial<AltBn128::Engine>(E, lengthBuffer);
         for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
-            auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsF["f" + std::to_string(i)]);
+            auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)]);
             fTmp->subScalar(evalRiY[i]);
             fTmp->mulScalar(preL[i]);
             polynomialL->add(*fTmp);
@@ -142,11 +130,11 @@ namespace ShPlonk {
         }
        
         LOG_TRACE("> Computing ZT polynomial");
-        Polynomial<AltBn128::Engine>* polynomialZT = computeZT(zkeyFflonk, rootsMap);
+        computeZT(zkeyFflonk);
 
-        FrElement evalZTY = polynomialZT->fastEvaluate(challengeY);
-        polynomialW->mulScalar(evalZTY);
-        polynomialL->sub(*polynomialW);
+        FrElement evalZTY = polynomialsShPlonk["ZT"]->fastEvaluate(challengeY);
+        polynomialsShPlonk["W"]->mulScalar(evalZTY);
+        polynomialL->sub(*polynomialsShPlonk["W"]);
 
         if (polynomialL->getDegree() > maxDegree)
         {
@@ -158,11 +146,11 @@ namespace ShPlonk {
         delete[] evalRiY;
         delete[] degrees;
 
-        return polynomialL;
+        polynomialsShPlonk["Wp"] = polynomialL;
         
     }
 
-    Polynomial<AltBn128::Engine>* ShPlonkProver::computeZTS2(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, FrElement *> rootsMap)
+    void ShPlonkProver::computeZTS2(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk)
     {
         u_int32_t* degrees = new u_int32_t[zkeyFflonk->f.size()]; 
 
@@ -186,15 +174,13 @@ namespace ShPlonk {
         }
 
 
-        Polynomial<AltBn128::Engine> * zts2 = Polynomial<AltBn128::Engine>::zerofierPolynomial(arr, nRoots);
+        polynomialsShPlonk["ZTS2"] = Polynomial<AltBn128::Engine>::zerofierPolynomial(arr, nRoots);
 
         delete[] degrees;
         delete[] arr;
-
-        return zts2;
     }
 
-    Polynomial<AltBn128::Engine> * ShPlonkProver::computeW(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, FrElement challengeAlpha, FrElement challengeXi, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsF, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsR)
+    void ShPlonkProver::computeW(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk)
     {
 
         LOG_TRACE("··· Computing W polynomial");
@@ -229,8 +215,8 @@ namespace ShPlonk {
         for(u_int32_t i = 0; i < zkeyFflonk->f.size(); ++i) {
             u_int32_t openingPoint = zkeyFflonk->f[i]->openingPoints[0];
 
-            auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsF["f" + std::to_string(i)]);
-            fTmp->sub(*polynomialsR["R" + std::to_string(i)]);
+            auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)]);
+            fTmp->sub(*polynomialsShPlonk["R" + std::to_string(i)]);
             fTmp->mulScalar(alpha);
 
             auto it = zkeyFflonk->openingPoints.find(openingPoint);
@@ -252,23 +238,23 @@ namespace ShPlonk {
         
         delete[] initialOpenValues;
 
-        return polynomialW;
+        polynomialsShPlonk["W"] = polynomialW;
         
     }
 
-    Polynomial<AltBn128::Engine> * ShPlonkProver::computeWp(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, FrElement challengeY, FrElement challengeAlpha, std::map<std::string, FrElement *> rootsMap, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsF, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsR, Polynomial<AltBn128::Engine> * polynomialW) {
+    void ShPlonkProver::computeWp(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk) {
         LOG_TRACE("> Computing L polynomial");
-        Polynomial<AltBn128::Engine>* polynomialL = computeL(zkeyFflonk, challengeY, challengeAlpha, rootsMap, polynomialsF, polynomialsR, polynomialW);
+        computeL(zkeyFflonk);
 
         LOG_TRACE("> Computing ZTS2 polynomial");
-        Polynomial<AltBn128::Engine>* polynomialZTS2 = computeZTS2(zkeyFflonk, rootsMap);
+        computeZTS2(zkeyFflonk);
 
-        FrElement ZTS2Y = polynomialZTS2->fastEvaluate(challengeY);
+        FrElement ZTS2Y = polynomialsShPlonk["ZTS2"]->fastEvaluate(challengeY);
         E.fr.inv(ZTS2Y, ZTS2Y);
-        polynomialL->mulScalar(ZTS2Y);
+        polynomialsShPlonk["Wp"]->mulScalar(ZTS2Y);
 
         LOG_TRACE("> Computing W' = L / ZTS2 polynomial");
-        polynomialL->divByZerofier(1, challengeY);
+        polynomialsShPlonk["Wp"]->divByZerofier(1, challengeY);
 
         u_int64_t maxDegree = 0;
         for(u_int32_t i = 0; i < zkeyFflonk->f.size(); ++i) {
@@ -279,15 +265,13 @@ namespace ShPlonk {
 
         maxDegree -= 1;
 
-        if (polynomialL->getDegree() >= maxDegree)
+        if (polynomialsShPlonk["Wp"]->getDegree() >= maxDegree)
         {
             throw std::runtime_error("Degree of L(X)/(ZTS2(y)(X-y)) is not correct");
         }
-
-        return polynomialL;
     }
 
-    AltBn128::FrElement ShPlonkProver::computeChallengeXiSeed(std::map<std::string, G1Point> commits, FrElement previousChallenge)
+    void ShPlonkProver::computeChallengeXiSeed(FrElement previousChallenge)
     {    
         transcript->reset();
         // TODO NULL FIX
@@ -295,22 +279,22 @@ namespace ShPlonk {
         //     transcript->addScalar(previousChallenge);
         // }
 
-        for (const auto& x : commits) {
+        for (const auto& x : nonConstantCommits) {
             transcript->addPolCommitment(x.second);
         }
 
-        return transcript->getChallenge();
+        challengeXiSeed = transcript->getChallenge();
     }
 
 
-    AltBn128::FrElement ShPlonkProver::computeChallengeAlpha(FrElement challengeXiSeed, std::map <std::string, FrElement> evaluationsMap)
+    void ShPlonkProver::computeChallengeAlpha()
     {    
-        u_int32_t nEvaluations = evaluationsMap.size();
+        u_int32_t nEvaluations = evaluationCommitments.size();
 
         std::string* evaluationsNamesOrdered = new std::string[nEvaluations];
 
         int index = 0;
-        for(auto const& x : evaluationsMap) {
+        for(auto const& x : evaluationCommitments) {
             evaluationsNamesOrdered[index++] = x.first;
         }
 
@@ -320,30 +304,29 @@ namespace ShPlonk {
         transcript->addScalar(challengeXiSeed);
 
         for (u_int32_t i = 0; i < nEvaluations; ++i) {
-            transcript->addScalar(evaluationsMap[evaluationsNamesOrdered[i]]);
+            transcript->addScalar(evaluationCommitments[evaluationsNamesOrdered[i]]);
         }
 
         delete[] evaluationsNamesOrdered;
 
-        return transcript->getChallenge();
+        challengeAlpha = transcript->getChallenge();
     }
 
-    AltBn128::FrElement ShPlonkProver::computeChallengeY(FrElement challengeAlpha, G1Point W)
+    void ShPlonkProver::computeChallengeY(G1Point W)
     {    
         transcript->reset();
         transcript->addScalar(challengeAlpha);
         transcript->addPolCommitment(W);
-        return transcript->getChallenge();
+        challengeY = transcript->getChallenge();
     }
 
-    std::map<std::string, AltBn128::FrElement*> ShPlonkProver::calculateRoots(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, FrElement challengeXiSeed) {
+    void ShPlonkProver::calculateRoots(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk) {
         u_int32_t* degrees = new u_int32_t[zkeyFflonk->f.size()]; 
 
         for(auto const& x : zkeyFflonk->f) {
             degrees[x.second->index] = x.second->nPols;
         }
 
-        std::map<std::string, FrElement *> rootsMap;
         std::map<std::string, FrElement *> omegasMap;
 
         for(u_int32_t i = 0; i < zkeyFflonk->f.size(); i++) {
@@ -376,11 +359,9 @@ namespace ShPlonk {
         }
 
         delete[] degrees;
-
-        return rootsMap;
     }
 
-    AltBn128::FrElement ShPlonkProver::getMontgomeryBatchedInverse(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, FrElement challengeXi, FrElement challengeY, std::map<std::string, FrElement *> rootsMap)
+    void ShPlonkProver::getMontgomeryBatchedInverse(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk)
     {
         std::map <std::string, FrElement> inverseElements;
 
@@ -473,13 +454,10 @@ namespace ShPlonk {
 
         delete[] degrees;
 
-        return mulAccumulator;
+        evaluationCommitments["inv"] = mulAccumulator;
     }    
 
-    std::map <std::string, AltBn128::FrElement> ShPlonkProver::calculateEvaluations(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, FrElement challengeXi) {
-        
-        std::map <std::string, FrElement > evaluationsMap;
-
+    void ShPlonkProver::calculateEvaluations(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials) {
         
         FrElement* initialOpenValues = new FrElement[zkeyFflonk->openingPoints.size()];
         for(u_int32_t i = 0; i < zkeyFflonk->openingPoints.size(); ++i) {
@@ -503,14 +481,11 @@ namespace ShPlonk {
             for(u_int32_t k = 0; k < zkeyFflonk->f[i]->nPols; ++k) {
                 std::string polName = zkeyFflonk->f[i]->pols[k];
                 if(polynomials[polName] == nullptr) throw std::runtime_error("Polynomial not found");
-                evaluationsMap[polName + wPower] = polynomials[polName]->fastEvaluate(openValue);
+                evaluationCommitments[polName + wPower] = polynomials[polName]->fastEvaluate(openValue);
             }
         }
 
         delete[] initialOpenValues;
-
-        return evaluationsMap;
-
     }
 
     AltBn128::G1Point ShPlonkProver::sumCommits(u_int32_t nCommits, G1Point *commits) {
@@ -555,9 +530,8 @@ namespace ShPlonk {
         return polynomial;
     }
 
-    std::map<std::string , ShPlonkCommit *> ShPlonkProver::prepareCommits(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits) {
+    void ShPlonkProver::prepareCommits(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits) {
         u_int32_t nPols = zkeyFflonk->f.size();
-        std::map<std::string , ShPlonkCommit *> shPlonkCommits;
         for(u_int64_t i = 0; i < nPols; ++i) {
 
             Polynomial<AltBn128::Engine>** polynomialsStage = new Polynomial<AltBn128::Engine>*[zkeyFflonk->f[i]->nStages];
@@ -578,18 +552,21 @@ namespace ShPlonk {
                 commitsStage[j] = commits[index]->commit;
             }
 
-            shPlonkCommits["f" + std::to_string(i)]->commit = sumCommits(zkeyFflonk->f[i]->nStages, commitsStage);
-            shPlonkCommits["f" + std::to_string(i)]->pol = sumPolynomials(zkeyFflonk->f[i]->nStages, polynomialsStage);
+            polynomialCommitments["f" + std::to_string(i)] = sumCommits(zkeyFflonk->f[i]->nStages, commitsStage);
 
-            if(shPlonkCommits["f" + std::to_string(i)]->pol->getDegree() > zkeyFflonk->f[i]->degree) {
+            if(zkeyFflonk->f[i]->nStages > 1 || zkeyFflonk->f[i]->nStages != 0) {
+                nonConstantCommits["f" + std::to_string(i)] = polynomialCommitments["f" + std::to_string(i)]; 
+            }
+
+            polynomialsShPlonk["f" + std::to_string(i)] = sumPolynomials(zkeyFflonk->f[i]->nStages, polynomialsStage);
+
+            if(polynomialsShPlonk["f" + std::to_string(i)]->getDegree() > zkeyFflonk->f[i]->degree) {
                 throw std::runtime_error("Polynomial f" + std::to_string(i) + " degree is greater than expected");
             }   
             
             delete[] polynomialsStage;
             delete[] commitsStage;
         }
-        
-        return shPlonkCommits;
     }
 
     std::map<std::string, ShPlonkCommit *> ShPlonkProver::commit(u_int32_t stage, ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, bool multiExp) {
@@ -654,66 +631,47 @@ namespace ShPlonk {
         return commits; 
     }
 
-    ShPlonkOpen ShPlonkProver::open(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, FrElement previousChallenge) {
+    void ShPlonkProver::open(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, FrElement previousChallenge) {
 
-        ShPlonkOpen proofCommitments;
-
-        std::map<std::string , ShPlonkCommit *> shPlonkCommits = prepareCommits(zkeyFflonk, commits);
-
-        std::map<std::string, G1Point> nonConstantCommits;
-
-        std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsF;
-
-
-        for(auto const& x : shPlonkCommits) {           
-            u_int32_t index = std::stoi(x.first.substr(1));
-            if(zkeyFflonk->f[index]->nStages > 1 || zkeyFflonk->f[index]->nStages != 0) {
-                nonConstantCommits[x.first] = x.second->commit;
-            }
-
-            polynomialsF[x.first] = x.second->pol;
-        }
+        prepareCommits(zkeyFflonk, commits);
 
         // Compute challenge xi seed
-        FrElement challengeXiSeed = computeChallengeXiSeed(nonConstantCommits, previousChallenge);
-        proofCommitments.challengeXiSeed = challengeXiSeed;
+        computeChallengeXiSeed(previousChallenge);
 
         // Calculate roots
-        std::map<std::string, FrElement *> rootsMap = calculateRoots(zkeyFflonk, challengeXiSeed);
+        calculateRoots(zkeyFflonk);
 
-        FrElement challengeXi = E.fr.one();
+        challengeXi = E.fr.one();
         for(u_int32_t i = 0; i < zkeyFflonk->powerW; ++i) {
             challengeXi = E.fr.mul(challengeXi, challengeXiSeed);
         }
 
-        proofCommitments.evaluationCommitments = calculateEvaluations(zkeyFflonk, polynomials, challengeXi);        
+        calculateEvaluations(zkeyFflonk, polynomials);        
 
-        FrElement challengeAlpha = computeChallengeAlpha(challengeXiSeed, proofCommitments.evaluationCommitments);
+        computeChallengeAlpha();
 
-        std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsR = computeR(zkeyFflonk, rootsMap, polynomialsF);
+        computeR(zkeyFflonk);
         
-        Polynomial<AltBn128::Engine>* polynomialW = computeW(zkeyFflonk, challengeAlpha, challengeXi, polynomialsF, polynomialsR);
+        computeW(zkeyFflonk);
 
         LOG_TRACE("> Computing W multi exponentiation");
         G1Point W;
-        u_int64_t* lengthsW = new u_int64_t[1]{polynomialW->getDegree() + 1};
-        E.g1.multiMulByScalar(W, PTau, (uint8_t *)polynomialW, sizeof(polynomialW[0]), polynomialW->getDegree() + 1, 1, lengthsW);
-        proofCommitments.polynomialCommitments["W"] = W;
+        u_int64_t* lengthsW = new u_int64_t[1]{polynomialsShPlonk["W"]->getDegree() + 1};
+        E.g1.multiMulByScalar(W, PTau, (uint8_t *)polynomialsShPlonk["W"], sizeof(polynomialsShPlonk["W"][0]), polynomialsShPlonk["W"]->getDegree() + 1, 1, lengthsW);
+        polynomialCommitments["W"] = W;
 
-        FrElement challengeY = computeChallengeY(challengeAlpha, W);
+        computeChallengeY(W);
 
-        Polynomial<AltBn128::Engine>* polynomialWp = computeWp(zkeyFflonk, challengeY, challengeAlpha, rootsMap, polynomialsF, polynomialsR, polynomialW);
+        computeWp(zkeyFflonk);
         G1Point Wp;
-        u_int64_t* lengthsWp = new u_int64_t[1]{polynomialWp->getDegree() + 1};
-        E.g1.multiMulByScalar(Wp, PTau, (uint8_t *)polynomialWp, sizeof(polynomialWp[0]), polynomialWp->getDegree() + 1, 1, lengthsWp);
-        proofCommitments.polynomialCommitments["Wp"] = Wp;
+        u_int64_t* lengthsWp = new u_int64_t[1]{polynomialsShPlonk["Wp"]->getDegree() + 1};
+        E.g1.multiMulByScalar(Wp, PTau, (uint8_t *)polynomialsShPlonk["Wp"], sizeof(polynomialsShPlonk["Wp"][0]), polynomialsShPlonk["Wp"]->getDegree() + 1, 1, lengthsWp);
+        polynomialCommitments["Wp"] = Wp;
 
-        proofCommitments.evaluationCommitments["inv"] = getMontgomeryBatchedInverse(zkeyFflonk, challengeXi, challengeY, rootsMap);
+        getMontgomeryBatchedInverse(zkeyFflonk);
 
         delete[] lengthsW;
         delete[] lengthsWp;
-
-        return proofCommitments;
     }
 
     int ShPlonkProver::find(std::string* arr, u_int32_t n, std::string x) {
