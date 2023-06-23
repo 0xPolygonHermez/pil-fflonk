@@ -1,14 +1,14 @@
 // #include <fstream>
-// #include <iostream>
+#include <iostream>
 // #include <iomanip>
 // #include <filesystem>
 // #include <uuid/uuid.h>
 // #include <sys/mman.h>
-// #include <sys/stat.h>
+#include <sys/stat.h>
 // #include <fcntl.h>
 // #include <sys/types.h>
 // #include <unistd.h>
-// #include "utils.hpp"
+#include "utils.hpp"
 // #include "scalar.hpp"
 // #include <openssl/md5.h>
 // #include <execinfo.h>
@@ -19,7 +19,7 @@
 // #include <net/if.h>
 // #include <arpa/inet.h>
 
-// using namespace std;
+using namespace std;
 // using namespace std::filesystem;
 
 // void printBa(uint8_t *pData, uint64_t dataSize, string name)
@@ -232,12 +232,12 @@
 //     inputStream.close();
 // }
 
-// bool fileExists (const string &fileName)
-// {
-//     struct stat fileStat;
-//     int iResult = stat( fileName.c_str(), &fileStat);
-//     return (iResult == 0);
-// }
+bool fileExists (const string &fileName)
+{
+    struct stat fileStat;
+    int iResult = stat( fileName.c_str(), &fileStat);
+    return (iResult == 0);
+}
 
 // void ensureDirectoryExists (const string &fileName)
 // {

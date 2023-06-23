@@ -1,3 +1,6 @@
 [submodule "depends/ffiasm"]
 	path = depends/ffiasm
 	url = https://github.com/iden3/ffiasm.git
+[submodule "depends/json"]
+	path = depends/json
+	url = https://github.com/nlohmann/json.git

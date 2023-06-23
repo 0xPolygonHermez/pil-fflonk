@@ -29,7 +29,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Files
 SRCS_PFP := $(shell find $(SRC_DIRS) -name *.cpp)
-SRCS_PFP += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp naf.cpp splitparstr.cpp)
+SRCS_PFP += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp binfile_utils.cpp naf.cpp splitparstr.cpp)
 SRCS_PFP += $(shell find $(DPNDS_DIR) -name *.asm)
 OBJS_PFP := $(patsubst %,$(BUILD_DIR)/%.o,$(SRCS_PFP))
 DEPS_PFP := $(OBJS_PFP:.o=.d)

@@ -7,6 +7,9 @@
 // #include "input.hpp"
 // #include "proof_fflonk.hpp"
 // #include "definitions.hpp"
+#include <iostream>
+
+using namespace std;
 
 // using json = nlohmann::json;
 // using ordered_json = nlohmann::ordered_json;
@@ -46,7 +49,7 @@
 // void file2json(const string &fileName, ordered_json &j);
 
 // // Returns if file exists
-// bool fileExists (const string &fileName);
+bool fileExists (const string &fileName);
 
 // // Ensure directory exists
 // void ensureDirectoryExists (const string &fileName);
