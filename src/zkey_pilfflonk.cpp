@@ -2,7 +2,7 @@
 #include "zkey_pilfflonk.hpp"
 
 using namespace std;
-namespace ZkeyPilFflonk
+namespace PilFflonkZkey
 {
     PilFflonkZkey::~PilFflonkZkey()
     {
@@ -14,7 +14,7 @@ namespace ZkeyPilFflonk
     {
         auto pilFflonkZkey = new PilFflonkZkey();
 
-        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_HEADER_SECTION);
+        fdZKey->startReadSection(ZKEY_PF_HEADER_SECTION);
 
         pilFflonkZkey->n8q = fdZKey->readU32LE();
         mpz_init(pilFflonkZkey->qPrime);
@@ -52,7 +52,7 @@ namespace ZkeyPilFflonk
 
     void readFSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
     {
-        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_F_SECTION);
+        fdZKey->startReadSection(ZKEY_PF_F_SECTION);
 
         u_int32_t lenF = fdZKey->readU32LE();
         for (uint32_t i = 0; i < lenF; i++)
@@ -100,7 +100,7 @@ namespace ZkeyPilFflonk
 
     void readOpeningPoints(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
     {
-        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_OPENINGPOINTS_SECTION);
+        fdZKey->startReadSection(ZKEY_PF_OPENINGPOINTS_SECTION);
         u_int32_t len = fdZKey->readU32LE();
         std::cout << "readOpeningPointsSection" << endl;
         std::cout << "len: " << len << endl;
@@ -116,7 +116,7 @@ namespace ZkeyPilFflonk
 
     void readFCommitmentsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
     {
-        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_F_COMMITMENTS_SECTION);
+        fdZKey->startReadSection(ZKEY_PF_F_COMMITMENTS_SECTION);
         u_int32_t len = fdZKey->readU32LE();
         std::cout << "readFCommitmentsSection" << endl;
         std::cout << "len: " << len << endl;
@@ -134,7 +134,7 @@ namespace ZkeyPilFflonk
 
     void readPolsMapSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
     {
-        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_POLSMAP_SECTION);
+        fdZKey->startReadSection(ZKEY_PF_POLSMAP_SECTION);
 
         u_int32_t len = fdZKey->readU32LE();
 
@@ -157,7 +157,7 @@ namespace ZkeyPilFflonk
 
     void readPolsOpeningsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
     {
-        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_POLSOPENINGS_SECTION);
+        fdZKey->startReadSection(ZKEY_PF_POLSOPENINGS_SECTION);
 
         u_int32_t len = fdZKey->readU32LE();
 
@@ -174,7 +174,7 @@ namespace ZkeyPilFflonk
 
     void readPolsNamesStageSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
     {
-        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_POLSNAMESSTAGE_SECTION);
+        fdZKey->startReadSection(ZKEY_PF_POLSNAMESSTAGE_SECTION);
 
         uint32_t len = fdZKey->readU32LE();
 
@@ -197,7 +197,7 @@ namespace ZkeyPilFflonk
 
     void readOmegasSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
     {
-        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_OMEGAS_SECTION);
+        fdZKey->startReadSection(ZKEY_PF_OMEGAS_SECTION);
 
         uint32_t len = fdZKey->readU32LE();
 

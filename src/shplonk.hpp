@@ -57,22 +57,22 @@ namespace ShPlonk {
     public:
         ShPlonkProver(AltBn128::Engine &_E, const std::string &protocol);
         
-        std::map<std::string, ShPlonkCommit *> commit(u_int32_t stage, ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, bool multiExp);
+        std::map<std::string, ShPlonkCommit *> commit(u_int32_t stage, PilFflonkZkey::PilFflonkZkey *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, bool multiExp);
 
-        void open(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, FrElement previousChallenge);
+        void open(PilFflonkZkey::PilFflonkZkey *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, FrElement previousChallenge);
 
     protected:
-        void computeR(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk);
+        void computeR(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
 
-        void computeZT(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk);
+        void computeZT(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
 
-        void computeL(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk);
+        void computeL(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
 
-        void computeZTS2(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk);
+        void computeZTS2(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
 
-        void computeW(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk);
+        void computeW(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
 
-        void computeWp(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk);
+        void computeWp(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
 
         void computeChallengeXiSeed(FrElement previousChallenge);
 
@@ -80,13 +80,13 @@ namespace ShPlonk {
         
         void computeChallengeY(G1Point W);
 
-        void calculateRoots(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk);
+        void calculateRoots(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
 
-        void getMontgomeryBatchedInverse(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk);
+        void getMontgomeryBatchedInverse(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
 
-        void calculateEvaluations(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials);
+        void calculateEvaluations(PilFflonkZkey::PilFflonkZkey *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials);
 
-        void prepareCommits(ZkeyPilFflonk::PilFflonkZkeyHeader *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits);
+        void prepareCommits(PilFflonkZkey::PilFflonkZkey *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits);
 
         AltBn128::G1Point sumCommits(u_int32_t nCommits, G1Point *commits);
 

@@ -33,7 +33,7 @@ namespace PilFflonk {
         AltBn128::Engine &E;
         FFT<AltBn128::Engine::Fr> *fft = NULL;
 
-        ZkeyPilFflonk::PilFflonkZkey *zkey;
+        PilFflonkZkey::PilFflonkZkey *zkey;
         u_int32_t zkeyPower;
         std::string curveName;
         size_t sDomain;

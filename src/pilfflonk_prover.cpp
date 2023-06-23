@@ -84,7 +84,7 @@ namespace PilFflonk
                 throw std::invalid_argument("zkey file is not pilfflonk");
             }
 
-            zkey = ZkeyPilFflonk::loadPilFflonkZkey(zkeyBinfile);
+            zkey = PilFflonkZkey::loadPilFflonkZkey(zkeyBinfile);
 
             ctx.N = 1 << zkey->power;
             ctx.nBits = zkey->power;

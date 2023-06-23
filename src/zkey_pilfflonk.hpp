@@ -8,7 +8,7 @@
 #include "zkey.hpp"
 #include <alt_bn128.hpp>
 
-namespace ZkeyPilFflonk
+namespace PilFflonkZkey
 {
     const int ZKEY_PF_NSECTIONS = 9;
 
@@ -74,7 +74,7 @@ namespace ZkeyPilFflonk
 
         std::map<u_int32_t, std::map<u_int32_t, std::string>*> polsNamesStage;
 
-        std::map<std::string, FrElement> omegas;
+        std::map<std::string, AltBn128::FrElement> omegas;
 
         ~PilFflonkZkey();
     };
