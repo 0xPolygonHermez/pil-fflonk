@@ -34,9 +34,9 @@ namespace ZkeyPilFflonk {
 
         // u_int32_t lenF = f->readU32LE();
 
-        // pilFflonkZkeyHeader->f = new std::map<u_int32_t, shPlonkPol *>();
+        // pilFflonkZkeyHeader->f = new std::map<u_int32_t, ShPlonkPol *>();
         // for(uint32_t i = 0; i < lenF; i++) {
-        //     shPlonkPol fi;
+        //     ShPlonkPol fi;
 
         //     fi.index = f->readU32LE();
         //     fi.degree = f->readU32LE();
@@ -55,12 +55,12 @@ namespace ZkeyPilFflonk {
 
         //     fi.nStages = f->readU32LE();
         //     for(uint32_t j = 0; j < fi.nStages; j++) {
-        //         shPlonkStage stage;
+        //         ShPlonkStage stage;
         //         stage.stage = f->readU32LE();
         //         stage.nPols = f->readU32LE();
         //         stage.pols = new u_int32_t[stage.nPols];
         //         for(uint32_t k = 0; k < stage.nPols; k++) {
-        //             shPlonkStagePol pol;
+        //             ShPlonkStagePol pol;
         //             pol.name = f->readString();
         //             pol.degree = f->readU32LE();
 
@@ -71,6 +71,17 @@ namespace ZkeyPilFflonk {
 
         //     (*pilFflonkZkeyHeader->f)[fi.index] = fi;
         // }   
+
+        // f->endReadSection();
+
+        // f->startReadSection(Zkey::ZKEY_PF_OPENINGPOINTS_SECTION);
+
+        // u_int32_t lenOpeningPoints = f->readU32LE();
+
+        // pilFflonkZkeyHeader->openingPoints = new std::map<u_int32_t, u_int32_t >();
+        // for(u_int32_t i = 0; i < lenOpeningPoints; ++i) {
+        //     (*pilFflonkZkeyHeader->openingPoints)[i] = f->readU32LE();
+        // }
 
         // f->endReadSection();
 

@@ -4,3 +4,6 @@
 [submodule "depends/json"]
 	path = depends/json
 	url = https://github.com/nlohmann/json.git
+[submodule "depends/xkcp"]
+	path = depends/xkcp
+	url = https://github.com/XKCP/XKCP

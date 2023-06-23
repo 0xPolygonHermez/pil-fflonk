@@ -6,8 +6,10 @@
 #include <binfile_utils.hpp>
 #include <nlohmann/json.hpp>
 #include "zkey_pilfflonk.hpp"
+#include "polynomial/polynomial.hpp"
 #include "zkey.hpp"
 #include "snark_proof.hpp"
+#include "keccak_256_transcript.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
 
