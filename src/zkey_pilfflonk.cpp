@@ -35,6 +35,8 @@ namespace ZkeyPilFflonk
 
         readFSection(fdZKey, pilFflonkZkey);
 
+        readOpeningPoints(fdZKey, pilFflonkZkey);
+
         readFCommitmentsSection(fdZKey, pilFflonkZkey);
 
         readPolsMapSection(fdZKey, pilFflonkZkey);
@@ -55,7 +57,7 @@ namespace ZkeyPilFflonk
         u_int32_t lenF = fdZKey->readU32LE();
         for (uint32_t i = 0; i < lenF; i++)
         {
-            shPlonkPol *fi = new shPlonkPol();
+            ShPlonkPol *fi = new ShPlonkPol();
             fi->index = fdZKey->readU32LE();
             fi->degree = fdZKey->readU32LE();
 
@@ -75,22 +77,38 @@ namespace ZkeyPilFflonk
             }
 
             fi->nStages = fdZKey->readU32LE();
-            fi->stages = new shPlonkStage[fi->nStages];
+            fi->stages = new ShPlonkStage[fi->nStages];
             for (uint32_t j = 0; j < fi->nStages; j++)
             {
-                shPlonkStage *stage = &(fi->stages[j]);
+                ShPlonkStage *stage = &(fi->stages[j]);
                 stage->stage = fdZKey->readU32LE();
                 stage->nPols = fdZKey->readU32LE();
-                stage->pols = new shPlonkStagePol[stage->nPols];
+                stage->pols = new ShPlonkStagePol[stage->nPols];
                 for (uint32_t k = 0; k < stage->nPols; k++)
                 {
-                    shPlonkStagePol *pol = &(stage->pols[k]);
+                    ShPlonkStagePol *pol = &(stage->pols[k]);
                     pol->name = fdZKey->readString();
                     pol->degree = fdZKey->readU32LE();
                 }
             }
 
             pilFflonkZkey->f[fi->index] = fi;
+        }
+
+        fdZKey->endReadSection();
+    }
+
+    void readOpeningPoints(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
+    {
+        fdZKey->startReadSection(ZkeyPilFflonk::ZKEY_PF_OPENINGPOINTS_SECTION);
+        u_int32_t len = fdZKey->readU32LE();
+        std::cout << "readOpeningPointsSection" << endl;
+        std::cout << "len: " << len << endl;
+
+        for (u_int32_t i = 0; i < len; i++)
+        {
+            pilFflonkZkey->openingPoints[i] = fdZKey->readU32LE();
+            std::cout << "pilFflonkZkey->openingPoints[i]: " << len << endl;
         }
 
         fdZKey->endReadSection();

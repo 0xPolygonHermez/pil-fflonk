@@ -14,27 +14,28 @@ namespace ZkeyPilFflonk
 
     const int ZKEY_PF_HEADER_SECTION = 2;
     const int ZKEY_PF_F_SECTION = 3;
-    const int ZKEY_PF_F_COMMITMENTS_SECTION = 4;
-    const int ZKEY_PF_POLSMAP_SECTION = 5;
-    const int ZKEY_PF_POLSOPENINGS_SECTION = 6;
-    const int ZKEY_PF_POLSNAMESSTAGE_SECTION = 7;
-    const int ZKEY_PF_OMEGAS_SECTION = 8;
-    const int ZKEY_PF_PTAU_SECTION = 9;
+    const int ZKEY_PF_OPENINGPOINTS_SECTION = 4; 
+    const int ZKEY_PF_F_COMMITMENTS_SECTION = 5;
+    const int ZKEY_PF_POLSMAP_SECTION = 6;
+    const int ZKEY_PF_POLSOPENINGS_SECTION = 7;
+    const int ZKEY_PF_POLSNAMESSTAGE_SECTION = 8;
+    const int ZKEY_PF_OMEGAS_SECTION = 9;
+    const int ZKEY_PF_PTAU_SECTION = 10;
 
-    struct shPlonkStagePol
+    struct ShPlonkStagePol
     {
         std::string name;
         u_int32_t degree;
     };
 
-    struct shPlonkStage
+    struct ShPlonkStage
     {
         u_int32_t stage;
         u_int32_t nPols;
-        shPlonkStagePol *pols;
+        ShPlonkStagePol *pols;
     };
 
-    struct shPlonkPol
+    struct ShPlonkPol
     {
         uint32_t index;
         uint32_t degree;
@@ -43,7 +44,7 @@ namespace ZkeyPilFflonk
         uint32_t nPols;
         std::string *pols;
         uint32_t nStages;
-        shPlonkStage *stages;
+        ShPlonkStage *stages;
     };
 
     class PilFflonkZkey
@@ -61,7 +62,9 @@ namespace ZkeyPilFflonk
 
         void *X2;
 
-        std::map<u_int32_t, shPlonkPol *> f;
+        std::map<u_int32_t, ShPlonkPol *> f;
+
+        std::map<u_int32_t, u_int32_t> openingPoints;
 
         std::map<std::string, void *> committedConstants;
 
@@ -79,6 +82,8 @@ namespace ZkeyPilFflonk
     PilFflonkZkey *loadPilFflonkZkey(BinFileUtils::BinFile *f);
 
     void readFSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
+
+    void readOpeningPoints(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 
     void readFCommitmentsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 
