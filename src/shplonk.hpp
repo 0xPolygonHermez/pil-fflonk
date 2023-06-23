@@ -19,13 +19,6 @@ using json = nlohmann::json;
 using namespace std;
 
 namespace ShPlonk {
-
-    struct ShPlonkCommit {
-        Polynomial<AltBn128::Engine>* pol;
-        AltBn128::G1Point commit;
-    };
-
-
     class ShPlonkProver {
 
         AltBn128::Engine &E;
@@ -33,6 +26,8 @@ namespace ShPlonk {
         using FrElement = typename AltBn128::FrElement;
         using G1Point = typename AltBn128::G1Point;
         using G1PointAffine = typename AltBn128::G1PointAffine;
+
+        PilFflonkZkey::PilFflonkZkey *zkeyPilFflonk;
 
         std::string protocol;
         
@@ -55,24 +50,24 @@ namespace ShPlonk {
 
 
     public:
-        ShPlonkProver(AltBn128::Engine &_E, const std::string &protocol);
+        ShPlonkProver(AltBn128::Engine &_E, const std::string &protocol, BinFileUtils::BinFile *zkeyBinfile);
         
-        std::map<std::string, ShPlonkCommit *> commit(u_int32_t stage, PilFflonkZkey::PilFflonkZkey *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, bool multiExp);
+        void commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp);
 
-        void open(PilFflonkZkey::PilFflonkZkey *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials, G1PointAffine *PTau, FrElement previousChallenge);
+        void open(G1PointAffine *PTau, FrElement previousChallenge);
 
     protected:
-        void computeR(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
+        void computeR();
 
-        void computeZT(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
+        void computeZT();
 
-        void computeL(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
+        void computeL();
 
-        void computeZTS2(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
+        void computeZTS2();
 
-        void computeW(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
+        void computeW();
 
-        void computeWp(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
+        void computeWp();
 
         void computeChallengeXiSeed(FrElement previousChallenge);
 
@@ -80,13 +75,13 @@ namespace ShPlonk {
         
         void computeChallengeY(G1Point W);
 
-        void calculateRoots(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
+        void calculateRoots();
 
-        void getMontgomeryBatchedInverse(PilFflonkZkey::PilFflonkZkey *zkeyFflonk);
+        void getMontgomeryBatchedInverse();
 
-        void calculateEvaluations(PilFflonkZkey::PilFflonkZkey *zkeyFflonk, std::map<std::string, Polynomial<AltBn128::Engine> *> polynomials);
+        void calculateEvaluations();
 
-        void prepareCommits(PilFflonkZkey::PilFflonkZkey *zkeyFflonk, std::map<std::string, ShPlonkCommit *> commits);
+        void prepareCommits();
 
         AltBn128::G1Point sumCommits(u_int32_t nCommits, G1Point *commits);
 
