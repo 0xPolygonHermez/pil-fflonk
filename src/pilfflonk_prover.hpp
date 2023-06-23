@@ -16,18 +16,30 @@ using json = nlohmann::json;
 using namespace std;
 
 namespace PilFflonk {
-    class PilFflonkProver {
 
+    struct Ctx {
+        u_int64_t N;
+        u_int64_t Next;
+        u_int32_t nBits;
+        u_int32_t nBitsExt;
+        u_int32_t extendBits;
+
+        std::map<std::string, FrElement> challenges;
+    };
+
+    class PilFflonkProver {
         AltBn128::Engine &E;
         FFT<AltBn128::Engine::Fr> *fft = NULL;
 
-        ZkeyPilFflonk::PilFflonkZkeyHeader *zkey;
+        ZkeyPilFflonk::PilFflonkZkey *zkey;
         u_int32_t zkeyPower;
         std::string curveName;
         size_t sDomain;
 
         FrElement *reservedMemoryPtr;
         uint64_t reservedMemorySize;
+
+        Ctx ctx;
 
         // FrElement *precomputedBigBuffer;
         // G1PointAffine *PTau;
@@ -73,8 +85,8 @@ namespace PilFflonk {
 
         void setZkey(BinFileUtils::BinFile *fdZkey);
 
-        tuple <json, json> prove(BinFileUtils::BinFile *fdZkey);
-        tuple <json, json> prove();
+        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdZkey);
+        /*tuple <json, json>*/ void prove();
 
     protected:
         void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);

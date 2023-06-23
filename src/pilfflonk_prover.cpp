@@ -27,7 +27,7 @@ namespace PilFflonk
         this->removePrecomputedData();
 
         // delete transcript;
-        delete proof;
+        //delete proof;
     }
 
     void PilFflonkProver::removePrecomputedData() {
@@ -42,7 +42,7 @@ namespace PilFflonk
         //     delete[] nonPrecomputedBigBuffer;
         // }
 
-        delete fft;
+        //delete fft;
 
         // mapBuffers.clear();
 
@@ -70,7 +70,7 @@ namespace PilFflonk
         // delete evaluations["lagrange"];
     }
 
-    void PilFflonkProver::setZkey(BinFileUtils::BinFile *fdZkey) {
+    void PilFflonkProver::setZkey(BinFileUtils::BinFile *zkeyBinfile) {
         try
         {
             if(NULL != zkey) {
@@ -79,13 +79,19 @@ namespace PilFflonk
 
             cout << "> Reading zkey file" << endl;
 
-            if (Zkey::getProtocolIdFromZkey(fdZkey) != Zkey::PILFFLONK_PROTOCOL_ID)
+            if (Zkey::getProtocolIdFromZkey(zkeyBinfile) != Zkey::PILFFLONK_PROTOCOL_ID)
             {
                 throw std::invalid_argument("zkey file is not pilfflonk");
             }
 
-            //zkey = ZkeyPilFflonk::loadPilFflonkZkeyHeader(fdZkey);
+            zkey = ZkeyPilFflonk::loadPilFflonkZkey(zkeyBinfile);
 
+            ctx.N = 1 << zkey->power;
+            ctx.nBits = zkey->power;
+            //ctx.extendBits = Math.ceil(fflonkInfo.qDeg + 1);
+            ctx.nBitsExt = zkey->power + ctx.extendBits;
+            ctx.Next = 1 << ctx.nBitsExt;
+    
             cout << "> Starting fft" << endl;
 
             //fft = new FFT<AltBn128::Engine::Fr>(zkey->domainSize * 4);
@@ -292,7 +298,7 @@ namespace PilFflonk
             //                     byteLength, nThreads);
 
             // transcript = new Keccak256Transcript<Engine>(E);
-            proof = new SnarkProof(E, "fflonk");
+            //proof = new SnarkProof(E, "fflonk");
 
             // roots["w8"] = new FrElement[8];
             // roots["w4"] = new FrElement[4];
@@ -380,6 +386,7 @@ namespace PilFflonk
             // buffers["T2"]     = buffers["tmp"];
             // buffers["T2z"]    = buffers["tmp"] + zkey->domainSize * 4;
         }
+
         catch (const std::exception &e)
         {
             std::cerr << "EXCEPTION: " << e.what() << "\n";
@@ -387,12 +394,13 @@ namespace PilFflonk
         }
     }
 
-    std::tuple <json, json> PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey) {
+    /*std::tuple <json, json>*/ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey) {
         this->setZkey(fdZkey);
+        
         return this->prove();
     }
 
-    std::tuple<json, json> PilFflonkProver::prove()
+    /*std::tuple<json, json>*/ void PilFflonkProver::prove()
     {
         if(NULL == zkey) {
             throw std::runtime_error("Zkey data not set");

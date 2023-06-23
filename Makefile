@@ -15,7 +15,7 @@ endif
 CXX := g++
 AS := nasm
 
-CXXFLAGS := -std=c++17 -Wall -pthread -flarge-source-files -Wno-unused-label -rdynamic -mavx2 -lgmp #-Wfatal-errors
+CXXFLAGS := -std=c++17 -g3 -Wall -pthread -flarge-source-files -Wno-unused-label -rdynamic -mavx2 -lgmp #-Wfatal-errors
 LDFLAGS := -lsodium -lpthread -lgmp -lstdc++ -lomp -lgmpxx -L$(LIBOMP)
 CFLAGS := -fopenmp
 ASFLAGS := -felf64
