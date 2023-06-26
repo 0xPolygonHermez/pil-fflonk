@@ -1,42 +1,42 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-// #include <sys/time.h>
-// #include "goldilocks_base_field.hpp"
+#include <sys/time.h>
 // #include "config.hpp"
 // #include "input.hpp"
 // #include "proof_fflonk.hpp"
 // #include "definitions.hpp"
+#include "exit_process.hpp"
 #include <nlohmann/json.hpp>
 #include <iostream>
+#include <string>
 
 using namespace std;
-
 using json = nlohmann::json;
 using ordered_json = nlohmann::ordered_json;
 
-// struct MemoryInfo {
-//     uint64_t total;
-//     uint64_t free;
-//     uint64_t available;
-//     uint64_t buffers;
-//     uint64_t cached;
-//     uint64_t swapCached;
-//     uint64_t swapTotal;
-//     uint64_t swapFree;
-// };
+struct MemoryInfo {
+    uint64_t total;
+    uint64_t free;
+    uint64_t available;
+    uint64_t buffers;
+    uint64_t cached;
+    uint64_t swapCached;
+    uint64_t swapTotal;
+    uint64_t swapFree;
+};
 
 // void printBa(uint8_t * pData, uint64_t dataSize, string name);
 // void printBits(uint8_t * pData, uint64_t dataSize, string name);
 
-// void getMemoryInfo(MemoryInfo &info);
-// void printMemoryInfo(bool compact = false);
-// void printProcessInfo(bool compact = false);
-// // Prints current call stack with function names (mangled)
-// void printCallStack (void);
+void getMemoryInfo(MemoryInfo &info);
+void printMemoryInfo(bool compact = false);
+void printProcessInfo(bool compact = false);
+// Prints current call stack with function names (mangled)
+void printCallStack (void);
 
-// // Returns timestamp in UTC, e.g. "20230110_173200_128863"
-// string getTimestamp(void);
+// Returns timestamp in UTC, e.g. "20230110_173200_128863"
+string getTimestamp(void);
 
 // // Returns timestamp in UTC with slashes up to the hour, e.g. "2023/01/10/17/3200_128863"
 // void getTimestampWithSlashes(string &timestamp, string &folder, string &file);
@@ -46,11 +46,11 @@ using ordered_json = nlohmann::ordered_json;
 
 // // Converts a json into/from a file
 // void json2file(const json &j, const string &fileName);
-void file2json(const string &fileName, json &j);
-void file2json(const string &fileName, ordered_json &j);
+void file2json(const std::string &fileName, json &j);
+void file2json(const std::string &fileName, ordered_json &j);
 
 // // Returns if file exists
-bool fileExists (const string &fileName);
+bool fileExists (const std::string &fileName);
 
 // // Ensure directory exists
 // void ensureDirectoryExists (const string &fileName);

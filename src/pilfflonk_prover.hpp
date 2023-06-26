@@ -11,6 +11,7 @@
 #include "snark_proof.hpp"
 #include "fflonk_info.hpp"
 #include "keccak_256_transcript.hpp"
+#include "constant_pols_fflonk.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
 
@@ -49,6 +50,28 @@ namespace PilFflonk {
 
         FflonkInfo fflonkInfo;
 
+        void *pConstPolsAddress;
+        void *pConstPolsAddress2ns;
+        ConstantPolsFflonk *pConstPols;
+        ConstantPolsFflonk *pConstPols2ns;
+
+        // Polinomial x_n;
+        // Polinomial x_2ns;
+
+        uint64_t constPolsSize;
+        uint64_t constPolsDegree;
+
+        AltBn128::FrElement *mem;
+        AltBn128::FrElement *p_cm1_2ns;
+        AltBn128::FrElement *p_cm1_n;
+        AltBn128::FrElement *p_cm2_2ns;
+        AltBn128::FrElement *p_cm2_n;
+        AltBn128::FrElement *p_cm3_2ns;
+        AltBn128::FrElement *p_cm3_n;
+        AltBn128::FrElement *p_q_2ns;
+        AltBn128::FrElement *pBuffer;
+
+        void *pAddress;
 
         // FrElement *precomputedBigBuffer;
         // G1PointAffine *PTau;

@@ -7,11 +7,11 @@
 #include <sys/stat.h>
 // #include <fcntl.h>
 // #include <sys/types.h>
-// #include <unistd.h>
+#include <unistd.h>
 #include "utils.hpp"
 // #include "scalar.hpp"
 // #include <openssl/md5.h>
-// #include <execinfo.h>
+#include <execinfo.h>
 // #include <openssl/evp.h>
 // #include <openssl/sha.h>
 // #include <openssl/crypto.h>
@@ -44,117 +44,117 @@ using namespace std;
 //     cout << endl;
 // }
 
-// void printCallStack(void)
-// {
-//     void *callStack[100];
-//     size_t callStackSize = backtrace(callStack, 100);
-//     char **callStackSymbols = backtrace_symbols(callStack, callStackSize);
-//     cout << "CALL STACK" << endl;
-//     for (uint64_t i = 0; i < callStackSize; i++)
-//     {
-//         cout << i << ": call=" << callStackSymbols[i] << endl;
-//     }
-//     free(callStackSymbols);
-// }
+void printCallStack(void)
+{
+    void *callStack[100];
+    size_t callStackSize = backtrace(callStack, 100);
+    char **callStackSymbols = backtrace_symbols(callStack, callStackSize);
+    cout << "CALL STACK" << endl;
+    for (uint64_t i = 0; i < callStackSize; i++)
+    {
+        cout << i << ": call=" << callStackSymbols[i] << endl;
+    }
+    free(callStackSymbols);
+}
 
-// void getMemoryInfo(MemoryInfo &info)
-// {
-//     vector<string> labels{"MemTotal:", "MemFree:", "MemAvailable:", "Buffers:", "Cached:", "SwapCached:", "SwapTotal:", "SwapFree:"};
+void getMemoryInfo(MemoryInfo &info)
+{
+    vector<string> labels{"MemTotal:", "MemFree:", "MemAvailable:", "Buffers:", "Cached:", "SwapCached:", "SwapTotal:", "SwapFree:"};
 
-//     ifstream meminfo = ifstream{"/proc/meminfo"};
-//     if (!meminfo.good())
-//     {
-//         cout << "Failed to get memory info" << endl;
-//     }
+    ifstream meminfo = ifstream{"/proc/meminfo"};
+    if (!meminfo.good())
+    {
+        cout << "Failed to get memory info" << endl;
+    }
 
-//     string line, label;
-//     uint64_t value;
-//     while (getline(meminfo, line))
-//     {
-//         stringstream ss{line};
-//         ss >> label >> value;
-//         if (find(labels.begin(), labels.end(), label) != labels.end())
-//         {
-//             if (label == "MemTotal:") info.total = value;
-//             else if (label == "MemFree:") info.free = value;
-//             else if (label == "MemAvailable:") info.available = value;
-//             else if (label == "Buffers:") info.buffers = value;
-//             else if (label == "Cached:") info.cached = value;
-//             else if (label == "SwapCached:") info.swapCached = value;
-//             else if (label == "SwapTotal:") info.swapTotal = value;
-//             else if (label == "SwapFree:") info.swapFree = value;
-//         }
-//     }
-//     meminfo.close();
-// }
+    string line, label;
+    uint64_t value;
+    while (getline(meminfo, line))
+    {
+        stringstream ss{line};
+        ss >> label >> value;
+        if (find(labels.begin(), labels.end(), label) != labels.end())
+        {
+            if (label == "MemTotal:") info.total = value;
+            else if (label == "MemFree:") info.free = value;
+            else if (label == "MemAvailable:") info.available = value;
+            else if (label == "Buffers:") info.buffers = value;
+            else if (label == "Cached:") info.cached = value;
+            else if (label == "SwapCached:") info.swapCached = value;
+            else if (label == "SwapTotal:") info.swapTotal = value;
+            else if (label == "SwapFree:") info.swapFree = value;
+        }
+    }
+    meminfo.close();
+}
 
-// void printMemoryInfo(bool compact)
-// {
-//     string endLine = (compact ? ", " : "\n");
+void printMemoryInfo(bool compact)
+{
+    string endLine = (compact ? ", " : "\n");
 
-//     cout << "MEMORY INFO" << endLine;
+    cout << "MEMORY INFO" << endLine;
 
-//     constexpr double factorMB = 1024;
+    constexpr double factorMB = 1024;
 
-//     MemoryInfo info;
-//     getMemoryInfo(info);
+    MemoryInfo info;
+    getMemoryInfo(info);
 
-//     int tab = (compact ? 0 : 15);
+    int tab = (compact ? 0 : 15);
 
-//     cout << left << setw(tab) << "MemTotal: " << right << setw(tab) << (info.total / factorMB) << " MB" << endLine;
-//     cout << left << setw(tab) << "MemFree: " << right << setw(tab) << (info.free / factorMB) << " MB" << endLine;
-//     cout << left << setw(tab) << "MemAvailable: " << right << setw(tab) << (info.available / factorMB) << " MB" << endLine;
-//     cout << left << setw(tab) << "Buffers: " << right << setw(tab) << (info.buffers / factorMB) << " MB" << endLine;
-//     cout << left << setw(tab) << "Cached: " << right << setw(tab) << (info.cached / factorMB) << " MB" << endLine;
-//     cout << left << setw(tab) << "SwapCached: " << right << setw(tab) << (info.swapCached / factorMB) << " MB" << endLine;
-//     cout << left << setw(tab) << "SwapTotal: " << right << setw(tab) << (info.swapTotal / factorMB) << " MB" << endLine;
-//     cout << left << setw(tab) << "SwapFree: " << right << setw(tab) << (info.swapFree / factorMB) << " MB" << endl;
-// }
+    cout << left << setw(tab) << "MemTotal: " << right << setw(tab) << (info.total / factorMB) << " MB" << endLine;
+    cout << left << setw(tab) << "MemFree: " << right << setw(tab) << (info.free / factorMB) << " MB" << endLine;
+    cout << left << setw(tab) << "MemAvailable: " << right << setw(tab) << (info.available / factorMB) << " MB" << endLine;
+    cout << left << setw(tab) << "Buffers: " << right << setw(tab) << (info.buffers / factorMB) << " MB" << endLine;
+    cout << left << setw(tab) << "Cached: " << right << setw(tab) << (info.cached / factorMB) << " MB" << endLine;
+    cout << left << setw(tab) << "SwapCached: " << right << setw(tab) << (info.swapCached / factorMB) << " MB" << endLine;
+    cout << left << setw(tab) << "SwapTotal: " << right << setw(tab) << (info.swapTotal / factorMB) << " MB" << endLine;
+    cout << left << setw(tab) << "SwapFree: " << right << setw(tab) << (info.swapFree / factorMB) << " MB" << endl;
+}
 
-// void printProcessInfo(bool compact)
-// {
-//     string endLine = (compact ? ", " : "\n");
+void printProcessInfo(bool compact)
+{
+    string endLine = (compact ? ", " : "\n");
 
-//     cout << "PROCESS INFO" << endLine;
+    cout << "PROCESS INFO" << endLine;
 
-//     ifstream stat("/proc/self/stat", ios_base::in);
-//     if (!stat.good())
-//     {
-//         cout << "Failed to get process stat info" << endl;
-//     }
+    ifstream stat("/proc/self/stat", ios_base::in);
+    if (!stat.good())
+    {
+        cout << "Failed to get process stat info" << endl;
+    }
 
-//     string comm, state, ppid, pgrp, session, tty_nr;
-//     string tpgid, flags, minflt, cminflt, majflt, cmajflt;
-//     string cutime, cstime, priority, nice;
-//     string itrealvalue, starttime;
+    string comm, state, ppid, pgrp, session, tty_nr;
+    string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+    string cutime, cstime, priority, nice;
+    string itrealvalue, starttime;
 
-//     int pid;
-//     unsigned long utime, stime, vsize;
-//     long rss, numthreads;
+    int pid;
+    unsigned long utime, stime, vsize;
+    long rss, numthreads;
 
-//     stat >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt >> utime >> stime >> cutime >> cstime >> priority >> nice >> numthreads >> itrealvalue >> starttime >> vsize >> rss;
+    stat >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt >> utime >> stime >> cutime >> cstime >> priority >> nice >> numthreads >> itrealvalue >> starttime >> vsize >> rss;
 
-//     stat.close();
+    stat.close();
 
-//     int tab = (compact ? 0 : 15);
+    int tab = (compact ? 0 : 15);
 
-//     cout << left << setw(tab) << "Pid: " << right << setw(tab) << pid << endLine;
-//     cout << left << setw(tab) << "User time: " << right << setw(tab) << (double)utime / sysconf(_SC_CLK_TCK) << " s" << endLine;
-//     cout << left << setw(tab) << "Kernel time: " << right << setw(tab) << (double)stime / sysconf(_SC_CLK_TCK) << " s" << endLine;
-//     cout << left << setw(tab) << "Total time: " << right << setw(tab) << (double)utime / sysconf(_SC_CLK_TCK) + (double)stime / sysconf(_SC_CLK_TCK) << " s" << endLine;
-//     cout << left << setw(tab) << "Num threads: " << right << setw(tab) << numthreads << endLine;
-//     cout << left << setw(tab) << "Virtual mem: " << right << setw(tab) << vsize / 1024 / 1024 << " MB" << endl;
-// }
+    cout << left << setw(tab) << "Pid: " << right << setw(tab) << pid << endLine;
+    cout << left << setw(tab) << "User time: " << right << setw(tab) << (double)utime / sysconf(_SC_CLK_TCK) << " s" << endLine;
+    cout << left << setw(tab) << "Kernel time: " << right << setw(tab) << (double)stime / sysconf(_SC_CLK_TCK) << " s" << endLine;
+    cout << left << setw(tab) << "Total time: " << right << setw(tab) << (double)utime / sysconf(_SC_CLK_TCK) + (double)stime / sysconf(_SC_CLK_TCK) << " s" << endLine;
+    cout << left << setw(tab) << "Num threads: " << right << setw(tab) << numthreads << endLine;
+    cout << left << setw(tab) << "Virtual mem: " << right << setw(tab) << vsize / 1024 / 1024 << " MB" << endl;
+}
 
-// string getTimestamp(void)
-// {
-//     struct timeval tv;
-//     gettimeofday(&tv, NULL);
-//     char tmbuf[64], buf[256];
-//     strftime(tmbuf, sizeof(tmbuf), "%Y%m%d_%H%M%S", gmtime(&tv.tv_sec));
-//     snprintf(buf, sizeof(buf), "%s_%06ld", tmbuf, tv.tv_usec);
-//     return buf;
-// }
+string getTimestamp(void)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    char tmbuf[64], buf[256];
+    strftime(tmbuf, sizeof(tmbuf), "%Y%m%d_%H%M%S", gmtime(&tv.tv_sec));
+    snprintf(buf, sizeof(buf), "%s_%06ld", tmbuf, tv.tv_usec);
+    return buf;
+}
 
 // void getTimestampWithSlashes(string &timestamp, string &folder, string &file)
 // {
@@ -198,7 +198,7 @@ void file2json(const string &fileName, json &j)
     if (!inputStream.good())
     {
         cerr << "Error: file2json() failed loading input JSON file " << fileName << endl;
-        // exitProcess();
+        exitProcess();
     }
     try
     {
@@ -207,7 +207,7 @@ void file2json(const string &fileName, json &j)
     catch (exception &e)
     {
         cerr << "Error: file2json() failed parsing input JSON file " << fileName << " exception=" << e.what() << endl;
-        // exitProcess();
+        exitProcess();
     }
     inputStream.close();
 }
@@ -218,7 +218,7 @@ void file2json(const string &fileName, ordered_json &j)
     if (!inputStream.good())
     {
         cerr << "Error: file2json() failed loading input JSON file " << fileName << endl;
-        // exitProcess();
+        exitProcess();
     }
     try
     {
@@ -227,7 +227,7 @@ void file2json(const string &fileName, ordered_json &j)
     catch (exception &e)
     {
         cerr << "Error: file2json() failed parsing input JSON file " << fileName << " exception=" << e.what() << endl;
-        // exitProcess();
+        exitProcess();
     }
     inputStream.close();
 }

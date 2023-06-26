@@ -14,12 +14,12 @@ namespace PilFflonk
         curveName = "bn128";
     }
 
-    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, std::string fflonkInfoFile) : E(_E), fflonkInfo(fflonkInfoFile)
+    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, std::string fflonkInfoFile) : E(_E), fflonkInfo(_E, fflonkInfoFile)
     {
         initialize(NULL);
     }
 
-    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, std::string fflonkInfoFile, void* reservedMemoryPtr, uint64_t reservedMemorySize) : E(_E), fflonkInfo(fflonkInfoFile)
+    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, std::string fflonkInfoFile, void* reservedMemoryPtr, uint64_t reservedMemorySize) : E(_E), fflonkInfo(_E, fflonkInfoFile)
     {
         initialize(reservedMemoryPtr, reservedMemorySize);
     }

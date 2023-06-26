@@ -32,9 +32,9 @@ int main(int argc, char **argv)
         }
     }
 
-    if (argc != 4) {
-        cerr << "Invalid number of parameters:\n";
-        cerr << "Usage: " << argv[0] << " <pil.zkey> <polynomials.cnst> <polynomials.cmt>" << endl;
+    if (argc != 5) {
+        cerr << "Invalid number of parameters: " << argc << endl;
+        cerr << "Usage: " << argv[0] << " <pil.zkey> <fflonkInfo.json> <polynomials.cnst> <polynomials.cmt>" << endl;
         return -1;
     }
 
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     // auto cmtPols = BinFileUtils::openExisting(cmtFilename, "cmt", 1);
 
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
-    prover->prove(zkey.get()/*, cnstPols, cmtPols*/);
+    prover->prove(zkey.get() /*, cnstPols, cmtPols*/);
 
     TimerStopAndLog(WHOLE_PROCESS);
 

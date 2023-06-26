@@ -2,10 +2,10 @@
 #include "utils.hpp"
 #include "timer.hpp"
 
-FflonkInfo::FflonkInfo(std::string file)
-{
-
+FflonkInfo::FflonkInfo(AltBn128::Engine &_E, std::string file): E(_E)
+{   
     // Load contents from json file
+    std::cout << "> Reading Fflonk Info" << std::endl;
     TimerStart(FFLONK_INFO_LOAD);
     json fflonkInfoJson;
     file2json(file, fflonkInfoJson);
@@ -319,7 +319,7 @@ void FflonkInfo::load(json j)
     for (auto it =  j["exp2pol"].begin(); it != j["exp2pol"].end(); ++it) {
         std::string key = it.key(); 
         uint64_t value = it.value();
-         exp2pol.insert(pair(key,value));
+        exp2pol.insert(std::pair(key,value));
     }
 
 }
@@ -341,16 +341,15 @@ uint64_t FflonkInfo::getPolSize(uint64_t polId)
     return N * p.dim * sizeof(AltBn128::FrElement);
 }
 
-// Polinomial FflonkInfo::getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol)
-// {
-//     VarPolMap polInfo = varPolMap[idPol];
-//     uint64_t dim = polInfo.dim;
-//     uint64_t N = mapDeg.section[polInfo.section];
-//     uint64_t offset = mapOffsets.section[polInfo.section];
-//     offset += polInfo.sectionPos;
-//     uint64_t next = mapSectionsN.section[polInfo.section];
-//     return Polinomial(&pAddress[offset], N, dim, next, std::to_string(idPol));
-// }
+Polinomial FflonkInfo::getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol)
+{
+    VarPolMap polInfo = varPolMap[idPol];
+    uint64_t N = mapDeg.section[polInfo.section];
+    uint64_t offset = mapOffsets.section[polInfo.section];
+    offset += polInfo.sectionPos;
+    uint64_t next = mapSectionsN.section[polInfo.section];
+    return Polinomial(E, &pAddress[offset], N, next, std::to_string(idPol));
+}
 
 eSection string2section(const std::string s)
 {
@@ -370,7 +369,7 @@ eSection string2section(const std::string s)
         return cm3_2ns;
     if (s == "q_2ns")
         return q_2ns;
-    // zklog.error("string2section() found invalid string=" + s);
-    // exitProcess();
+    zklog.error("string2section() found invalid string=" + s);
+    exitProcess();
     exit(-1);
 }
