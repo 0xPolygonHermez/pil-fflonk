@@ -24,7 +24,7 @@ ASFLAGS := -felf64
 TARGET_PFP := pfProver
 TARGET_TEST := pfProverTest
 
-INC_DIRS := depends/ffiasm/c
+INC_DIRS := depends/ffiasm/c depends/json/single_include/nlohmann depends/xkcp/Standalone/CompactFIPS202/C
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Files

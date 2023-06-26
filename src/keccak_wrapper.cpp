@@ -1,5 +1,5 @@
 #include "keccak_wrapper.hpp"
-#include "../depends/xkcp/Standalone/CompactFIPS202/C/Keccak-more-compact.c"
+#include "Keccak-more-compact.c"
 
 int64_t keccak (void *data, int64_t dataSize, void *hash, int64_t hashSize)
 {
