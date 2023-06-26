@@ -204,7 +204,7 @@ namespace PilFflonkZkey
         for (u_int32_t i = 0; i < len; ++i)
         {
             std::string name = fdZKey->readString();
-            FrElement omega = *(FrElement *)(fdZKey->read(pilFflonkZkey->n8q));
+            AltBn128::FrElement omega = *(AltBn128::FrElement *)(fdZKey->read(pilFflonkZkey->n8q));
             pilFflonkZkey->omegas[name] = omega;
         }
 

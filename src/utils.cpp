@@ -1,4 +1,4 @@
-// #include <fstream>
+#include <fstream>
 #include <iostream>
 // #include <iomanip>
 // #include <filesystem>
@@ -192,45 +192,45 @@ using namespace std;
 //     outputStream.close();
 // }
 
-// void file2json(const string &fileName, json &j)
-// {
-//     std::ifstream inputStream(fileName);
-//     if (!inputStream.good())
-//     {
-//         cerr << "Error: file2json() failed loading input JSON file " << fileName << endl;
-//         exitProcess();
-//     }
-//     try
-//     {
-//         inputStream >> j;
-//     }
-//     catch (exception &e)
-//     {
-//         cerr << "Error: file2json() failed parsing input JSON file " << fileName << " exception=" << e.what() << endl;
-//         exitProcess();
-//     }
-//     inputStream.close();
-// }
+void file2json(const string &fileName, json &j)
+{
+    std::ifstream inputStream(fileName);
+    if (!inputStream.good())
+    {
+        cerr << "Error: file2json() failed loading input JSON file " << fileName << endl;
+        // exitProcess();
+    }
+    try
+    {
+        inputStream >> j;
+    }
+    catch (exception &e)
+    {
+        cerr << "Error: file2json() failed parsing input JSON file " << fileName << " exception=" << e.what() << endl;
+        // exitProcess();
+    }
+    inputStream.close();
+}
 
-// void file2json(const string &fileName, ordered_json &j)
-// {
-//     std::ifstream inputStream(fileName);
-//     if (!inputStream.good())
-//     {
-//         cerr << "Error: file2json() failed loading input JSON file " << fileName << endl;
-//         exitProcess();
-//     }
-//     try
-//     {
-//         inputStream >> j;
-//     }
-//     catch (exception &e)
-//     {
-//         cerr << "Error: file2json() failed parsing input JSON file " << fileName << " exception=" << e.what() << endl;
-//         exitProcess();
-//     }
-//     inputStream.close();
-// }
+void file2json(const string &fileName, ordered_json &j)
+{
+    std::ifstream inputStream(fileName);
+    if (!inputStream.good())
+    {
+        cerr << "Error: file2json() failed loading input JSON file " << fileName << endl;
+        // exitProcess();
+    }
+    try
+    {
+        inputStream >> j;
+    }
+    catch (exception &e)
+    {
+        cerr << "Error: file2json() failed parsing input JSON file " << fileName << " exception=" << e.what() << endl;
+        // exitProcess();
+    }
+    inputStream.close();
+}
 
 bool fileExists (const string &fileName)
 {

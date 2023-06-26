@@ -7,12 +7,13 @@
 // #include "input.hpp"
 // #include "proof_fflonk.hpp"
 // #include "definitions.hpp"
+#include <nlohmann/json.hpp>
 #include <iostream>
 
 using namespace std;
 
-// using json = nlohmann::json;
-// using ordered_json = nlohmann::ordered_json;
+using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 
 // struct MemoryInfo {
 //     uint64_t total;
@@ -45,8 +46,8 @@ using namespace std;
 
 // // Converts a json into/from a file
 // void json2file(const json &j, const string &fileName);
-// void file2json(const string &fileName, json &j);
-// void file2json(const string &fileName, ordered_json &j);
+void file2json(const string &fileName, json &j);
+void file2json(const string &fileName, ordered_json &j);
 
 // // Returns if file exists
 bool fileExists (const string &fileName);

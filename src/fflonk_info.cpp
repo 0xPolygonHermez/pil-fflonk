@@ -1,14 +1,9 @@
 #include "fflonk_info.hpp"
 #include "utils.hpp"
 #include "timer.hpp"
-#include "zklog.hpp"
-#include "exit_process.hpp"
 
-FflonkInfo::FflonkInfo(const Config &config, string file) : config(config)
+FflonkInfo::FflonkInfo(string file)
 {
-    // Avoid initialization if we are not going to generate any proof
-    if (!config.generateProof())
-        return;
 
     // Load contents from json file
     TimerStart(FFLONK_INFO_LOAD);
@@ -73,25 +68,6 @@ void FflonkInfo::load(json j)
     mapSectionsN.section[cm2_2ns] = j["mapSectionsN"]["cm2_2ns"];
     mapSectionsN.section[cm3_2ns] = j["mapSectionsN"]["cm3_2ns"];
     mapSectionsN.section[q_2ns] = j["mapSectionsN"]["q_2ns"];
-
-    mapSectionsN1.section[cm1_n] = j["mapSectionsN1"]["cm1_n"];
-    mapSectionsN1.section[cm2_n] = j["mapSectionsN1"]["cm2_n"];
-    mapSectionsN1.section[cm3_n] = j["mapSectionsN1"]["cm3_n"];
-    mapSectionsN1.section[eSection::tmpExp_n] = j["mapSectionsN1"]["tmpExp_n"];
-    mapSectionsN1.section[cm1_2ns] = j["mapSectionsN1"]["cm1_2ns"];
-    mapSectionsN1.section[cm2_2ns] = j["mapSectionsN1"]["cm2_2ns"];
-    mapSectionsN1.section[cm3_2ns] = j["mapSectionsN1"]["cm3_2ns"];
-    mapSectionsN1.section[q_2ns] = j["mapSectionsN1"]["q_2ns"];
-
-
-    mapSectionsN3.section[cm1_n] = j["mapSectionsN3"]["cm1_n"];
-    mapSectionsN3.section[cm2_n] = j["mapSectionsN3"]["cm2_n"];
-    mapSectionsN3.section[cm3_n] = j["mapSectionsN3"]["cm3_n"];
-    mapSectionsN3.section[eSection::tmpExp_n] = j["mapSectionsN3"]["tmpExp_n"];
-    mapSectionsN3.section[cm1_2ns] = j["mapSectionsN3"]["cm1_2ns"];
-    mapSectionsN3.section[cm2_2ns] = j["mapSectionsN3"]["cm2_2ns"];
-    mapSectionsN3.section[cm3_2ns] = j["mapSectionsN3"]["cm3_2ns"];
-    mapSectionsN3.section[q_2ns] = j["mapSectionsN3"]["q_2ns"];
 
     for (uint64_t i = 0; i < j["varPolMap"].size(); i++)
     {
@@ -365,16 +341,16 @@ uint64_t FflonkInfo::getPolSize(uint64_t polId)
     return N * p.dim * sizeof(AltBn128::FrElement);
 }
 
-Polinomial FflonkInfo::getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol)
-{
-    VarPolMap polInfo = varPolMap[idPol];
-    uint64_t dim = polInfo.dim;
-    uint64_t N = mapDeg.section[polInfo.section];
-    uint64_t offset = mapOffsets.section[polInfo.section];
-    offset += polInfo.sectionPos;
-    uint64_t next = mapSectionsN.section[polInfo.section];
-    return Polinomial(&pAddress[offset], N, dim, next, std::to_string(idPol));
-}
+// Polinomial FflonkInfo::getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol)
+// {
+//     VarPolMap polInfo = varPolMap[idPol];
+//     uint64_t dim = polInfo.dim;
+//     uint64_t N = mapDeg.section[polInfo.section];
+//     uint64_t offset = mapOffsets.section[polInfo.section];
+//     offset += polInfo.sectionPos;
+//     uint64_t next = mapSectionsN.section[polInfo.section];
+//     return Polinomial(&pAddress[offset], N, dim, next, std::to_string(idPol));
+// }
 
 eSection string2section(const string s)
 {
@@ -394,7 +370,7 @@ eSection string2section(const string s)
         return cm3_2ns;
     if (s == "q_2ns")
         return q_2ns;
-    zklog.error("string2section() found invalid string=" + s);
-    exitProcess();
+    // zklog.error("string2section() found invalid string=" + s);
+    // exitProcess();
     exit(-1);
 }

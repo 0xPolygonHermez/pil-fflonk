@@ -4,11 +4,10 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-#include "config.hpp"
-#include "zkassert.hpp"
-#include "polynomial.hpp"
-#include "zklog.hpp"
-#include "exit_process.hpp"
+// #include "polynomial.hpp"
+// #include "zkassert.hpp"
+// #include "zklog.hpp"
+// #include "exit_process.hpp"
 #include <alt_bn128.hpp>
 
 using json = nlohmann::json;
@@ -65,15 +64,9 @@ public:
     uint64_t offset;
     uint64_t size;
     AltBn128::FrElement * pAddress;
-    AltBn128::FrElement * get(uint64_t step)
+    AltBn128::FrElement * get(uint64_t step, uint64_t shift)
     {
-        zkassert(map.dim==1);
-        return pAddress + step*size;
-    }
-    AltBn128::FrElement * get1(uint64_t step)
-    {
-        zkassert(map.dim==1);
-        return pAddress + step*size + 1;
+        return pAddress + step*size + shift;
     }
 };
 
@@ -134,8 +127,8 @@ public:
         else if (s == "q") type = q;
         else
         {
-            zklog.error("EvMap::setType() found invalid type: " + s);
-            exitProcess();
+            // zklog.error("EvMap::setType() found invalid type: " + s);
+            // exitProcess();
         }
     }
 };
@@ -174,15 +167,15 @@ public:
         else if (s == "number") type = number;
         else if (s == "x") type = x;
         else if (s == "Z") type = Z;
-        else if (s == "public") type = _public;i;
+        else if (s == "public") type = _public;
         else if (s == "cm") type = cm;
         else if (s == "const") type = _const;
         else if (s == "q") type = q;
         else if (s == "tmpExp") type = tmpExp;
         else
         {
-            zklog.error("StepType::setType() found invalid type: " + s);
-            exitProcess();
+            // zklog.error("StepType::setType() found invalid type: " + s);
+            // exitProcess();
         }
     }
 };
@@ -210,8 +203,8 @@ public:
         else if (s == "copy") op = copy;
         else
         {
-            zklog.error("StepOperation::setOperation() found invalid type: " + s);
-            exitProcess();
+            // zklog.error("StepOperation::setOperation() found invalid type: " + s);
+            // exitProcess();
         }
     }
 };
@@ -227,7 +220,6 @@ public:
 
 class FflonkInfo
 {
-    const Config &config;
 public:
     uint64_t mapTotalN;
     uint64_t nConstants;
@@ -259,7 +251,7 @@ public:
     map<string,uint64_t> exp2pol;
     
     /* Constructor */
-    FflonkInfo(const Config &config, string file);
+    FflonkInfo(string file);
 
     /* Loads data from a json object */
     void load (json j);
@@ -271,7 +263,7 @@ public:
     uint64_t getPolSize(uint64_t polId);
 
     /* Returns a polynomial specified by its ID */
-    Polinomial getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol);
+    // Polinomial getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol);
 };
 
 #endif
