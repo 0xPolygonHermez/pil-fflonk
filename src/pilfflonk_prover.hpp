@@ -31,11 +31,14 @@ namespace PilFflonk {
 
     class PilFflonkProver {
         AltBn128::Engine &E;
+        std::string curveName;
+
         FFT<AltBn128::Engine::Fr> *fft = NULL;
 
         PilFflonkZkey::PilFflonkZkey *zkey;
+
         u_int32_t zkeyPower;
-        std::string curveName;
+        u_int64_t domainSize;
         size_t sDomain;
 
         FrElement *reservedMemoryPtr;

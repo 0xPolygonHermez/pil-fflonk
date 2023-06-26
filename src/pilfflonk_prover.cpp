@@ -1,5 +1,6 @@
 #include "pilfflonk_prover.hpp"
 #include "zkey.hpp"
+#include <math.h>
 
 
 namespace PilFflonk
@@ -94,24 +95,24 @@ namespace PilFflonk
     
             cout << "> Starting fft" << endl;
 
-            //fft = new FFT<AltBn128::Engine::Fr>(zkey->domainSize * 4);
-            // zkeyPower = fft->log2(zkey->domainSize);
+            domainSize = ctx.N;
+            fft = new FFT<AltBn128::Engine::Fr>(domainSize * 4);
 
-            // mpz_t altBbn128r;
-            // mpz_init(altBbn128r);
-            // mpz_set_str(altBbn128r, "21888242871839275222246405745257275088548364400416034343698204186575808495617", 10);
+            mpz_t altBbn128r;
+            mpz_init(altBbn128r);
+            mpz_set_str(altBbn128r, "21888242871839275222246405745257275088548364400416034343698204186575808495617", 10);
 
-            // if (mpz_cmp(zkey->rPrime, altBbn128r) != 0)
-            // {
-            //     throw std::invalid_argument("zkey curve not supported");
-            // }
+            if (mpz_cmp(zkey->rPrime, altBbn128r) != 0)
+            {
+                throw std::invalid_argument("zkey curve not supported");
+            }
 
-            // sDomain = zkey->domainSize * sizeof(FrElement);
+            sDomain = domainSize * sizeof(FrElement);
 
-            // ////////////////////////////////////////////////////
-            // // PRECOMPUTED BIG BUFFER
-            // ////////////////////////////////////////////////////
-            // // Precomputed 1 > polynomials buffer
+            ////////////////////////////////////////////////////
+            // PRECOMPUTED BIG BUFFER
+            ////////////////////////////////////////////////////
+            // Precomputed 1 > polynomials buffer
             // uint64_t lengthPrecomputedBigBuffer = 0;
             // lengthPrecomputedBigBuffer += zkey->domainSize * 1 * 8; // Polynomials QL, QR, QM, QO, QC, Sigma1, Sigma2 & Sigma3
             // lengthPrecomputedBigBuffer += zkey->domainSize * 8 * 1; // Polynomial  C0
