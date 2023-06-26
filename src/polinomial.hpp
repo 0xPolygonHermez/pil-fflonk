@@ -140,34 +140,12 @@ class Polinomial
 
 //     static inline void addElement(Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Polinomial &in_b, uint64_t idx_b)
 //     {
-//         assert(out.dim() == in_a.dim());
-
-//         if (in_a.dim() == 1)
-//         {
-//             out[idx_out][0] = in_a[idx_a][0] + in_b[idx_b][0];
-//         }
-//         else
-//         {
-//             out[idx_out][0] = in_a[idx_a][0] + in_b[idx_b][0];
-//             out[idx_out][1] = in_a[idx_a][1] + in_b[idx_b][1];
-//             out[idx_out][2] = in_a[idx_a][2] + in_b[idx_b][2];
-//         }
+//         out[idx_out] = in_a[idx_a] + in_b[idx_b];
 //     }
 
 //     static inline void subElement(Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Polinomial &in_b, uint64_t idx_b)
 //     {
-//         assert(out.dim() == in_a.dim());
-
-//         if (in_a.dim() == 1)
-//         {
-//             out[idx_out][0] = in_a[idx_a][0] - in_b[idx_b][0];
-//         }
-//         else
-//         {
-//             out[idx_out][0] = in_a[idx_a][0] - in_b[idx_b][0];
-//             out[idx_out][1] = in_a[idx_a][1] - in_b[idx_b][1];
-//             out[idx_out][2] = in_a[idx_a][2] - in_b[idx_b][2];
-//         }
+//         out[idx_out] = in_a[idx_a] - in_b[idx_b];
 //     }
 
 //     static inline void mulElement(Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Goldilocks::Element &b)
@@ -178,55 +156,7 @@ class Polinomial
 
 //     static inline void mulElement(Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Polinomial &in_b, uint64_t idx_b)
 //     {
-//         assert(out.dim() == in_a.dim());
-
-//         if (in_a.dim() == 1)
-//         {
-//             out[idx_out][0] = in_a[idx_a][0] * in_b[idx_b][0];
-//         }
-//         else if (in_a.dim() == 3 && in_b.dim() == 1)
-//         {
-
-//             out[idx_out][0] = in_a[idx_a][0] * in_b[idx_b][0];
-//             out[idx_out][1] = in_a[idx_a][1] * in_b[idx_b][0];
-//             out[idx_out][2] = in_a[idx_a][2] * in_b[idx_b][0];
-//         }
-//         else
-//         {
-//             Goldilocks::Element A = (in_a[idx_a][0] + in_a[idx_a][1]) * (in_b[idx_b][0] + in_b[idx_b][1]);
-//             Goldilocks::Element B = (in_a[idx_a][0] + in_a[idx_a][2]) * (in_b[idx_b][0] + in_b[idx_b][2]);
-//             Goldilocks::Element C = (in_a[idx_a][1] + in_a[idx_a][2]) * (in_b[idx_b][1] + in_b[idx_b][2]);
-//             Goldilocks::Element D = in_a[idx_a][0] * in_b[idx_b][0];
-//             Goldilocks::Element E = in_a[idx_a][1] * in_b[idx_b][1];
-//             Goldilocks::Element F = in_a[idx_a][2] * in_b[idx_b][2];
-//             Goldilocks::Element G = D - E;
-
-//             out[idx_out][0] = (C + G) - F;
-//             out[idx_out][1] = ((((A + C) - E) - E) - D);
-//             out[idx_out][2] = B - G;
-//         }
-//     };
-
-//     static inline void divElement(Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Goldilocks::Element &b)
-//     {
-//         Polinomial polB(&b, 1, 1);
-//         divElement(out, idx_out, in_a, idx_a, polB, 0);
-//     }
-
-//     static inline void divElement(Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Polinomial &in_b, uint64_t idx_b)
-//     {
-//         assert(out.dim() == in_a.dim() && in_b.dim() == 1);
-
-//         if (in_a.dim() == 1)
-//         {
-//             out[idx_out][0] = in_a[idx_a][0] / in_b[idx_b][0];
-//         }
-//         else
-//         {
-//             Goldilocks::Element inv = Goldilocks::inv(*in_b[idx_b]);
-//             Polinomial polInv(&inv, 1, 1);
-//             mulElement(out, idx_out, in_a, idx_a, polInv, 0);
-//         }
+//          out[idx_out] = in_a[idx_a] * in_b[idx_b];
 //     };
 
 //     inline std::vector<Goldilocks::Element> toVector(uint64_t idx)
@@ -301,51 +231,6 @@ class Polinomial
 //             }
 //         }
 //     };
-
-//     static void calculateH1H2_(Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol, uint64_t pNumber)
-//     {
-//         map<std::vector<Goldilocks::Element>, uint64_t, CompareFe> idx_t;
-//         multimap<std::vector<Goldilocks::Element>, uint64_t, CompareFe> s;
-//         multimap<std::vector<Goldilocks::Element>, uint64_t>::iterator it;
-
-//         vector<int> counter(tPol.degree(), 1);
-
-//         for (uint64_t i = 0; i < tPol.degree(); i++)
-//         {
-//             vector<Goldilocks::Element> key = tPol.toVector(i);
-//             idx_t[key] = i + 1;
-//         }
-
-//         for (uint64_t i = 0; i < fPol.degree(); i++)
-//         {
-//             vector<Goldilocks::Element> key = fPol.toVector(i);
-//             uint64_t indx = idx_t[key];
-//             if (indx == 0)
-//             {
-//                 zklog.error("Polynomial::calculateH1H2() Number not included: w=" + to_string(i) + " plookup_number=" + to_string(pNumber) + "\nPol:" + Goldilocks::toString(fPol[i], 16));
-//                 exitProcess();
-//             }
-//             ++counter[indx - 1];
-//         }
-
-//         uint64_t id = 0;
-//         for (u_int64_t i = 0; i < tPol.degree(); ++i)
-//         {
-//             if (counter[id] == 0)
-//             {
-//                 ++id;
-//             }
-//             counter[id] -= 1;
-//             Polinomial::copyElement(h1, i, tPol, id);
-
-//             if (counter[id] == 0)
-//             {
-//                 ++id;
-//             }
-//             counter[id] -= 1;
-//             Polinomial::copyElement(h2, i, tPol, id);
-//         }
-//     }
 
 //     static void calculateH1H2_opt1(Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol, uint64_t pNumber, uint64_t *buffer, uint64_t size_keys, uint64_t size_values)
 //     {
@@ -463,127 +348,6 @@ class Polinomial
 //         // std::cout << "holu: " << id << " " << pos << " times: " << time2 - time1 << " " << time3 - time2 << " " << time4 - time3 << " " << h2.dim() << std::endl;
 //     }
 
-//     static void calculateH1H2_opt3(Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol, uint64_t pNumber, uint64_t *buffer, uint64_t size_keys, uint64_t size_values)
-//     {
-//         vector<int> counter(tPol.degree(), 1);  // this 1 is important, space of the original buffer could be used
-//         vector<bool> touched(size_keys, false); // faster use this than initialize buffer, bitmask could be used
-//         uint32_t pos = 0;
-//         uint64_t key[3];
-
-//         // double time1 = omp_get_wtime();
-//         for (uint64_t i = 0; i < tPol.degree(); i++)
-//         {
-//             tPol.toVectorU64(i, key);
-//             uint64_t ind = key[0] % size_keys;
-//             if (!touched[ind])
-//             {
-//                 buffer[ind] = pos;
-//                 uint32_t offset = size_keys + 5 * pos;
-//                 buffer[offset] = key[0];
-//                 buffer[offset + 1] = key[1];
-//                 buffer[offset + 2] = key[2];
-//                 buffer[offset + 3] = i;
-//                 buffer[offset + 4] = 0;
-//                 pos += 1;
-//                 touched[ind] = true;
-//             }
-//             else
-//             {
-//                 uint64_t pos_ = buffer[ind];
-//                 bool exit_ = false;
-//                 do
-//                 {
-//                     uint32_t offset = size_keys + 5 * pos_;
-//                     if (key[0] == buffer[offset] && key[1] == buffer[offset + 1] && key[2] == buffer[offset + 2])
-//                     {
-//                         buffer[offset + 3] = i;
-//                         exit_ = true;
-//                     }
-//                     else
-//                     {
-//                         if (buffer[offset + 4] != 0)
-//                         {
-//                             pos_ = buffer[offset + 4];
-//                         }
-//                         else
-//                         {
-//                             buffer[offset + 4] = pos;
-//                             // new offset
-//                             offset = size_keys + 5 * pos;
-//                             buffer[offset] = key[0];
-//                             buffer[offset + 1] = key[1];
-//                             buffer[offset + 2] = key[2];
-//                             buffer[offset + 3] = i;
-//                             buffer[offset + 4] = 0;
-//                             pos += 1;
-//                             exit_ = true;
-//                         }
-//                     }
-//                 } while (!exit_);
-//             }
-//         }
-
-//         // double time2 = omp_get_wtime();
-
-//         for (uint64_t i = 0; i < fPol.degree(); i++)
-//         {
-//             uint64_t indx = 0;
-//             fPol.toVectorU64(i, key);
-//             uint64_t ind = key[0] % size_keys;
-//             if (!touched[ind])
-//             {
-//                 zklog.error("Polinomial::calculateH1H2() Number not included: w=" + to_string(i) + " plookup_number=" + to_string(pNumber) + "\nPol:" + Goldilocks::toString(fPol[i], 16));
-//                 exitProcess();
-//             }
-//             uint64_t pos_ = buffer[ind];
-//             bool exit_ = false;
-//             do
-//             {
-//                 uint32_t offset = size_keys + 5 * pos_;
-//                 if (key[0] == buffer[offset] && key[1] == buffer[offset + 1] && key[2] == buffer[offset + 2])
-//                 {
-//                     indx = buffer[offset + 3];
-//                     exit_ = true;
-//                 }
-//                 else
-//                 {
-//                     if (buffer[offset + 4] != 0)
-//                     {
-//                         pos_ = buffer[offset + 4];
-//                     }
-//                     else
-//                     {
-//                         zklog.error("Polinomial::calculateH1H2() Number not included: w=" + to_string(i) + " plookup_number=" + to_string(pNumber) + "\nPol:" + Goldilocks::toString(fPol[i], 16));
-//                         exitProcess();
-//                     }
-//                 }
-//             } while (!exit_);
-//             ++counter[indx];
-//         }
-
-//         // double time3 = omp_get_wtime();
-//         uint64_t id = 0;
-//         for (u_int64_t i = 0; i < tPol.degree(); ++i)
-//         {
-//             if (counter[id] == 0)
-//             {
-//                 ++id;
-//             }
-
-//             counter[id] -= 1;
-//             Polinomial::copyElement(h1, i, tPol, id);
-
-//             if (counter[id] == 0)
-//             {
-//                 ++id;
-//             }
-//             counter[id] -= 1;
-//             Polinomial::copyElement(h2, i, tPol, id);
-//         }
-//         // double time4 = omp_get_wtime();
-//         // std::cout << "holu: " << id << " " << pos << " times: " << time2 - time1 << " " << time3 - time2 << " " << time4 - time3 << " " << h2.dim() << std::endl;
-//     }
-
 //     static void calculateZ(Polinomial &z, Polinomial &num, Polinomial &den)
 //     {
 //         uint64_t size = num.degree();
@@ -631,116 +395,6 @@ class Polinomial
 //             }
 //         }
 //         computeMuls(src, srcSize, partitionSize * 2, nThreads);
-//     }
-
-//     inline static void batchInverseParallel(Polinomial &res, Polinomial &src)
-//     {
-//         uint64_t size = src.degree();
-//         Polinomial tmp(size, 3);
-
-//         double pow2thread = floor(log2(omp_get_max_threads()));
-//         uint64_t nThreads = (1 << (int)pow2thread) / 4;
-//         uint64_t partitionSize = size / nThreads;
-
-//         // initalize tmp with src
-//         // | s_0 0 0 .. 0 | s_partitionSize 0 0 .. 0 | s_partitionSize+1 0 0 .. 0 | s_partitionSize*(nThreads-1) ... 0 |
-
-// #pragma omp parallel for num_threads(nThreads)
-//         for (uint64_t i = 0; i < nThreads; i++)
-//         {
-//             uint64_t thread_idx = omp_get_thread_num();
-//             Polinomial::copyElement(tmp, thread_idx * partitionSize, src, thread_idx * partitionSize);
-//         }
-
-// #pragma omp parallel for num_threads(nThreads)
-//         for (uint64_t j = 0; j < nThreads; j++)
-//         {
-//             uint64_t thread_idx = omp_get_thread_num();
-//             for (uint64_t i = 1; i < partitionSize; i++)
-//             {
-//                 Polinomial::mulElement(tmp, i + thread_idx * partitionSize, tmp, i - 1 + thread_idx * partitionSize, src, i + thread_idx * partitionSize);
-//             }
-//         }
-
-//         computeMuls(tmp, size, 2 * partitionSize, nThreads);
-
-//         Polinomial z(size, 3);
-//         Goldilocks3::inv((Goldilocks3::Element *)z[0], (Goldilocks3::Element *)tmp[size - 1]);
-
-//         // calculo Z
-// #pragma omp parallel for num_threads(nThreads - 1)
-//         for (uint64_t i = 0; i < nThreads - 1; i++)
-//         {
-//             uint64_t thread_idx = omp_get_thread_num();
-//             Polinomial::copyElement(z, thread_idx * partitionSize + partitionSize, src, size - thread_idx * partitionSize - partitionSize);
-//         }
-//         Goldilocks3::inv((Goldilocks3::Element *)z[0], (Goldilocks3::Element *)tmp[size - 1]);
-
-// #pragma omp parallel for num_threads(nThreads)
-//         for (uint64_t j = 0; j < nThreads; j++)
-//         {
-//             uint64_t thread_idx = omp_get_thread_num();
-//             for (uint64_t i = 1; i < partitionSize; i++)
-//             {
-//                 Polinomial::mulElement(z, i + thread_idx * partitionSize, z, i - 1 + thread_idx * partitionSize, src, size - i - thread_idx * partitionSize);
-//             }
-//         }
-
-//         computeMuls(z, size, 2 * partitionSize, nThreads);
-
-// #pragma omp parallel for num_threads(nThreads)
-//         for (uint64_t i = 0; i < size - 1; i++)
-//         {
-//             Polinomial::mulElement(res, size - 1 - i, z, i, tmp, size - 2 - i);
-//         }
-//         Polinomial::copyElement(res, 0, z, size - 1);
-//     }
-
-//     inline static void batchInverse(Polinomial &res, Polinomial &src)
-//     {
-//         uint64_t size = src.degree();
-//         Polinomial tmp(size, 3);
-//         Polinomial z(2, 3);
-
-//         Polinomial::copyElement(tmp, 0, src, 0);
-
-//         for (uint64_t i = 1; i < size; i++)
-//         {
-//             Polinomial::mulElement(tmp, i, tmp, i - 1, src, i);
-//         }
-
-//         Goldilocks3::inv((Goldilocks3::Element *)z[0], (Goldilocks3::Element *)tmp[size - 1]);
-
-//         for (uint64_t i = size - 1; i > 0; i--)
-//         {
-//             Polinomial::mulElement(z, 1, z, 0, src, i);
-//             Polinomial::mulElement(res, i, z, 0, tmp, i - 1);
-//             Polinomial::copyElement(z, 0, z, 1);
-//         }
-//         Polinomial::copyElement(res, 0, z, 0);
-//     }
-
-//     static inline void mulAddElement_adim3(Goldilocks::Element *out, Goldilocks::Element *in_a, Polinomial &in_b, uint64_t idx_b)
-//     {
-//         if (in_b.dim() == 1)
-//         {
-//             out[0] = out[0] + in_a[0] * in_b[idx_b][0];
-//             out[1] = out[1] + in_a[1] * in_b[idx_b][0];
-//             out[2] = out[2] + in_a[2] * in_b[idx_b][0];
-//         }
-//         else
-//         {
-//             Goldilocks::Element A = (in_a[0] + in_a[1]) * (in_b[idx_b][0] + in_b[idx_b][1]);
-//             Goldilocks::Element B = (in_a[0] + in_a[2]) * (in_b[idx_b][0] + in_b[idx_b][2]);
-//             Goldilocks::Element C = (in_a[1] + in_a[2]) * (in_b[idx_b][1] + in_b[idx_b][2]);
-//             Goldilocks::Element D = in_a[0] * in_b[idx_b][0];
-//             Goldilocks::Element E = in_a[1] * in_b[idx_b][1];
-//             Goldilocks::Element F = in_a[2] * in_b[idx_b][2];
-//             Goldilocks::Element G = D - E;
-//             out[0] = out[0] + (C + G) - F;
-//             out[1] = out[1] + ((((A + C) - E) - E) - D);
-//             out[2] = out[2] + B - G;
-//         }
 //     }
 };
 #endif

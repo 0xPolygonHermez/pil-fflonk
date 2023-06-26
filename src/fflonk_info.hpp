@@ -2,7 +2,6 @@
 #define FFLONK_INFO_HPP
 
 #include <nlohmann/json.hpp>
-#include <string>
 #include <vector>
 // #include "polynomial.hpp"
 // #include "zkassert.hpp"
@@ -34,7 +33,7 @@ typedef enum
     eSectionMax = 8
 } eSection;
 
-eSection string2section (const string s);
+eSection string2section (const std::string s);
 
 class PolsSections
 {
@@ -120,7 +119,7 @@ public:
     uint64_t id;
     bool prime;
 
-    void setType (string s)
+    void setType (std::string s)
     {
         if (s == "cm") type = cm;
         else if (s == "const") type = _const;
@@ -156,9 +155,9 @@ public:
     uint64_t id;
     bool prime;
     uint64_t p;
-    string value;
+    std::string value;
 
-    void setType (string s)
+    void setType (std::string s)
     {
         if (s == "tmp") type = tmp;
         else if (s == "exp") type = exp;
@@ -195,7 +194,7 @@ public:
     StepType dest;
     vector<StepType> src;
 
-    void setOperation (string s)
+    void setOperation (std::string s)
     {
         if (s == "add") op = add;
         else if (s == "sub") op = sub;
@@ -248,10 +247,10 @@ public:
     vector<uint64_t> exps_n;
     vector<uint64_t> q_2nsVector;
     vector<uint64_t> tmpExp_n;
-    map<string,uint64_t> exp2pol;
+    map<std::string,uint64_t> exp2pol;
     
     /* Constructor */
-    FflonkInfo(string file);
+    FflonkInfo(std::string file);
 
     /* Loads data from a json object */
     void load (json j);

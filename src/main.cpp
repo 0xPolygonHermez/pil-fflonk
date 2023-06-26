@@ -40,8 +40,9 @@ int main(int argc, char **argv)
 
     // Get the input arguments
     string zkeyFilename = argv[1];
-    string cnstFilename = argv[2];
-    string cmtFilename = argv[3];
+    string fflonkInfoFileName = argv[2];
+    string cnstFilename = argv[3];
+    string cmtFilename = argv[4];
 
     TimerStart(WHOLE_PROCESS);
 
@@ -50,6 +51,12 @@ int main(int argc, char **argv)
     if (!fileExists(zkeyFilename))
     {
         cerr << "Error: required file zkeyFilename=" << zkeyFilename << " does not exist" << endl;
+        bError = true;
+    }
+
+    if (!fileExists(fflonkInfoFileName))
+    {
+        cerr << "Error: required file zkeyFilename=" << fflonkInfoFileName << " does not exist" << endl;
         bError = true;
     }
     // if (!fileExists(cnstFilename))
@@ -74,7 +81,7 @@ int main(int argc, char **argv)
     // cout << "> Opening committed polynomial file" << endl;
     // auto cmtPols = BinFileUtils::openExisting(cmtFilename, "cmt", 1);
 
-    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine);
+    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
     prover->prove(zkey.get()/*, cnstPols, cmtPols*/);
 
     TimerStopAndLog(WHOLE_PROCESS);

@@ -2,7 +2,7 @@
 #include "utils.hpp"
 #include "timer.hpp"
 
-FflonkInfo::FflonkInfo(string file)
+FflonkInfo::FflonkInfo(std::string file)
 {
 
     // Load contents from json file
@@ -352,7 +352,7 @@ uint64_t FflonkInfo::getPolSize(uint64_t polId)
 //     return Polinomial(&pAddress[offset], N, dim, next, std::to_string(idPol));
 // }
 
-eSection string2section(const string s)
+eSection string2section(const std::string s)
 {
     if (s == "cm1_n")
         return cm1_n;

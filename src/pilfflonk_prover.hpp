@@ -9,6 +9,7 @@
 #include "polynomial/polynomial.hpp"
 #include "zkey.hpp"
 #include "snark_proof.hpp"
+#include "fflonk_info.hpp"
 #include "keccak_256_transcript.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
@@ -45,6 +46,9 @@ namespace PilFflonk {
         uint64_t reservedMemorySize;
 
         Ctx ctx;
+
+        FflonkInfo fflonkInfo;
+
 
         // FrElement *precomputedBigBuffer;
         // G1PointAffine *PTau;
@@ -83,8 +87,8 @@ namespace PilFflonk {
         // Keccak256Transcript *transcript;
         SnarkProof *proof;
     public:
-        PilFflonkProver(AltBn128::Engine &E);
-        PilFflonkProver(AltBn128::Engine &E, void* reservedMemoryPtr, uint64_t reservedMemorySize);
+        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile);
+        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, void* reservedMemoryPtr, uint64_t reservedMemorySize);
 
         ~PilFflonkProver();
 
