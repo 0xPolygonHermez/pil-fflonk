@@ -52,6 +52,8 @@ namespace PilFflonk {
 
         FflonkInfo* fflonkInfo;
 
+        AltBn128::FrElement* cnstPols;
+        AltBn128::FrElement* cmtdPols;
         // void *pConstPolsAddress;
         // void *pConstPolsAddress2ns;
         // ConstantPolsFflonk *pConstPols;
@@ -112,22 +114,22 @@ namespace PilFflonk {
         // std::map<std::string, Evaluations<Engine> *> evaluations;
 
         // std::map <std::string, FrElement> toInverse;
-        // std::map <std::string, FrElement> challenges;
+        // std::map <std::string, FrElement> challenges;      
         // std::map<std::string, FrElement *> roots;
         // FrElement blindingFactors[BLINDINGFACTORSLENGTH];
 
         Keccak256Transcript *transcript;
         SnarkProof *proof;
     public:
-        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile);
-        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, void* reservedMemoryPtr, uint64_t reservedMemorySize);
+        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, AltBn128::FrElement *cnstPols);
+        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, AltBn128::FrElement *cnstPols, void* reservedMemoryPtr, uint64_t reservedMemorySize);
 
         ~PilFflonkProver();
 
         void setZkey(BinFileUtils::BinFile *fdZkey);
 
-        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdZkey);
-        /*tuple <json, json>*/ void prove();
+        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdZkey, AltBn128::FrElement *cmtdPols);
+        /*tuple <json, json>*/ void prove(AltBn128::FrElement *cmtdPols);
 
     protected:
         void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);

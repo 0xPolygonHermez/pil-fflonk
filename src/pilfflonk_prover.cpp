@@ -15,15 +15,17 @@ namespace PilFflonk
         curveName = "bn128";
     }
 
-    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, std::string fflonkInfoFile) : E(_E)
+    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, std::string fflonkInfoFile, AltBn128::FrElement* cnstPols) : E(_E)
     {
         fflonkInfo = new FflonkInfo(_E, fflonkInfoFile);
+        this->cnstPols = cnstPols;
         initialize(NULL);
     }
 
-    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, std::string fflonkInfoFile, void* reservedMemoryPtr, uint64_t reservedMemorySize) : E(_E)
+    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, std::string fflonkInfoFile, AltBn128::FrElement* cnstPols, void* reservedMemoryPtr, uint64_t reservedMemorySize) : E(_E)
     {
         fflonkInfo = new FflonkInfo(_E, fflonkInfoFile);
+        this->cnstPols = cnstPols;
         initialize(reservedMemoryPtr, reservedMemorySize);
     }
 
@@ -75,6 +77,10 @@ namespace PilFflonk
     }
 
     void PilFflonkProver::setZkey(BinFileUtils::BinFile *zkeyBinfile) {
+        // TODO check constant polynomials size match with definitions
+        // TODO check committed polynomials size match with definitions
+
+
         try
         {
             if(NULL != zkey) {
@@ -88,7 +94,6 @@ namespace PilFflonk
                 throw std::invalid_argument("zkey file is not pilfflonk");
             }
 
-// TODO TODO TODO ADD fflonkInfo
             zkey = PilFflonkZkey::loadPilFflonkZkey(zkeyBinfile);
 
             n8r = sizeof(FrElement);
@@ -442,7 +447,7 @@ namespace PilFflonk
         }
     }
 
-    /*std::tuple <json, json>*/ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey) {
+    /*std::tuple <json, json>*/ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey, AltBn128::FrElement* cmtdPols) {
         this->setZkey(fdZkey);
 
         auto shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, fdZkey);
@@ -471,7 +476,7 @@ namespace PilFflonk
         return this->prove();
     }
 
-    /*std::tuple<json, json>*/ void PilFflonkProver::prove()
+    /*std::tuple<json, json>*/ void PilFflonkProver::prove(AltBn128::FrElement* cmtdPols)
     {
         if(NULL == zkey) {
             throw std::runtime_error("Zkey data not set");
@@ -531,20 +536,20 @@ namespace PilFflonk
             // // STAGE 0. Store constants and committed values. Calculate publics
             // stage0();
 
-            // // STAGE 1. Compute Trace Column Polynomials
-            // cout << "> STAGE 1. Compute Trace Column Polynomials" << endl;
+            // STAGE 1. Compute Trace Column Polynomials
+            cout << "> STAGE 1. Compute Trace Column Polynomials" << endl;
             // stage1();
 
-            // // STAGE 2. Compute Inclusion Polynomials
-            // cout << "> STAGE 2. Compute Inclusion Polynomials" << endl;
+            // STAGE 2. Compute Inclusion Polynomials
+            cout << "> STAGE 2. Compute Inclusion Polynomials" << endl;
             // stage2();
 
-            // // STAGE 3. Compute Grand Product and Intermediate Polynomials
-            // cout << "> STAGE 3. Compute Grand Product and Intermediate Polynomials" << endl;
+            // STAGE 3. Compute Grand Product and Intermediate Polynomials
+            cout << "> STAGE 3. Compute Grand Product and Intermediate Polynomials" << endl;
             // stage3();
 
-            // // STAGE 4. Trace Quotient Polynomials
-            // cout << "> STAGE 4. Compute Trace Quotient Polynomials" << endl;
+            // STAGE 4. Trace Quotient Polynomials
+            cout << "> STAGE 4. Compute Trace Quotient Polynomials" << endl;
             // stage4();
 
             // const [cmts, evaluations, xiSeed] = await open(zkey, PTau, ctx, committedPols, curve, { logger, fflonkPreviousChallenge: ctx.challenges[4], nonCommittedPols: ["Q"] });

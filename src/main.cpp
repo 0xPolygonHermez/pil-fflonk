@@ -7,9 +7,43 @@
 #include "timer.hpp"
 #include "pilfflonk_prover.hpp"
 
+
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <system_error>
+#include <string>
+#include <memory.h>
+#include <stdexcept>
+#include <thread_utils.hpp>
+#include <omp.h>
+
 #define PILFFLONK_PROVER_VERSION "v0.0.1"
 
 using namespace std;
+
+void loadPolynomialsFile(std::string filename, void* addr)
+{
+    int fd;
+    struct stat sb;
+
+    fd = open(filename.c_str(), O_RDONLY);
+    if (fd == -1)
+        throw std::system_error(errno, std::generic_category(), "open");
+
+    if (fstat(fd, &sb) == -1) /* To obtain file size */
+        throw std::system_error(errno, std::generic_category(), "fstat");
+
+    void* addrmm = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+    addr = malloc(sb.st_size);
+
+    int nThreads = omp_get_max_threads() / 2;
+    ThreadUtils::parcpy(addr, addrmm, sb.st_size, nThreads);
+
+    munmap(addrmm, sb.st_size);
+    close(fd);
+}
 
 int main(int argc, char **argv)
 {
@@ -34,7 +68,7 @@ int main(int argc, char **argv)
 
     if (argc != 5) {
         cerr << "Invalid number of parameters: " << argc << endl;
-        cerr << "Usage: " << argv[0] << " <pil.zkey> <fflonkInfo.json> <polynomials.cnst> <polynomials.cmt>" << endl;
+        cerr << "Usage: " << argv[0] << " <pil.zkey> <fflonkInfo.json> <polynomials.cnst> <polynomials.cmtd>" << endl;
         return -1;
     }
 
@@ -42,7 +76,7 @@ int main(int argc, char **argv)
     string zkeyFilename = argv[1];
     string fflonkInfoFileName = argv[2];
     string cnstFilename = argv[3];
-    string cmtFilename = argv[4];
+    string cmtdFilename = argv[4];
 
     TimerStart(WHOLE_PROCESS);
 
@@ -50,39 +84,43 @@ int main(int argc, char **argv)
     bool bError = false;
     if (!fileExists(zkeyFilename))
     {
-        cerr << "Error: required file zkeyFilename=" << zkeyFilename << " does not exist" << endl;
+        cerr << "Error: zkey file '" << zkeyFilename << "' does not exist" << endl;
         bError = true;
     }
 
     if (!fileExists(fflonkInfoFileName))
     {
-        cerr << "Error: required file zkeyFilename=" << fflonkInfoFileName << " does not exist" << endl;
+        cerr << "Error: fflonk info file '" << fflonkInfoFileName << "' does not exist" << endl;
         bError = true;
     }
-    // if (!fileExists(cnstFilename))
-    // {
-    //     cerr << "Error: required file cnstFilename=" << cnstFilename << " does not exist" << endl;
-    //     bError = true;
-    // }
-    // if (!fileExists(cmtFilename))
-    // {
-    //     cerr << "Error: required file cmtFilename=" << cmtFilename << " does not exist" << endl;
-    //     bError = true;
-    // }
+
+    if (!fileExists(cnstFilename))
+    {
+        cerr << "Error: constant polynomials file '" << cnstFilename << "' does not exist" << endl;
+        bError = true;
+    }
+
+    if (!fileExists(cmtdFilename))
+    {
+        cerr << "Error: committed polynomials file '" << cmtdFilename << "' does not exist" << endl;
+        bError = true;
+    }
 
     if (bError) return -1; // exitProcess();
 
     cout << "> Opening zkey file" << endl;
     auto zkey = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
 
-    // cout << "> Opening constant polynomials file file" << endl;
-    // auto cnstPols = BinFileUtils::openExisting(cnstFilename, "cnst", 1);
+    cout << "> Opening constant polynomials file file" << endl;
+    void* cnstPols = NULL;
+    loadPolynomialsFile(cnstFilename, cnstPols);
 
-    // cout << "> Opening committed polynomial file" << endl;
-    // auto cmtPols = BinFileUtils::openExisting(cmtFilename, "cmt", 1);
+    cout << "> Opening committed polynomial file" << endl;
+    void* cmtdPols = NULL;
+    loadPolynomialsFile(cnstFilename, cmtdPols);
 
-    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
-    prover->prove(zkey.get() /*, cnstPols, cmtPols*/);
+    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName, (AltBn128::FrElement *)cnstPols);
+    prover->prove(zkey.get(), (AltBn128::FrElement *)cmtdPols);
 
     TimerStopAndLog(WHOLE_PROCESS);
 
