@@ -21,6 +21,12 @@ using json = nlohmann::json;
 using namespace std;
 
 namespace PilFflonk {
+    struct BinFilePolsData{
+        u_int32_t nPols;
+        string* names;
+        AltBn128::FrElement* buffer;
+    };
+
     class PilFflonkProver {
         using FrElement = typename AltBn128::Engine::FrElement;
         using G1Point = typename AltBn128::Engine::G1Point;
@@ -52,8 +58,8 @@ namespace PilFflonk {
 
         FflonkInfo* fflonkInfo;
 
-        AltBn128::FrElement* cnstPols;
-        AltBn128::FrElement* cmtdPols;
+        BinFilePolsData* cnstPols;
+        BinFilePolsData* cmtdPols;
         // void *pConstPolsAddress;
         // void *pConstPolsAddress2ns;
         // ConstantPolsFflonk *pConstPols;
@@ -121,30 +127,32 @@ namespace PilFflonk {
         Keccak256Transcript *transcript;
         SnarkProof *proof;
     public:
-        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, AltBn128::FrElement *cnstPols);
-        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, AltBn128::FrElement *cnstPols, void* reservedMemoryPtr, uint64_t reservedMemorySize);
+        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile);
+        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, void* reservedMemoryPtr, uint64_t reservedMemorySize);
 
         ~PilFflonkProver();
 
-        void setZkey(BinFileUtils::BinFile *fdZkey);
+        void setZkey(BinFileUtils::BinFile *fdZkey, BinFileUtils::BinFile *fdCnstPols);
 
-        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdZkey, AltBn128::FrElement *cmtdPols);
-        /*tuple <json, json>*/ void prove(AltBn128::FrElement *cmtdPols);
+        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdZkey, BinFileUtils::BinFile *fdCnstPols, BinFileUtils::BinFile *fdCmtdPols);
+        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdCmtdPols);
 
     protected:
         void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);
 
         void removePrecomputedData();
 
-        // void stage0();
+        void stage0();
 
-        // void stage1();
+        void stage1();
 
-        // void stage2();
+        void stage2();
 
-        // void stage3();
+        void stage3();
 
-        // void stage4();
+        void stage4();
+
+        BinFilePolsData* loadPolynomialsFromBinFile(BinFileUtils::BinFile *fd);
     };
 }
 

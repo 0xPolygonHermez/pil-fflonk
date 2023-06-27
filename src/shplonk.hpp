@@ -40,11 +40,10 @@ namespace ShPlonk {
 
         std::map<std::string, AltBn128::FrElement> evaluationCommitments;
 
+        std::map <std::string, AltBn128::G1Point> nonConstantCommits;
+    public:
         std::map <std::string, AltBn128::G1Point> polynomialCommitments;
 
-        std::map <std::string, AltBn128::G1Point> nonConstantCommits;
-
-    public:
         std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsShPlonk;
 
         ShPlonkProver(AltBn128::Engine &_E, BinFileUtils::BinFile *zkeyBinfile);

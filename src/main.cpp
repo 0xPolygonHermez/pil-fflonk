@@ -23,28 +23,6 @@
 
 using namespace std;
 
-void loadPolynomialsFile(std::string filename, void* addr)
-{
-    int fd;
-    struct stat sb;
-
-    fd = open(filename.c_str(), O_RDONLY);
-    if (fd == -1)
-        throw std::system_error(errno, std::generic_category(), "open");
-
-    if (fstat(fd, &sb) == -1) /* To obtain file size */
-        throw std::system_error(errno, std::generic_category(), "fstat");
-
-    void* addrmm = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
-    addr = malloc(sb.st_size);
-
-    int nThreads = omp_get_max_threads() / 2;
-    ThreadUtils::parcpy(addr, addrmm, sb.st_size, nThreads);
-
-    munmap(addrmm, sb.st_size);
-    close(fd);
-}
-
 int main(int argc, char **argv)
 {
     cout << "PIL-FFLONK " << string(PILFFLONK_PROVER_VERSION) << endl;
@@ -111,16 +89,15 @@ int main(int argc, char **argv)
     cout << "> Opening zkey file" << endl;
     auto zkey = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
 
-    cout << "> Opening constant polynomials file file" << endl;
-    void* cnstPols = NULL;
-    loadPolynomialsFile(cnstFilename, cnstPols);
+    cout << "> Opening constant polynomials file" << endl;
+    auto cnstPols = BinFileUtils::openExisting(zkeyFilename, "pols", 1);
 
     cout << "> Opening committed polynomial file" << endl;
-    void* cmtdPols = NULL;
-    loadPolynomialsFile(cnstFilename, cmtdPols);
+    auto cmtdPols = BinFileUtils::openExisting(zkeyFilename, "pols", 1);
 
-    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName, (AltBn128::FrElement *)cnstPols);
-    prover->prove(zkey.get(), (AltBn128::FrElement *)cmtdPols);
+    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
+
+    prover->prove(zkey.get(), cnstPols.get(), cmtdPols.get());
 
     TimerStopAndLog(WHOLE_PROCESS);
 
