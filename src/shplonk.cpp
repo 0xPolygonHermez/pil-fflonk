@@ -18,16 +18,16 @@ namespace ShPlonk {
             degrees[x.second->index] = x.second->nPols;
         }
         
-        for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             std::string log = "> Computing R" + std::to_string(i) + " polynomial"; 
             LOG_TRACE(log);
 
             FrElement* evals = new FrElement[degrees[i]];
 
             for(u_int32_t j = 0; j < degrees[i]; ++j) {
-                evals[i] = polynomialsShPlonk["f" + std::to_string(i)]->fastEvaluate(rootsMap["f" + std::to_string(i)][j]);
+                evals[j] = polynomialsShPlonk["f" + std::to_string(i)]->fastEvaluate(rootsMap["f" + std::to_string(i)][j]);
             }
-
+ 
             polynomialsShPlonk["R" + std::to_string(i)] = Polynomial<AltBn128::Engine>::lagrangePolynomialInterpolation(rootsMap["f" + std::to_string(i)], evals, degrees[i]);
             
             // Check the degree of R0(X) < (degree - 1)
@@ -36,10 +36,10 @@ namespace ShPlonk {
                 throw std::runtime_error("Polynomial is not well calculated");
             }
 
-            delete[] evals;
+            delete evals;
         }
 
-        delete[] degrees;
+        delete degrees;
     }
 
     void ShPlonkProver::computeZT()
@@ -51,14 +51,14 @@ namespace ShPlonk {
         }
         
         u_int32_t nRoots = 0;
-        for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             nRoots += degrees[i];
         }
 
         FrElement* arr = new FrElement[nRoots];
 
         u_int32_t index = 0;
-        for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             for(u_int32_t j = 0; j < degrees[i]; ++j) {
                 arr[index++] = rootsMap["f" + std::to_string(i)][j];
             }
@@ -67,17 +67,17 @@ namespace ShPlonk {
 
         polynomialsShPlonk["ZT"] = Polynomial<AltBn128::Engine>::zerofierPolynomial(arr, nRoots);
 
-        delete[] arr;
-        delete[] degrees;
+        delete arr;
+        delete degrees;
     }
 
     void ShPlonkProver::computeL()
     {
         LOG_TRACE("··· Computing L polynomial");
 
-        FrElement* mulL = new FrElement[rootsMap.size()];
-        FrElement* preL = new FrElement[rootsMap.size()];
-        FrElement* evalRiY = new FrElement[rootsMap.size()];
+        FrElement* mulL = new FrElement[zkeyPilFflonk->f.size()];
+        FrElement* preL = new FrElement[zkeyPilFflonk->f.size()];
+        FrElement* evalRiY = new FrElement[zkeyPilFflonk->f.size()];
 
         u_int32_t* degrees = new u_int32_t[zkeyPilFflonk->f.size()]; 
 
@@ -85,7 +85,7 @@ namespace ShPlonk {
             degrees[x.second->index] = x.second->nPols;
         }
 
-        for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             FrElement mulLi = E.fr.one();
             for (u_int32_t j = 0; j < degrees[i]; j++)
             {
@@ -96,9 +96,9 @@ namespace ShPlonk {
 
        
         FrElement alpha = E.fr.one();
-        for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             preL[i] = alpha;
-            for(u_int32_t j = 0; j < rootsMap.size(); ++j) {
+            for(u_int32_t j = 0; j < zkeyPilFflonk->f.size(); ++j) {
                 if(i != j) {
                     preL[i] = E.fr.mul(preL[i], mulL[j]);
                 }
@@ -106,7 +106,7 @@ namespace ShPlonk {
             alpha = E.fr.mul(alpha,challengeAlpha);
         }
 
-        for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
            evalRiY[i] = polynomialsShPlonk["R" + std::to_string(i)]->fastEvaluate(challengeY);
         }
 
@@ -121,7 +121,7 @@ namespace ShPlonk {
 
         // COMPUTE L(X)
         polynomialsShPlonk["Wp"] = new Polynomial<AltBn128::Engine>(E, lengthBuffer);
-        for(u_int32_t i = 0; i < rootsMap.size(); ++i) {
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)]);
             fTmp->subScalar(evalRiY[i]);
             fTmp->mulScalar(preL[i]);
@@ -141,10 +141,10 @@ namespace ShPlonk {
             throw std::runtime_error("L Polynomial is not well calculated");
         }
 
-        delete[] mulL;
-        delete[] preL;
-        delete[] evalRiY;
-        delete[] degrees;        
+        delete mulL;
+        delete preL;
+        delete evalRiY;
+        delete degrees;        
     }
 
     void ShPlonkProver::computeZTS2()
@@ -173,8 +173,8 @@ namespace ShPlonk {
 
         polynomialsShPlonk["ZTS2"] = Polynomial<AltBn128::Engine>::zerofierPolynomial(arr, nRoots);
 
-        delete[] degrees;
-        delete[] arr;
+        delete degrees;
+        delete arr;
     }
 
     void ShPlonkProver::computeW()
@@ -233,7 +233,7 @@ namespace ShPlonk {
             throw std::runtime_error("W Polynomial is not well calculated");
         }
         
-        delete[] initialOpenValues;
+        delete initialOpenValues;
 
         polynomialsShPlonk["W"] = polynomialW;
         
@@ -243,6 +243,7 @@ namespace ShPlonk {
         LOG_TRACE("> Computing L polynomial");
         computeL();
 
+        cout << "L " << E.fr.toString(polynomialsShPlonk["Wp"]->fastEvaluate(challengeAlpha)) << endl;
         LOG_TRACE("> Computing ZTS2 polynomial");
         computeZTS2();
 
@@ -250,10 +251,14 @@ namespace ShPlonk {
         E.fr.inv(ZTS2Y, ZTS2Y);
         polynomialsShPlonk["Wp"]->mulScalar(ZTS2Y);
 
+        cout << "L2 " << E.fr.toString(polynomialsShPlonk["Wp"]->fastEvaluate(challengeAlpha)) << endl;
+
         LOG_TRACE("> Computing W' = L / ZTS2 polynomial");
         polynomialsShPlonk["Wp"]->divByZerofier(1, challengeY);
 
-        u_int64_t maxDegree = 0;
+        cout << "L3 " << E.fr.toString(polynomialsShPlonk["Wp"]->fastEvaluate(challengeAlpha)) << endl;
+
+        u_int64_t maxDegree = 0; 
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             if(zkeyPilFflonk->f[i]->degree > maxDegree) {
                 maxDegree = zkeyPilFflonk->f[i]->degree;
@@ -262,19 +267,25 @@ namespace ShPlonk {
 
         maxDegree -= 1;
 
-        if (polynomialsShPlonk["Wp"]->getDegree() >= maxDegree)
+        cout << "maxDegree " << maxDegree << endl;
+        cout << "L degree" << polynomialsShPlonk["Wp"]->getDegree() << endl;
+
+        if (polynomialsShPlonk["Wp"]->getDegree() > maxDegree)
         {
             throw std::runtime_error("Degree of L(X)/(ZTS2(y)(X-y)) is not correct");
         }
     }
 
     void ShPlonkProver::computeChallengeXiSeed(FrElement previousChallenge)
-    {    
+    {     
         transcript->reset();
-        transcript->addScalar(previousChallenge);
+        // transcript->addScalar(previousChallenge); //TODO: Uncomment this line when the transcript is fixed
 
-        for (const auto& x : nonConstantCommits) {
-            transcript->addPolCommitment(x.second);
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
+            if(zkeyPilFflonk->f[i]->nStages > 1 || zkeyPilFflonk->f[i]->nStages != 0) {
+                G1Point commit = polynomialCommitments["f" + std::to_string(zkeyPilFflonk->f[i]->index)]; 
+                transcript->addPolCommitment(commit);
+            }
         }
 
         challengeXiSeed = transcript->getChallenge();
@@ -324,6 +335,7 @@ namespace ShPlonk {
         std::map<std::string, FrElement *> omegasMap;
 
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); i++) {
+            omegasMap["w" + std::to_string(degrees[i])] = new FrElement[degrees[i]];
             omegasMap["w" + std::to_string(degrees[i])][0] = E.fr.one();
             for (u_int32_t j = 1; j < degrees[i]; j++)
             {   
@@ -352,23 +364,13 @@ namespace ShPlonk {
             }
         }
 
-        delete[] degrees;
+        delete degrees;
     }
 
     void ShPlonkProver::getMontgomeryBatchedInverse()
     {
-        std::map <std::string, FrElement> inverseElements;
-
-        std::ostringstream ss;
-        //   · denominator needed in step 8 and 9 of the verifier to multiply by 1/Z_H(xi)
-        FrElement xiN = challengeXi;
-        for (u_int64_t i = 0; i < zkeyPilFflonk->power; i++)
-        {
-            xiN = E.fr.square(xiN);
-        }
-
-        inverseElements["zh"] = E.fr.sub(xiN, E.fr.one());
-
+        std::vector<FrElement> inverseElements;
+     
         u_int32_t* degrees = new u_int32_t[zkeyPilFflonk->f.size()]; 
 
         for(auto const& x : zkeyPilFflonk->f) {
@@ -398,7 +400,7 @@ namespace ShPlonk {
                 {
                     mulLi = E.fr.mul(mulLi, E.fr.sub(challengeY, rootsMap["f" + std::to_string(i)][j]));
                 }
-                inverseElements["mulL" + std::to_string(i+1)] = mulLi;
+                 inverseElements.push_back(mulLi);
             }
         }
 
@@ -419,19 +421,22 @@ namespace ShPlonk {
 
             if (isAddedDen.find(wName) == isAddedDen.end()) {
                 isAddedDen[wName] = true;
-                FrElement den1 = E.fr.set(degrees[i]);
-                for (u_int64_t j = 0; j < (degrees[i] - 2); j++)
-                {
-                    den1 = E.fr.mul(den1, rootsMap["f" + std::to_string(i)][0]);
-                }
 
-                for (uint j = 0; j < degrees[i]; j++) {
-                    FrElement den2 = rootsMap["f" + std::to_string(i)][((degrees[i] - 1) * j) % degrees[i]];
-                    FrElement den3 = E.fr.sub(challengeY, rootsMap["f" + std::to_string(i)][j]);
+                if(degrees[i] > 1) {
+                    FrElement den1 = E.fr.set(degrees[i]);
+                    if(degrees[i] > 2) {
+                        for (u_int64_t j = 0; j < (degrees[i] - 2); j++)
+                        {
+                            den1 = E.fr.mul(den1, rootsMap["f" + std::to_string(i)][0]);
+                        }
+                    }
+                    
+                    for (uint j = 0; j < degrees[i]; j++) {
+                        FrElement den2 = rootsMap["f" + std::to_string(i)][((degrees[i] - 1) * j) % degrees[i]];
+                        FrElement den3 = E.fr.sub(challengeY, rootsMap["f" + std::to_string(i)][j]);
 
-                    ss.str("");
-                    ss << "LiS" << i << "_" << (j + 1) << " ";
-                    inverseElements[ss.str()] = E.fr.mul(E.fr.mul(den1, den2), den3);
+                        inverseElements.push_back(E.fr.mul(E.fr.mul(den1, den2), den3));
+                    }
                 }
             }
         }
@@ -439,14 +444,15 @@ namespace ShPlonk {
         
 
         FrElement mulAccumulator = E.fr.one();
-        for (auto &[key, value] : inverseElements)
-        {
-            mulAccumulator = E.fr.mul(mulAccumulator, value);
+        for (u_int32_t i = 0; i < inverseElements.size(); i++)
+        {            
+            cout << E.fr.toString(inverseElements[i]) << endl;
+            mulAccumulator = E.fr.mul(mulAccumulator, inverseElements[i]);
         }
-
+      
         E.fr.inv(mulAccumulator, mulAccumulator);
 
-        delete[] degrees;
+        delete degrees;
 
         evaluationCommitments["inv"] = mulAccumulator;
     }    
@@ -471,7 +477,8 @@ namespace ShPlonk {
             if (it == zkeyPilFflonk->openingPoints.end()) throw std::runtime_error("Opening point not found");
             FrElement openValue = initialOpenValues[it->first];
 
-            
+            cout << "OPEN VALUE INDEX " << " " <<  it->first << " " << E.fr.toString(openValue) <<  endl;
+
             for(u_int32_t k = 0; k < zkeyPilFflonk->f[i]->nPols; ++k) {
                 std::string polName = zkeyPilFflonk->f[i]->pols[k];
                 if(polynomialsShPlonk[polName] == nullptr) throw std::runtime_error("Polynomial not found");
@@ -479,7 +486,7 @@ namespace ShPlonk {
             }
         }
 
-        delete[] initialOpenValues;
+        delete initialOpenValues;
     }
 
     AltBn128::G1Point ShPlonkProver::sumCommits(u_int32_t nCommits, G1Point *commits) {
@@ -545,20 +552,17 @@ namespace ShPlonk {
                 commitsStage[j] = polynomialCommitments[index];
             }
 
-            polynomialCommitments["f" + std::to_string(i)] = sumCommits(zkeyPilFflonk->f[i]->nStages, commitsStage);
+            std::string ind = std::to_string(zkeyPilFflonk->f[i]->index);
+            polynomialCommitments["f" + ind] = sumCommits(zkeyPilFflonk->f[i]->nStages, commitsStage);
 
-            if(zkeyPilFflonk->f[i]->nStages > 1 || zkeyPilFflonk->f[i]->nStages != 0) {
-                nonConstantCommits["f" + std::to_string(i)] = polynomialCommitments["f" + std::to_string(i)]; 
-            }
+            polynomialsShPlonk["f" + ind] = sumPolynomials(zkeyPilFflonk->f[i]->nStages, polynomialsStage);
 
-            polynomialsShPlonk["f" + std::to_string(i)] = sumPolynomials(zkeyPilFflonk->f[i]->nStages, polynomialsStage);
-
-            if(polynomialsShPlonk["f" + std::to_string(i)]->getDegree() > zkeyPilFflonk->f[i]->degree) {
+            if(polynomialsShPlonk["f" + ind]->getDegree() > zkeyPilFflonk->f[i]->degree) {
                 throw std::runtime_error("Polynomial f" + std::to_string(i) + " degree is greater than expected");
             }   
             
-            delete[] polynomialsStage;
-            delete[] commitsStage;
+            delete polynomialsStage;
+            delete commitsStage;
         }
     }
 
@@ -628,6 +632,8 @@ namespace ShPlonk {
         // Compute challenge xi seed
         computeChallengeXiSeed(previousChallenge);
 
+        cout << E.fr.toString(challengeXiSeed) << endl;
+
         // Calculate roots
         calculateRoots();
 
@@ -636,32 +642,51 @@ namespace ShPlonk {
             challengeXi = E.fr.mul(challengeXi, challengeXiSeed);
         }
 
+        cout << "CHALLENGE XI " << E.fr.toString(challengeXi) << endl;
+
         calculateEvaluations();        
+
+        cout << "Evaluation Commitments A" << E.fr.toString(evaluationCommitments["Simple.a"]) << endl;
+        cout << "Evaluation Commitments B" << E.fr.toString(evaluationCommitments["Simple.b"]) << endl;
+        cout << "Evaluation Commitments Q" << E.fr.toString(evaluationCommitments["Q"]) << endl;
+
 
         computeChallengeAlpha();
 
+        cout << "ALPHA " << E.fr.toString(challengeAlpha) << endl;
+
         computeR();
+
+        cout << "R0 " << E.fr.toString(polynomialsShPlonk["R0"]->fastEvaluate(challengeXiSeed)) << endl;
+        cout << "R1 " << E.fr.toString(polynomialsShPlonk["R1"]->fastEvaluate(challengeXiSeed)) << endl;
         
         computeW();
 
         LOG_TRACE("> Computing W multi exponentiation");
-        G1Point W;
         u_int64_t* lengthsW = new u_int64_t[1]{polynomialsShPlonk["W"]->getDegree() + 1};
-        E.g1.multiMulByScalar(W, PTau, (uint8_t *)polynomialsShPlonk["W"], sizeof(polynomialsShPlonk["W"][0]), polynomialsShPlonk["W"]->getDegree() + 1, 1, lengthsW);
+        G1Point W = multiExponentiation(PTau, polynomialsShPlonk["W"], 1, lengthsW);
         polynomialCommitments["W"] = W;
+
+        cout << "W " << E.g1.toString(polynomialCommitments["W"] ) << endl;
 
         computeChallengeY(W);
 
+        cout << "CHALLENGE Y " << E.fr.toString(challengeY) << endl;
+
         computeWp();
-        G1Point Wp;
         u_int64_t* lengthsWp = new u_int64_t[1]{polynomialsShPlonk["Wp"]->getDegree() + 1};
-        E.g1.multiMulByScalar(Wp, PTau, (uint8_t *)polynomialsShPlonk["Wp"], sizeof(polynomialsShPlonk["Wp"][0]), polynomialsShPlonk["Wp"]->getDegree() + 1, 1, lengthsWp);
+        G1Point Wp = multiExponentiation(PTau, polynomialsShPlonk["Wp"], 1, lengthsWp);
+
         polynomialCommitments["Wp"] = Wp;
+
+        cout << "Wp " << E.g1.toString(polynomialCommitments["Wp"] ) << endl;
 
         getMontgomeryBatchedInverse();
 
-        delete[] lengthsW;
-        delete[] lengthsWp;
+        cout << "inv " << E.fr.toString(evaluationCommitments["inv"]) << endl;
+
+        delete lengthsW;
+        delete lengthsWp;
     }
 
     AltBn128::G1Point ShPlonkProver::multiExponentiation(G1PointAffine *PTau, Polynomial<AltBn128::Engine> *polynomial, u_int32_t nx, u_int64_t x[])

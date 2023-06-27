@@ -478,6 +478,7 @@ namespace PilFflonk
 
         shPlonkProver->commit(4, PTau, true);
 
+        shPlonkProver->open(PTau, E.fr.set(1));
         // return this->prove();
     }
 
@@ -640,47 +641,47 @@ namespace PilFflonk
 
     void PilFflonkProver::stage0()
     {
-        // STEP 0.1 - Prepare constant polynomial evaluations
-        for (u_int32_t i = 0; i < fflonkInfo->nConstants; i++) {
-            string name = cnstPols->defArray[i].name;
-            if (cnstPols->defArray[i].idx >= 0) name += cnstPols.$$defArray[i].idx;
+        // // STEP 0.1 - Prepare constant polynomial evaluations
+        // for (u_int32_t i = 0; i < fflonkInfo->nConstants; i++) {
+        //     string name = cnstPols->defArray[i].name;
+        //     if (cnstPols->defArray[i].idx >= 0) name += cnstPols.$$defArray[i].idx;
 
-            cout << "··· Preparing '" << name << "' constant polynomial" << endl;
+        //     cout << "··· Preparing '" << name << "' constant polynomial" << endl;
 
-            // Prepare constant polynomial evaluations
-            const cnstPolBuffer = cnstPols.array[i];
-            for (u_int64_t j = 0; j < cnstPolBuffer.length; j++) {
-                ptr["const_n"][i + j * fflonkInfo.nConstants] = E.fr.set(cnstPolBuffer[j]);
-            }
-        }
+        //     // Prepare constant polynomial evaluations
+        //     const cnstPolBuffer = cnstPols.array[i];
+        //     for (u_int64_t j = 0; j < cnstPolBuffer.length; j++) {
+        //         ptr["const_n"][i + j * fflonkInfo.nConstants] = E.fr.set(cnstPolBuffer[j]);
+        //     }
+        // }
 
-        // STEP 0.2 - Prepare committed polynomial evaluations
-        for (u_int32_t i = 0; i < cmPols.nPols; i++) {
-            string name = cmPols.defArray[i].name;
-            if (cmPols.defArray[i].idx >= 0) name += cmPols.$$defArray[i].idx;
+        // // STEP 0.2 - Prepare committed polynomial evaluations
+        // for (u_int32_t i = 0; i < cmPols.nPols; i++) {
+        //     string name = cmPols.defArray[i].name;
+        //     if (cmPols.defArray[i].idx >= 0) name += cmPols.$$defArray[i].idx;
 
-            cout << "··· Preparing '" << name << "' polynomial" << endl;
+        //     cout << "··· Preparing '" << name << "' polynomial" << endl;
 
-            // Prepare committed polynomial evaluations
-            const cmPolBuffer = cmPols.array[i];
-            for (u_int64_t j = 0; j < cmPolBuffer.length; j++) {
-                ptr["cm1_n"][i + j * fflonkInfo.mapSectionsN.cm1_n] = E.fr.set(cmPolBuffer[j]);
-            }
-        }
+        //     // Prepare committed polynomial evaluations
+        //     const cmPolBuffer = cmPols.array[i];
+        //     for (u_int64_t j = 0; j < cmPolBuffer.length; j++) {
+        //         ptr["cm1_n"][i + j * fflonkInfo.mapSectionsN.cm1_n] = E.fr.set(cmPolBuffer[j]);
+        //     }
+        // }
 
-        // STEP 0.3 - Prepare public inputs
-        for (u_int32_t i = 0; i < fflonkInfo.publics.length; i++) {
-            const publicPol = fflonkInfo.publics[i];
+        // // STEP 0.3 - Prepare public inputs
+        // for (u_int32_t i = 0; i < fflonkInfo.publics.length; i++) {
+        //     const publicPol = fflonkInfo.publics[i];
 
-            if ("cmP" == publicPol.polType) {
-                u_int64_t offset = (fflonkInfo.publics[i].idx * fflonkInfo.mapSectionsN.cm1_n + fflonkInfo.publics[i].polId) * n8r;
-                ptr["publics"][i] = ptr["cm1_n"][offset];
-            } else if ("imP" == publicPol.polType) {
-                ptr["publics"][i] = calculateExpAtPoint(ctx, fflonkInfo.publicsCode[i], publicPol.idx);
-            } else {
-                throw  std::runtime_error("Invalid public input type");
-            }
-        }
+        //     if ("cmP" == publicPol.polType) {
+        //         u_int64_t offset = (fflonkInfo.publics[i].idx * fflonkInfo.mapSectionsN.cm1_n + fflonkInfo.publics[i].polId) * n8r;
+        //         ptr["publics"][i] = ptr["cm1_n"][offset];
+        //     } else if ("imP" == publicPol.polType) {
+        //         ptr["publics"][i] = calculateExpAtPoint(ctx, fflonkInfo.publicsCode[i], publicPol.idx);
+        //     } else {
+        //         throw  std::runtime_error("Invalid public input type");
+        //     }
+        // }
     }
 
     void PilFflonkProver::stage1()

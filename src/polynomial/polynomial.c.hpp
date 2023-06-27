@@ -688,17 +688,23 @@ template<typename Engine>
 Polynomial<Engine> *
 Polynomial<Engine>::computeLagrangePolynomial(u_int64_t i, FrElement xArr[], FrElement yArr[], u_int32_t length) {
     Engine &E = Engine::engine;
-    Polynomial<Engine> *polynomial = NULL;
+    Polynomial<Engine> *polynomial = new Polynomial<Engine>(E, length);
 
+    if(length == 1) {
+        polynomial->coef[0] = E.fr.one();
+        polynomial->fixDegree();
+    }
+
+    bool first = true;
     for (u_int64_t j = 0; j < length; j++) {
         if (j == i) continue;
 
-        if (NULL == polynomial) {
+        if (first) {
             polynomial = new Polynomial<Engine>(E, length);
             polynomial->coef[0] = E.fr.neg(xArr[j]);
             polynomial->coef[1] = E.fr.one();
             polynomial->fixDegree();
-
+            first = false;
         } else {
             polynomial->byXSubValue(xArr[j]);
         }
@@ -718,6 +724,12 @@ Polynomial<Engine> *Polynomial<Engine>::zerofierPolynomial(FrElement xArr[], u_i
     Engine &E = Engine::engine;
     Polynomial<Engine> *polynomial = new Polynomial<Engine>(E, length + 1);
 
+    if(length == 0) {
+        polynomial->coef[0] = E.fr.one();
+        polynomial->fixDegree();
+
+        return polynomial;
+    }
     // Build a zerofier polynomial with the following form:
     // zerofier(X) = (X-xArr[0])(X-xArr[1])...(X-xArr[n])
     E.fr.neg(polynomial->coef[0], xArr[0]);

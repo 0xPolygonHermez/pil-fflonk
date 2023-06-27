@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string.h>
+#include <vector>
 #include <binfile_utils.hpp>
 #include <nlohmann/json.hpp>
 #include "polynomial/polynomial.hpp"
@@ -37,11 +38,9 @@ namespace ShPlonk {
         FrElement challengeY;
 
         std::map<std::string, FrElement *> rootsMap;
-
+    public:
         std::map<std::string, AltBn128::FrElement> evaluationCommitments;
 
-        std::map <std::string, AltBn128::G1Point> nonConstantCommits;
-    public:
         std::map <std::string, AltBn128::G1Point> polynomialCommitments;
 
         std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsShPlonk;
