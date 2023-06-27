@@ -145,7 +145,7 @@ typename Engine::FrElement Polynomial<Engine>::getCoef(u_int64_t index) const {
 template<typename Engine>
 void Polynomial<Engine>::setCoef(u_int64_t index, FrElement value) {
     if (index > degree) {
-        throw std::runtime_error("Polynomial::getCoef: invalid index");
+        throw std::runtime_error("Polynomial::setCoef: invalid index");
     }
     coef[index] = value;
 }

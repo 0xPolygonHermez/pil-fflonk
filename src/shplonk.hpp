@@ -28,8 +28,6 @@ namespace ShPlonk {
         using G1PointAffine = typename AltBn128::G1PointAffine;
 
         PilFflonkZkey::PilFflonkZkey *zkeyPilFflonk;
-
-        std::string protocol;
         
         Keccak256Transcript *transcript;
 
@@ -40,17 +38,16 @@ namespace ShPlonk {
 
         std::map<std::string, FrElement *> rootsMap;
 
-        std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsShPlonk;
-
         std::map<std::string, AltBn128::FrElement> evaluationCommitments;
 
         std::map <std::string, AltBn128::G1Point> polynomialCommitments;
 
         std::map <std::string, AltBn128::G1Point> nonConstantCommits;
 
-
     public:
-        ShPlonkProver(AltBn128::Engine &_E, const std::string &protocol, BinFileUtils::BinFile *zkeyBinfile);
+        std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsShPlonk;
+
+        ShPlonkProver(AltBn128::Engine &_E, BinFileUtils::BinFile *zkeyBinfile);
         
         void commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp);
 

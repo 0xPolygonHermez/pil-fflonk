@@ -4,8 +4,7 @@
 
 namespace ShPlonk {
 
-    ShPlonkProver::ShPlonkProver(AltBn128::Engine &_E, const std::string &protocol, BinFileUtils::BinFile *zkeyBinfile) : E(_E) {
-        this->protocol = protocol;
+    ShPlonkProver::ShPlonkProver(AltBn128::Engine &_E, BinFileUtils::BinFile *zkeyBinfile) : E(_E) {
 
         transcript = new Keccak256Transcript(_E);
 
@@ -565,6 +564,8 @@ namespace ShPlonk {
 
     void ShPlonkProver::commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp) {
         
+        cout << "COMMITS" << endl;
+
         for (auto it = zkeyPilFflonk->f.begin(); it != zkeyPilFflonk->f.end(); ++it) {
             PilFflonkZkey::ShPlonkPol* pol = it->second;
 
@@ -572,6 +573,8 @@ namespace ShPlonk {
             for(u_int32_t i = 0; i < pol->nStages; ++i) {
                 stages[i] = pol->stages[i].stage;
             }
+
+            cout << "STAGES " << stages[0] << endl;
 
             if(find(stages, pol->nStages, stage) != -1) {
                 PilFflonkZkey::ShPlonkStage* stagePol = &pol->stages[stage];

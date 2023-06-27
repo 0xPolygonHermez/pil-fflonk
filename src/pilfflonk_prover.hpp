@@ -6,6 +6,7 @@
 #include <binfile_utils.hpp>
 #include <nlohmann/json.hpp>
 #include "zkey_pilfflonk.hpp"
+#include "shplonk.hpp"
 #include "polynomial/polynomial.hpp"
 #include "zkey.hpp"
 #include "snark_proof.hpp"
@@ -133,15 +134,15 @@ namespace PilFflonk {
 
         void removePrecomputedData();
 
-        void stage0();
+        // void stage0();
 
-        void stage1();
+        // void stage1();
 
-        void stage2();
+        // void stage2();
 
-        void stage3();
+        // void stage3();
 
-        void stage4();
+        // void stage4();
     };
 }
 
