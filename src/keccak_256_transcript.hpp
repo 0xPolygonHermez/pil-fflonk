@@ -4,11 +4,12 @@
 #include <any>
 #include <vector>
 #include <sstream>
+#include <alt_bn128.hpp>
 
-template<typename Engine>
+
 class Keccak256Transcript {
-    using FrElement = typename Engine::FrElement;
-    using G1Point = typename Engine::G1Point;
+    using FrElement = typename AltBn128::Engine::FrElement;
+    using G1Point = typename AltBn128::Engine::G1Point;
 
     enum ElementTypeEnum {
         FrType, G1Type
@@ -18,7 +19,7 @@ class Keccak256Transcript {
         std::any element;
     };
 
-    Engine &E;
+    AltBn128::Engine &E;
 
     int fieldElements;
     int groupElements;
@@ -30,7 +31,7 @@ class Keccak256Transcript {
     void hashToFr(FrElement &element, u_int8_t *data, int64_t size);
 
 public:
-    Keccak256Transcript(Engine &E);
+    Keccak256Transcript(AltBn128::Engine &E);
 
     void addScalar(FrElement value);
 
@@ -38,9 +39,7 @@ public:
 
     void reset();
 
-    typename Engine::FrElement getChallenge();
+    typename AltBn128::Engine::FrElement getChallenge();
 };
-
-#include "keccak_256_transcript.c.hpp"
 
 #endif

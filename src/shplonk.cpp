@@ -7,7 +7,7 @@ namespace ShPlonk {
     ShPlonkProver::ShPlonkProver(AltBn128::Engine &_E, const std::string &protocol, BinFileUtils::BinFile *zkeyBinfile) : E(_E) {
         this->protocol = protocol;
 
-        transcript = new Keccak256Transcript<AltBn128::Engine>(_E);
+        transcript = new Keccak256Transcript(_E);
 
         zkeyPilFflonk = PilFflonkZkey::loadPilFflonkZkey(zkeyBinfile);
     }

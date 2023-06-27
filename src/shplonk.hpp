@@ -31,7 +31,7 @@ namespace ShPlonk {
 
         std::string protocol;
         
-        Keccak256Transcript<AltBn128::Engine> *transcript;
+        Keccak256Transcript *transcript;
 
         FrElement challengeXiSeed;
         FrElement challengeXi;
