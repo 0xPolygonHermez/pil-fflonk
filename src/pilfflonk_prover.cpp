@@ -72,6 +72,8 @@ namespace PilFflonk
         // delete evaluations["Sigma2"];
         // delete evaluations["Sigma3"];
         // delete evaluations["lagrange"];
+
+        delete shPlonkProver;
     }
 
     void PilFflonkProver::setZkey(BinFileUtils::BinFile *fdZkey, BinFileUtils::BinFile *fdCnstPols) {
@@ -83,6 +85,10 @@ namespace PilFflonk
             if(NULL != zkey) {
                 removePrecomputedData();
             }
+
+            cout << "> Creating shPlonk prover" << endl;
+
+            shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, fdZkey);
 
             cout << "> Reading zkey file" << endl;
 
@@ -455,31 +461,29 @@ namespace PilFflonk
 
         cmtdPols = loadPolynomialsFromBinFile(fdCmtdPols);
 
-        auto shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, fdZkey);
+        // shPlonkProver->polynomialsShPlonk["Simple.a"] = new Polynomial<AltBn128::Engine>(E, 11);
+        // shPlonkProver->polynomialsShPlonk["Simple.b"] = new Polynomial<AltBn128::Engine>(E, 11);
+        // shPlonkProver->polynomialsShPlonk["Q"] = new Polynomial<AltBn128::Engine>(E, 17);
 
-        shPlonkProver->polynomialsShPlonk["Simple.a"] = new Polynomial<AltBn128::Engine>(E, 11);
-        shPlonkProver->polynomialsShPlonk["Simple.b"] = new Polynomial<AltBn128::Engine>(E, 11);
-        shPlonkProver->polynomialsShPlonk["Q"] = new Polynomial<AltBn128::Engine>(E, 17);
+        // for (u_int64_t i = 0; i < 11; i++) {
+        //     shPlonkProver->polynomialsShPlonk["Simple.a"]->coef[i] = E.fr.set(i);
+        //     shPlonkProver->polynomialsShPlonk["Simple.b"]->coef[i] = E.fr.set(i);
+        // }
 
-        for (u_int64_t i = 0; i < 11; i++) {
-            shPlonkProver->polynomialsShPlonk["Simple.a"]->coef[i] = E.fr.set(i);
-            shPlonkProver->polynomialsShPlonk["Simple.b"]->coef[i] = E.fr.set(i);
-        }
+        // for (u_int64_t i = 0; i < 17; i++) {
+        //     shPlonkProver->polynomialsShPlonk["Q"]->coef[i] = E.fr.set(i);
+        // }
 
-        for (u_int64_t i = 0; i < 17; i++) {
-            shPlonkProver->polynomialsShPlonk["Q"]->coef[i] = E.fr.set(i);
-        }
-
-        shPlonkProver->polynomialsShPlonk["Simple.a"]->fixDegree();
-        shPlonkProver->polynomialsShPlonk["Simple.b"]->fixDegree();
-        shPlonkProver->polynomialsShPlonk["Q"]->fixDegree();
+        // shPlonkProver->polynomialsShPlonk["Simple.a"]->fixDegree();
+        // shPlonkProver->polynomialsShPlonk["Simple.b"]->fixDegree();
+        // shPlonkProver->polynomialsShPlonk["Q"]->fixDegree();
         
-        shPlonkProver->commit(1, PTau, true);
+        // shPlonkProver->commit(1, PTau, true);
 
-        shPlonkProver->commit(4, PTau, true);
+        // shPlonkProver->commit(4, PTau, true);
 
-        shPlonkProver->open(PTau, E.fr.set(1));
-        // return this->prove();
+        // shPlonkProver->open(PTau, E.fr.set(1));
+        return this->prove(fdCmtdPols);
     }
 
     /*std::tuple<json, json>*/ void PilFflonkProver::prove(BinFileUtils::BinFile* fdCmtdPols)
@@ -544,19 +548,19 @@ namespace PilFflonk
 
             // STAGE 1. Compute Trace Column Polynomials
             cout << "> STAGE 1. Compute Trace Column Polynomials" << endl;
-            // stage1();
+            stage1();
 
             // STAGE 2. Compute Inclusion Polynomials
             cout << "> STAGE 2. Compute Inclusion Polynomials" << endl;
-            // stage2();
+            stage2();
 
             // STAGE 3. Compute Grand Product and Intermediate Polynomials
             cout << "> STAGE 3. Compute Grand Product and Intermediate Polynomials" << endl;
-            // stage3();
+            stage3();
 
             // STAGE 4. Trace Quotient Polynomials
             cout << "> STAGE 4. Compute Trace Quotient Polynomials" << endl;
-            // stage4();
+            stage4();
 
             // const [cmts, evaluations, xiSeed] = await open(zkey, PTau, ctx, committedPols, curve, { logger, fflonkPreviousChallenge: ctx.challenges[4], nonCommittedPols: ["Q"] });
 
@@ -641,47 +645,49 @@ namespace PilFflonk
 
     void PilFflonkProver::stage0()
     {
-        // // STEP 0.1 - Prepare constant polynomial evaluations
-        // for (u_int32_t i = 0; i < fflonkInfo->nConstants; i++) {
-        //     string name = cnstPols->defArray[i].name;
-        //     if (cnstPols->defArray[i].idx >= 0) name += cnstPols.$$defArray[i].idx;
+        // STEP 0.1 - Prepare constant polynomial evaluations
+        for (u_int32_t i = 0; i < fflonkInfo->nConstants; i++)
+        {
+            cout << "··· Preparing '" << cnstPols->names[i] << "' constant polynomial" << endl;
 
-        //     cout << "··· Preparing '" << name << "' constant polynomial" << endl;
+            // Prepare constant polynomial evaluations
+            for (u_int64_t j = 0; j < cnstPols->n; j++)
+            {
+                ptr["const_n"][i + j * fflonkInfo->nConstants] = cnstPols->buffer[i + j * fflonkInfo->nConstants];
+            }
+        }
 
-        //     // Prepare constant polynomial evaluations
-        //     const cnstPolBuffer = cnstPols.array[i];
-        //     for (u_int64_t j = 0; j < cnstPolBuffer.length; j++) {
-        //         ptr["const_n"][i + j * fflonkInfo.nConstants] = E.fr.set(cnstPolBuffer[j]);
-        //     }
-        // }
+        // STEP 0.2 - Prepare committed polynomial evaluations
+        for (u_int32_t i = 0; i < cmtdPols->nPols; i++) {
+             cout << "··· Preparing '" << cmtdPols->names[i] << "' polynomial" << endl;
 
-        // // STEP 0.2 - Prepare committed polynomial evaluations
-        // for (u_int32_t i = 0; i < cmPols.nPols; i++) {
-        //     string name = cmPols.defArray[i].name;
-        //     if (cmPols.defArray[i].idx >= 0) name += cmPols.$$defArray[i].idx;
+             // Prepare committed polynomial evaluations
+             for (u_int64_t j = 0; j < cmtdPols->n; j++)
+             {
+                ptr["cm1_n"][i + j * fflonkInfo->mapSectionsN.section[cm1_n]] = cmtdPols->buffer[i + j * fflonkInfo->mapSectionsN.section[cm1_n]];
+                cout << E.fr.toString(ptr["cm1_n"][i + j * fflonkInfo->mapSectionsN.section[cm1_n]]) << endl;
+             }
+        }
 
-        //     cout << "··· Preparing '" << name << "' polynomial" << endl;
+        // STEP 0.3 - Prepare public inputs
+        for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
+        {
+            //  const publicPol = fflonkInfo.publics[i];
 
-        //     // Prepare committed polynomial evaluations
-        //     const cmPolBuffer = cmPols.array[i];
-        //     for (u_int64_t j = 0; j < cmPolBuffer.length; j++) {
-        //         ptr["cm1_n"][i + j * fflonkInfo.mapSectionsN.cm1_n] = E.fr.set(cmPolBuffer[j]);
-        //     }
-        // }
-
-        // // STEP 0.3 - Prepare public inputs
-        // for (u_int32_t i = 0; i < fflonkInfo.publics.length; i++) {
-        //     const publicPol = fflonkInfo.publics[i];
-
-        //     if ("cmP" == publicPol.polType) {
-        //         u_int64_t offset = (fflonkInfo.publics[i].idx * fflonkInfo.mapSectionsN.cm1_n + fflonkInfo.publics[i].polId) * n8r;
-        //         ptr["publics"][i] = ptr["cm1_n"][offset];
-        //     } else if ("imP" == publicPol.polType) {
-        //         ptr["publics"][i] = calculateExpAtPoint(ctx, fflonkInfo.publicsCode[i], publicPol.idx);
-        //     } else {
-        //         throw  std::runtime_error("Invalid public input type");
-        //     }
-        // }
+            //  if ("cmP" == publicPol.polType)
+            //  {
+            //     u_int64_t offset = (fflonkInfo.publics[i].idx * fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo.publics[i].polId) * n8r;
+            //     ptr["publics"][i] = ptr["cm1_n"][offset];
+            //  }
+            //  else if ("imP" == publicPol.polType)
+            //  {
+            //     ptr["publics"][i] = calculateExpAtPoint(ctx, fflonkInfo.publicsCode[i], publicPol.idx);
+            //  }
+            //  else
+            //  {
+            //     throw std::runtime_error("Invalid public input type");
+            //  }
+        }
     }
 
     void PilFflonkProver::stage1()
@@ -705,12 +711,12 @@ namespace PilFflonk
     //     // STEP 1.4 - Commit stage 1 polynomials
     //     auto commitsStage1 = commit(1, zkey, ctx, PTau, curve, { multiExp: true });
     //     commitsStage1.forEach((com) => committedPols[`${com.index}`] = { commit: com.commit, pol: com.pol });
-    // }
+    }
 
-    // void PilFflonkProver::stage2()
-    // {
-    //     // STEP 2.1 - Compute random challenges
-    //     cout << "> Computing challenges alpha and beta" << endl;
+    void PilFflonkProver::stage2()
+    {
+        // STEP 2.1 - Compute random challenges
+        cout << "> Computing challenges alpha and beta" << endl;
 
     //     // auto cnstCommitPols = Object.keys(zkey).filter(k => k.match(/^f\d/));
     //     // for (let i = 0; i < cnstCommitPols.length; ++i) {
@@ -878,8 +884,6 @@ namespace PilFflonk
         fd->endReadSection();
 
         // Read section 3 -> polynomials data
-        fd->startReadSection(3);
-
         auto lenSection = fd->getSectionSize(3);
         auto lenArray =  (u_int64_t)(lenSection / sizeof(FrElement));
         if(lenSection != lenArray * sizeof(FrElement))
@@ -887,12 +891,28 @@ namespace PilFflonk
             throw std::runtime_error("Invalid section size");
         }
 
+        polsData->n = lenArray;
         polsData->buffer = new FrElement[lenArray];
 
-        int nThreads = omp_get_max_threads() / 2;
-
+        int nThreads = max(omp_get_max_threads() / 2, 128 * 128);
 
         ThreadUtils::parcpy(polsData->buffer, (FrElement *)fd->getSectionData(3), lenSection, nThreads);
-        fd->endReadSection();
+
+        u_int8_t* data = (uint8_t *)&polsData->buffer[0];
+        // for(int i =0;i< lenSection;i++) {
+        //     cout << 
+        // }
+        // u_int64_t bytes = 0;
+        // u_int8_t data2[32];
+
+
+        // for(u_int64_t i = 0; i < lenArray; i++)
+        // {
+        //     FrElement element = std::any_cast<FrElement>(polsData->buffer[i]);
+        //     bytes += E.fr.toRprBE(element, data2/* + bytes*/, E.fr.bytes());
+        //     int a = 3;
+        // }
+
+        return polsData;
     }
 }

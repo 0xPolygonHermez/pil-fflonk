@@ -90,10 +90,10 @@ int main(int argc, char **argv)
     auto zkey = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
 
     cout << "> Opening constant polynomials file" << endl;
-    auto cnstPols = BinFileUtils::openExisting(zkeyFilename, "pols", 1);
+    auto cnstPols = BinFileUtils::openExisting(cnstFilename, "pols", 1);
 
     cout << "> Opening committed polynomial file" << endl;
-    auto cmtdPols = BinFileUtils::openExisting(zkeyFilename, "pols", 1);
+    auto cmtdPols = BinFileUtils::openExisting(cmtdFilename, "pols", 1);
 
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
 

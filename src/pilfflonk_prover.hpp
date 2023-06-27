@@ -22,8 +22,9 @@ using namespace std;
 
 namespace PilFflonk {
     struct BinFilePolsData{
-        u_int32_t nPols;
-        string* names;
+        u_int64_t  n;
+        u_int32_t  nPols;
+        string*    names;
         AltBn128::FrElement* buffer;
     };
 
@@ -60,6 +61,9 @@ namespace PilFflonk {
 
         BinFilePolsData* cnstPols;
         BinFilePolsData* cmtdPols;
+
+        ShPlonk::ShPlonkProver* shPlonkProver;
+
         // void *pConstPolsAddress;
         // void *pConstPolsAddress2ns;
         // ConstantPolsFflonk *pConstPols;
