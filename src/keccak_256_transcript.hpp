@@ -39,6 +39,8 @@ public:
 
     void reset();
 
+    int nElements() { return elements.size(); }
+
     typename AltBn128::Engine::FrElement getChallenge();
 };
 

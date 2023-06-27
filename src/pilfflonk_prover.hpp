@@ -49,7 +49,7 @@ namespace PilFflonk {
 
         std::map<std::string, FrElement> challenges;
 
-        // FflonkInfo fflonkInfo;
+        FflonkInfo* fflonkInfo;
 
         // void *pConstPolsAddress;
         // void *pConstPolsAddress2ns;
@@ -105,8 +105,6 @@ namespace PilFflonk {
         // // This is the length of the buffer that must be zeroed after each proof (starting from buffers["A"] pointer)
         // u_int64_t buffersLength;
 
-        std::map<std::string, FrElement *> ptr;
-
         // std::map<std::string, u_int32_t *> mapBuffers;
         // std::map<std::string, FrElement *> buffers;
         // std::map<std::string, Polynomial<Engine> *> polynomials;
@@ -135,10 +133,6 @@ namespace PilFflonk {
 
         void removePrecomputedData();
 
-        // void calculateAdditions();
-
-        // FrElement getWitness(u_int64_t idx);
-
         void stage0();
 
         void stage1();
@@ -148,56 +142,6 @@ namespace PilFflonk {
         void stage3();
 
         void stage4();
-
-        // //ROUND 1 functions
-        // void computeWirePolynomials();
-
-        // void computeWirePolynomial(std::string polName, FrElement blindingFactors[]);
-
-        // void computeT0();
-
-        // void computeC1();
-
-        // //ROUND 2 functions
-        // void computeZ();
-
-        // void computeT1();
-
-        // void computeT2();
-
-        // void computeC2();
-
-        // //ROUND 4 functions
-        // void computeR0();
-
-        // void computeR1();
-
-        // void computeR2();
-
-        // void computeF();
-
-        // void computeZT();
-
-        // //ROUND 5 functions
-        // void computeL();
-
-        // void computeZTS2();
-
-        // void batchInverse(FrElement *elements, u_int64_t length);
-
-        // FrElement *polynomialFromMontgomery(Polynomial<Engine> *polynomial);
-
-        // FrElement getMontgomeryBatchedInverse();
-
-        // void computeLiS0();
-
-        // void computeLiS1();
-
-        // void computeLiS2();
-
-        // G1Point multiExponentiation(Polynomial<Engine> *polynomial);
-
-        // G1Point multiExponentiation(Polynomial<Engine> *polynomial, u_int32_t nx, u_int64_t x[]);
     };
 }
 
