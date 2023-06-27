@@ -132,39 +132,92 @@ void FflonkInfo::load(json j)
         evMap.push_back(map);
     }
 
+    for (uint64_t i = 0; i < j["publics"].size(); i++) 
+    {
+        Publics pub;
+        pub.polType = j["publics"][i]["polType"];
+        pub.polId = j["publics"][i]["polId"];
+        pub.idx = j["publics"][i]["idx"];
+        pub.id = j["publics"][i]["id"];
+        pub.name = j["publics"][i]["name"];
+        publics.push_back(pub);
+    }
+
+    for(uint64_t i = 0; i < j["publicsCode"].size(); i++) {
+            Step publicsCodeStep;
+            publicsCodeStep.tmpUsed = j["publicsCode"][i]["tmpUsed"];
+        for (uint64_t l = 0; l < j["publicsCode"][i]["first"].size(); l++)
+        {
+            StepOperation op;
+            op.setOperation(j["publicsCode"][i]["first"][l]["op"]);           // Mandatory field
+            op.dest.setType(j["publicsCode"][i]["first"][l]["dest"]["type"]); // Mandatory field
+            op.dest.id = j["publicsCode"][i]["first"][l]["dest"]["id"];       // Mandatory field
+            if (j["publicsCode"][i]["first"][l]["dest"].contains("prime"))
+                op.dest.prime = j["publicsCode"][i]["first"][l]["dest"]["prime"];
+            else
+                op.dest.prime = false;
+            if (j["publicsCode"][i]["first"][l]["dest"].contains("p"))
+                op.dest.p = j["publicsCode"][i]["first"][l]["dest"]["p"];
+            else
+                op.dest.p = 0;
+            for (uint64_t k = 0; k < j["publicsCode"][i]["first"][l]["src"].size(); k++)
+            {
+                StepType ty;
+                ty.setType(j["publicsCode"][i]["first"][l]["src"][k]["type"]); // Mandatory field
+                if (j["publicsCode"][i]["first"][l]["src"][k].contains("id"))
+                    ty.id = j["publicsCode"][i]["first"][l]["src"][k]["id"];
+                else
+                    ty.id = 0; // Mandatory field
+                if (j["publicsCode"][i]["first"][l]["src"][k].contains("prime"))
+                    ty.prime = j["publicsCode"][i]["first"][l]["src"][k]["prime"];
+                else
+                    ty.prime = false;
+                if (j["publicsCode"][i]["first"][l]["src"][k].contains("p"))
+                    ty.p = j["publicsCode"][i]["first"][l]["src"][k]["p"];
+                else
+                    ty.p = 0;
+                if (j["publicsCode"][i]["first"][l]["src"][k].contains("value"))
+                    ty.value = j["publicsCode"][i]["first"][l]["src"][k]["value"];
+                op.src.push_back(ty);
+            }
+            publicsCodeStep.first.push_back(op);
+            publicsCode.push_back(publicsCodeStep);
+        }
+    }
+
     step2prev.tmpUsed = j["step2prev"]["tmpUsed"];
-    for (uint64_t i = 0; i < j["step2prev"]["first"].size(); i++)
+    for (uint64_t i = 0; i < j["publicsCode"][i]["first"].size(); i++)
     {
         StepOperation op;
-        op.setOperation(j["step2prev"]["first"][i]["op"]);           // Mandatory field
-        op.dest.setType(j["step2prev"]["first"][i]["dest"]["type"]); // Mandatory field
-        op.dest.id = j["step2prev"]["first"][i]["dest"]["id"];       // Mandatory field
-        if (j["step2prev"]["first"][i]["dest"].contains("prime"))
-            op.dest.prime = j["step2prev"]["first"][i]["dest"]["prime"];
+        op.setOperation(j["publicsCode"][i]["first"][i]["op"]);           // Mandatory field
+        op.dest.setType(j["publicsCode"][i]["first"][i]["dest"]["type"]); // Mandatory field
+        op.dest.id = j["publicsCode"][i]["first"][i]["dest"]["id"];       // Mandatory field
+        if (j["publicsCode"][i]["first"][i]["dest"].contains("prime"))
+            op.dest.prime = j["publicsCode"][i]["first"][i]["dest"]["prime"];
         else
             op.dest.prime = false;
-        if (j["step2prev"]["first"][i]["dest"].contains("p"))
-            op.dest.p = j["step2prev"]["first"][i]["dest"]["p"];
+        if (j["publicsCode"][i]["first"][i]["dest"].contains("p"))
+            op.dest.p = j["publicsCode"][i]["first"][i]["dest"]["p"];
         else
             op.dest.p = 0;
-        for (uint64_t k = 0; k < j["step2prev"]["first"][i]["src"].size(); k++)
+        for (uint64_t k = 0; k < j["publicsCode"][i]["first"][i]["src"].size(); k++)
         {
             StepType ty;
-            ty.setType(j["step2prev"]["first"][i]["src"][k]["type"]); // Mandatory field
-            if (j["step2prev"]["first"][i]["src"][k].contains("id"))
-                ty.id = j["step2prev"]["first"][i]["src"][k]["id"];
+            ty.setType(j["publicsCode"][i]["first"][i]["src"][k]["type"]); // Mandatory field
+            if (j["publicsCode"][i]["first"][i]["src"][k].contains("id"))
+                ty.id = j["publicsCode"][i]["first"][i]["src"][k]["id"];
             else
                 ty.id = 0; // Mandatory field
-            if (j["step2prev"]["first"][i]["src"][k].contains("prime"))
-                ty.prime = j["step2prev"]["first"][i]["src"][k]["prime"];
+            if (j["publicsCode"][i]["first"][i]["src"][k].contains("prime"))
+                ty.prime = j["publicsCode"][i]["first"][i]["src"][k]["prime"];
             else
                 ty.prime = false;
-            if (j["step2prev"]["first"][i]["src"][k].contains("p"))
-                ty.p = j["step2prev"]["first"][i]["src"][k]["p"];
+            if (j["publicsCode"][i]["first"][i]["src"][k].contains("p"))
+                ty.p = j["publicsCode"][i]["first"][i]["src"][k]["p"];
             else
                 ty.p = 0;
-            if (j["step2prev"]["first"][i]["src"][k].contains("value"))
-                ty.value = j["step2prev"]["first"][i]["src"][k]["value"];
+            if (j["publicsCode"][i]["first"][i]["src"][k].contains("value"))
+                ty.value = j["publicsCode"][i]["first"][i]["src"][k]["value"];
             op.src.push_back(ty);
         }
         step2prev.first.push_back(op);

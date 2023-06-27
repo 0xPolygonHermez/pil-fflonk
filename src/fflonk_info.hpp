@@ -3,6 +3,7 @@
 
 #include <nlohmann/json.hpp>
 #include <vector>
+#include <string>
 #include "polynomial.hpp"
 #include "zkassert.hpp"
 #include "zklog.hpp"
@@ -78,6 +79,16 @@ public:
     uint64_t numId;
     uint64_t denId;
     uint64_t c2Id;
+};
+
+class Publics
+{
+public:
+    std::string polType;
+    uint64_t polId;
+    uint64_t idx;
+    uint64_t id;
+    std::string name; 
 };
 
 class PuCtx
@@ -240,6 +251,8 @@ public:
     std::vector<PuCtx> puCtx;
     std::vector<CiCtx> ciCtx;
     std::vector<EvMap> evMap;
+    std::vector<Step> publicsCode;
+    std::vector<Publics> publics;
     Step step2prev;
     Step step3prev;
     Step step3;
