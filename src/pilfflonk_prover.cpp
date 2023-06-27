@@ -473,7 +473,7 @@ namespace PilFflonk
         
         shPlonkProver->commit(1, PTau, true);
 
-        return this->prove();
+        return this->prove(cmtdPols);
     }
 
     /*std::tuple<json, json>*/ void PilFflonkProver::prove(AltBn128::FrElement* cmtdPols)
