@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/pfProver",
-            "args": ["tmp/fflonk_simple2.zkey","tmp/pols.cnst","tmp/pols.cmtd"],
+            "args": ["tmp/fflonk_simple2.zkey", "tmp/simple2.fflonkinfo.json", "tmp/fflonk_simple2.zkey","tmp/fflonk_simple2.zkey"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

@@ -564,8 +564,6 @@ namespace ShPlonk {
 
     void ShPlonkProver::commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp) {
         
-        cout << "COMMITS" << endl;
-
         for (auto it = zkeyPilFflonk->f.begin(); it != zkeyPilFflonk->f.end(); ++it) {
             PilFflonkZkey::ShPlonkPol* pol = it->second;
 
@@ -573,11 +571,11 @@ namespace ShPlonk {
             for(u_int32_t i = 0; i < pol->nStages; ++i) {
                 stages[i] = pol->stages[i].stage;
             }
+ 
+            int stagePos = find(stages, pol->nStages, stage);
 
-            cout << "STAGES " << stages[0] << endl;
-
-            if(find(stages, pol->nStages, stage) != -1) {
-                PilFflonkZkey::ShPlonkStage* stagePol = &pol->stages[stage];
+            if(stagePos != -1) {
+                PilFflonkZkey::ShPlonkStage* stagePol = &pol->stages[stagePos];
                 
                 u_int64_t* lengths = new u_int64_t[pol->nPols]{};
 
@@ -585,7 +583,7 @@ namespace ShPlonk {
                 for(u_int32_t j = 0; j < stagePol->nPols; ++j) {
                     std::string name = stagePol->pols[j].name;
                     int index = find(pol->pols, pol->nPols, name);
-                    if (index != -1) {
+                    if (index == -1) {
                             throw std::runtime_error("Polynomial " + std::string(name) + " missing");
                     }
                     
@@ -610,17 +608,16 @@ namespace ShPlonk {
                 polynomialsShPlonk[index] = cPol;
 
                 if(multiExp) {
-                    G1Point Fi;
-                    E.g1.multiMulByScalar(Fi, PTau, (uint8_t *)cPol, sizeof(cPol[0]), fi->getDegree() + 1, pol->nPols, lengths);
+                    G1Point Fi = multiExponentiation(PTau, cPol, pol->nPols, lengths);
+                    cout << E.g1.toString(Fi) << endl;
                     polynomialCommitments[index] = Fi;
                 }
 
-                delete[] lengths;
-                delete[] fi;
-
+                delete lengths;
+                delete fi;
             }
 
-            delete[] stages;
+            delete stages;
         }
     }
 
@@ -667,10 +664,38 @@ namespace ShPlonk {
         delete[] lengthsWp;
     }
 
+    AltBn128::G1Point ShPlonkProver::multiExponentiation(G1PointAffine *PTau, Polynomial<AltBn128::Engine> *polynomial, u_int32_t nx, u_int64_t x[])
+    {
+       
+        G1Point value;
+        FrElement *pol = this->polynomialFromMontgomery(polynomial);
+        E.g1.multiMulByScalar(value, PTau, (uint8_t *)pol, sizeof(pol[0]), polynomial->getDegree() + 1, nx, x);
+
+        return value;
+    }
+
+        AltBn128::FrElement *ShPlonkProver::polynomialFromMontgomery(Polynomial<AltBn128::Engine> *polynomial)
+    {
+        const u_int64_t length = polynomial->getLength();
+
+        FrElement *result = new FrElement[length];
+        int nThreads = omp_get_max_threads() / 2;
+        ThreadUtils::parset(result, 0, length * sizeof(FrElement), nThreads);
+
+#pragma omp parallel for
+        for (u_int32_t index = 0; index < length; ++index)
+        {
+            E.fr.fromMontgomery(result[index], polynomial->coef[index]);
+        }
+
+        return result;
+    }
+
+
     int ShPlonkProver::find(std::string* arr, u_int32_t n, std::string x) {
-        for(int i = 0; i < int(n); ++i) {
+        for(u_int32_t i = 0; i < n; ++i) {
             if(arr[i] == x) {
-                return true;
+                return int(i);
             }
         }
 
@@ -678,9 +703,9 @@ namespace ShPlonk {
     }
 
     int ShPlonkProver::find(u_int32_t* arr, u_int32_t n, u_int32_t x) {
-        for(int i = 0; i < int(n); ++i) {
+        for(u_int32_t i = 0; i < n; ++i) {
             if(arr[i] == x) {
-                return i;
+                return int(i);
             }
         }
 

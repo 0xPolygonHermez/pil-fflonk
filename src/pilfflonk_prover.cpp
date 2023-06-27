@@ -452,28 +452,28 @@ namespace PilFflonk
 
         auto shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, fdZkey);
 
-        AltBn128::FrElement* A = new FrElement[12];
-        AltBn128::FrElement* B = new FrElement[12];
-        for(int i = 0; i < 12; i++) {
-            cout << i << endl;
-            A[i] = AltBn128::Engine::engine.fr.set(i);
-            B[i] = AltBn128::Engine::engine.fr.set(i);
+        shPlonkProver->polynomialsShPlonk["Simple.a"] = new Polynomial<AltBn128::Engine>(E, 11);
+        shPlonkProver->polynomialsShPlonk["Simple.b"] = new Polynomial<AltBn128::Engine>(E, 11);
+        shPlonkProver->polynomialsShPlonk["Q"] = new Polynomial<AltBn128::Engine>(E, 17);
+
+        for (u_int64_t i = 0; i < 11; i++) {
+            shPlonkProver->polynomialsShPlonk["Simple.a"]->coef[i] = E.fr.set(i);
+            shPlonkProver->polynomialsShPlonk["Simple.b"]->coef[i] = E.fr.set(i);
         }
 
-        AltBn128::FrElement* Q = new FrElement[16];
-
-        for(int i = 0; i < 12; i++) {
-            cout << i << endl;
-            Q[i] = AltBn128::Engine::engine.fr.set(i);
+        for (u_int64_t i = 0; i < 17; i++) {
+            shPlonkProver->polynomialsShPlonk["Q"]->coef[i] = E.fr.set(i);
         }
 
-        shPlonkProver->polynomialsShPlonk["Simple.a"] = new Polynomial<AltBn128::Engine>(E, A, 12);
-        shPlonkProver->polynomialsShPlonk["Simple.b"] = new Polynomial<AltBn128::Engine>(E, B, 12);
-        shPlonkProver->polynomialsShPlonk["Q"] = new Polynomial<AltBn128::Engine>(E, Q, 16);
+        shPlonkProver->polynomialsShPlonk["Simple.a"]->fixDegree();
+        shPlonkProver->polynomialsShPlonk["Simple.b"]->fixDegree();
+        shPlonkProver->polynomialsShPlonk["Q"]->fixDegree();
         
         shPlonkProver->commit(1, PTau, true);
 
-        return this->prove(cmtdPols);
+        shPlonkProver->commit(4, PTau, true);
+
+        // return this->prove();
     }
 
     /*std::tuple<json, json>*/ void PilFflonkProver::prove(AltBn128::FrElement* cmtdPols)

@@ -87,6 +87,10 @@ namespace ShPlonk {
         int find(std::string* arr, u_int32_t n, std::string x);
         int find(u_int32_t* arr, u_int32_t n, u_int32_t x);
 
+        AltBn128::G1Point multiExponentiation(G1PointAffine *PTau, Polynomial<AltBn128::Engine> *polynomial, u_int32_t nx, u_int64_t x[]);
+        
+        FrElement *polynomialFromMontgomery(Polynomial<AltBn128::Engine> *polynomial);
+
     };
 }
 
