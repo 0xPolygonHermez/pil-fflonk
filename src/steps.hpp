@@ -19,21 +19,21 @@ struct StepsParams
 class Steps
 {
 public:
-    virtual void step2prev_first(StepsParams &params, uint64_t i) = 0;
-    virtual void step2prev_i(StepsParams &params, uint64_t i) = 0;
-    virtual void step2prev_last(StepsParams &params, uint64_t i) = 0;
+    virtual void step2prev_first(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
+    virtual void step2prev_i(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
+    virtual void step2prev_last(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
 
-    virtual void step3prev_first(StepsParams &params, uint64_t i) = 0;
-    virtual void step3prev_i(StepsParams &params, uint64_t i) = 0;
-    virtual void step3prev_last(StepsParams &params, uint64_t i) = 0;
+    virtual void step3prev_first(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
+    virtual void step3prev_i(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
+    virtual void step3prev_last(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
 
-    virtual void step3_first(StepsParams &params, uint64_t i) = 0;
-    virtual void step3_i(StepsParams &params, uint64_t i) = 0;
-    virtual void step3_last(StepsParams &params, uint64_t i) = 0;
+    virtual void step3_first(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
+    virtual void step3_i(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
+    virtual void step3_last(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
 
-    virtual void step42ns_first(StepsParams &params, uint64_t i) = 0;
-    virtual void step42ns_i(StepsParams &params, uint64_t i) = 0;
-    virtual void step42ns_last(StepsParams &params, uint64_t i) = 0;
+    virtual void step42ns_first(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
+    virtual void step42ns_i(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
+    virtual void step42ns_last(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
 };
 
 #endif // STEPS

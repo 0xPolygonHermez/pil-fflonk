@@ -416,6 +416,12 @@ namespace PilFflonk
         //     committedPols[`${cnstCommitPols[i]}`].commit = zkey[cnstCommitPols[i]];
         // }
 
+        for(auto const&[key, commit] : zkey->committedConstants) {
+            G1Point C;
+            E.g1.copy(C, *((G1PointAffine *)commit));
+            transcript->addPolCommitment(C);
+        }
+
         // Add all the publics to the transcript
         for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
         {
@@ -442,7 +448,7 @@ namespace PilFflonk
             #pragma omp parallel for
             for (uint64_t i = 0; i < N * factorZK; i++)
             {
-                steps->step2prev_first(params, i);
+                steps->step2prev_first(E, params, i);
             }
 
             auto nCm2 = fflonkInfo->mapSectionsN.section[cm2_n];
@@ -492,7 +498,7 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < N; i++)
         {
-            steps->step3prev_first(params, i);
+            steps->step3prev_first(E, params, i);
         }
 
         auto nCm3 = fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->mapSectionsN.section[cm2_n];
@@ -528,7 +534,7 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < N * factorZK; i++)
         {
-            steps->step3_first(params, i);
+            steps->step3_first(E, params, i);
         }
 
         extend(3, ctx, zkey, ptr["cm3_n"], ptr["cm3_2ns"], ptr["cm3_coefs"], nBits, nBitsExtZK, fflonkInfo->mapSectionsN.section[cm3_n], factorZK);
@@ -551,7 +557,7 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < NExt * factorZK; i++)
         {
-            steps->step42ns_first(params, i);
+            steps->step42ns_first(E, params, i);
         }
 
         shPlonkProver->polynomialsShPlonk["Q"] = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptr["q_2ns"], fflonkInfo->qDim * NExt * factorZK);

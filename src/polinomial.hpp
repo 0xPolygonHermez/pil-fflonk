@@ -145,15 +145,18 @@ public:
 
     // static void calculateH1H2(Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol)
     // {
-    //     map<std::vector<Goldilocks::Element>, uint64_t, CompareFe> idx_t;
-    //     multimap<std::vector<Goldilocks::Element>, uint64_t, CompareFe> s;
-    //     multimap<std::vector<Goldilocks::Element>, uint64_t>::iterator it;
+    //     //TODO
+    //     // map<std::vector<AltBn128::FrElement, CompareFe >, uint64_t> idx_t;
+
+    //     map<std::vector<AltBn128::FrElement>, uint64_t> idx_t;
+    //     map<std::vector<AltBn128::FrElement>, uint64_t> s;
+    //     map<std::vector<AltBn128::FrElement>, uint64_t>::iterator it;
     //     uint64_t i = 0;
 
     //     for (uint64_t i = 0; i < tPol.degree(); i++)
     //     {
-    //         vector<Goldilocks::Element> key = tPol.toVector(i);
-    //         std::pair<vector<Goldilocks::Element>, uint64_t> pr(key, i);
+    //         vector<AltBn128::FrElement> key = tPol.toVector(i);
+    //         std::pair<vector<AltBn128::FrElement>, uint64_t> pr(key, i);
 
     //         auto const result = idx_t.insert(pr);
     //         if (not result.second)
@@ -166,19 +169,19 @@ public:
 
     //     for (uint64_t i = 0; i < fPol.degree(); i++)
     //     {
-    //         vector<Goldilocks::Element> key = fPol.toVector(i);
+    //         vector<AltBn128::FrElement> key = fPol.toVector(i);
 
     //         if (idx_t.find(key) == idx_t.end())
     //         {
-    //             zklog.error("Polinomial::calculateH1H2() Number not included: " + Goldilocks::toString(fPol[i], 16));
+    //             zklog.error("Polinomial::calculateH1H2() Number not included: " + AltBn128::FrElement::toString(fPol[i], 16));
     //             exitProcess();
     //         }
     //         uint64_t idx = idx_t[key];
-    //         s.insert(pair<vector<Goldilocks::Element>, uint64_t>(key, idx));
+    //         s.insert(pair<vector<AltBn128::FrElement>, uint64_t>(key, idx));
     //     }
 
-    //     multimap<uint64_t, vector<Goldilocks::Element>> s_sorted;
-    //     multimap<uint64_t, vector<Goldilocks::Element>>::iterator it_sorted;
+    //     map<uint64_t, vector<AltBn128::FrElement>> s_sorted;
+    //     map<uint64_t, vector<AltBn128::FrElement>>::iterator it_sorted;
 
     //     for (it = s.begin(); it != s.end(); it++)
     //     {
