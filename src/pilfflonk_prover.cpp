@@ -128,10 +128,10 @@ namespace PilFflonk
 
             bBufferConst = new FrElement[lengthBufferConst];
 
-            ptr["const_n"]     = &bBufferConst[0];
-            ptr["const_coefs"] = ptr["const_n"]     + N * fflonkInfo->nConstants;
-            ptr["const_2ns"]   = ptr["const_coefs"] + N * factorZK * fflonkInfo->nConstants;
-            PTau = (G1PointAffine *)(ptr["const_2ns"] + NExt * factorZK * fflonkInfo->nConstants);
+            ptrConst["const_n"]     = &bBufferConst[0];
+            ptrConst["const_coefs"] = ptrConst["const_n"]     + N * fflonkInfo->nConstants;
+            ptrConst["const_2ns"]   = ptrConst["const_coefs"] + N * factorZK * fflonkInfo->nConstants;
+            PTau = (G1PointAffine *)(ptrConst["const_2ns"] + NExt * factorZK * fflonkInfo->nConstants);
 
             // //////////////////////////////////////////////////
             // BIG BUFFER
@@ -161,20 +161,20 @@ namespace PilFflonk
             ptr["cm1_n"]     = &bBuffer[0];
             ptr["cm2_n"]     = ptr["cm1_n"]     + N * fflonkInfo->mapSectionsN.section[cm1_n];
             ptr["cm3_n"]     = ptr["cm2_n"]     + N * fflonkInfo->mapSectionsN.section[cm2_n];
-            ptr["tmpExp_n"]  = ptr["cm3_n"]     + N * fflonkInfo->mapSectionsN.section[cm3_n];
-            ptr["x_n"]       = ptr["tmpExp_n"]  + N * fflonkInfo->mapSectionsN.section[tmpExp_n];
-
-            ptr["cm1_coefs"] = ptr["x_n"]       + N;
-            ptr["cm2_coefs"] = ptr["cm1_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
-            ptr["cm3_coefs"] = ptr["cm2_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
-
-            ptr["cm1_2ns"]   = ptr["cm3_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
+            ptr["tmpExp_n"]  = ptr["cm3_n"]     + N * fflonkInfo->mapSectionsN.section[cm3_n];            
+            ptr["cm1_2ns"]   = ptr["tmpExp_n"]  + N  * fflonkInfo->mapSectionsN.section[tmpExp_n];
             ptr["cm2_2ns"]   = ptr["cm1_2ns"]   + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
             ptr["cm3_2ns"]   = ptr["cm2_2ns"]   + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
             ptr["q_2ns"]     = ptr["cm3_2ns"]   + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
-            ptr["x_2ns"]     = ptr["q_2ns"]     + NExt * factorZK * fflonkInfo->qDim;
             
-            ptr["publics"]   = ptr["x_2ns"]     + NExt * factorZK;
+            ptr["x_n"]       = ptr["q_2ns"]     + NExt * factorZK * fflonkInfo->qDim;
+            ptr["x_2ns"]     = ptr["x_n"]       + N;
+            
+            ptr["cm1_coefs"] = ptr["x_2ns"]     + NExt * factorZK;
+            ptr["cm2_coefs"] = ptr["cm1_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
+            ptr["cm3_coefs"] = ptr["cm2_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
+
+            ptr["publics"]   = ptr["cm3_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
 
             int nThreads = omp_get_max_threads() / 2;
 
@@ -186,8 +186,30 @@ namespace PilFflonk
                                 (G1PointAffine *)(fdZkey->getSectionData(PilFflonkZkey::ZKEY_PF_PTAU_SECTION)),
                                 lenPTau, nThreads);
 
+
             transcript = new Keccak256Transcript(E);
             proof = new SnarkProof(E, "pilfflonk");
+
+            pConstPols = new ConstantPolsFflonk(ptrConst["const_n"], N, fflonkInfo->nConstants);
+            pConstPols2ns = new ConstantPolsFflonk(ptrConst["const_2ns"], NExt * factorZK, fflonkInfo->nConstants);
+
+            // Initialize vars
+            TimerStart(FFLONK_INITIALIZATION);
+
+            uint64_t numCommited = fflonkInfo->nCm1;
+
+            StepsParams params = {
+                pols : &bBuffer,
+                pConstPols :  pConstPols,
+                pConstPols2ns :  pConstPols2ns,
+                challenges : challenges,
+                x_n : ptr["x_n"],
+                x_2ns : ptr["x_2ns"],
+                publicInputs : publicInputs,
+                q_2ns : ptr["q_2ns"],
+            };
+
+            TimerStopAndLog(FFLONK_INITIALIZATION);
         }
 
         catch (const std::exception &e)
@@ -214,7 +236,7 @@ namespace PilFflonk
         }
 
         try
-        {
+        {   
             cout << "PIL-FFLONK PROVER STARTED" << endl << endl;
 
             // if(NULL != wtnsHeader) {
@@ -346,16 +368,16 @@ namespace PilFflonk
         // STEP 0.3 - Prepare public inputs
         for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
         {
-            //  const publicPol = fflonkInfo.publics[i];
+            //  const publicPol = fflonkInfo->publics[i];
 
             //  if ("cmP" == publicPol.polType)
             //  {
-            //     u_int64_t offset = (fflonkInfo.publics[i].idx * fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo.publics[i].polId) * n8r;
+            //     u_int64_t offset = (fflonkInfo->publics[i].idx * fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->publics[i].polId) * n8r;
             //     ptr["publics"][i] = ptr["cm1_n"][offset];
             //  }
             //  else if ("imP" == publicPol.polType)
             //  {
-            //     ptr["publics"][i] = calculateExpAtPoint(ctx, fflonkInfo.publicsCode[i], publicPol.idx);
+            //     ptr["publics"][i] = calculateExpAtPoint(ctx, fflonkInfo->publicsCode[i], publicPol.idx);
             //  }
             //  else
             //  {
@@ -367,14 +389,14 @@ namespace PilFflonk
     void PilFflonkProver::stage1()
     {
         // STEP 1.1 - Compute random challenge
-        // TODO Add preprocessed polynomials to the transcript ????
+        // TODO Add preprocessed polynomials or public inputs to the transcript ????
 
         // STEP 1.2 - Compute constant polynomials (coefficients + evaluations) and commit them
         if (fflonkInfo->nConstants > 0)
         {
-             extend(0, zkey, ptr["const_n"], ptr["const_2ns"], ptr["const_coefs"], nBits, nBitsExtZK, fflonkInfo->nConstants, factorZK);
+            extend(0, zkey, ptr["const_n"], ptr["const_2ns"], ptr["const_coefs"], nBits, nBitsExtZK, fflonkInfo->nConstants, factorZK);
 
-             shPlonkProver->commit(1, PTau, false);
+            shPlonkProver->commit(0, PTau, false);
         }
 
         // STEP 1.3 - Compute commit polynomials (coefficients + evaluations) and commit them
@@ -409,34 +431,34 @@ namespace PilFflonk
         }
 
         // Compute challenge alpha
-        challenges["alpha"] = transcript->getChallenge();
-        cout << "··· challenges.alpha: " << E.fr.toString(challenges["alpha"]) << endl;
+        challenges[0] = transcript->getChallenge();
+        cout << "··· challenges.alpha: " << E.fr.toString(challenges[0]) << endl;
 
         // Compute challenge beta
         transcript->reset();
-        transcript->addScalar(challenges["alpha"]);
-        challenges["beta"] = transcript->getChallenge();
-        cout << "··· challenges.beta: " << E.fr.toString(challenges["beta"]) << endl;
+        transcript->addScalar(challenges[0]);
+        challenges[1] = transcript->getChallenge();
+        cout << "··· challenges.beta: " << E.fr.toString(challenges[1]) << endl;
 
-        if (!fflonkInfo->mapSectionsN.section[cm2_n])
-            return;
+        if (!fflonkInfo->mapSectionsN.section[cm2_n]) return;
 
             // STEP 2.2 - Compute stage 2 polynomials --> h1, h2
-            callCalculateExps("step2prev", "n", pool, ctx, fflonkInfo, false);
+            #pragma omp parallel for
+            for (uint64_t i = 0; i < N * factorZK; i++)
+            {
+                steps->step2prev_first(params, i);
+            }
 
             auto nCm2 = fflonkInfo->mapSectionsN.section[cm2_n];
 
-            for (u_int32_t i = 0; i < fflonkInfo->puCtx.size(); i++)
+            for (uint64_t i = 0; i < fflonkInfo->puCtx.size(); i++)
             {
-                auto puCtx = fflonkInfo->puCtx[i];
+                Polinomial fPol = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].fExpId)]);
+                Polinomial tPol = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].tExpId)]);
+                Polinomial h1 = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm2 + 2*i]);
+                Polinomial h2 = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm2 + 2*i + 1]);
 
-                auto fPol = getPol(ctx, fflonkInfo, fflonkInfo->exp2pol[puCtx.fExpId]);
-                auto tPol = getPol(ctx, fflonkInfo, fflonkInfo->exp2pol[puCtx.tExpId]);
-
-                const[h1, h2] = Polinomial::calculateH1H2_opt1(h1, h2, fPol, tPol);
-                
-                setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm2 + 2 * i], h1);
-                setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm2 + 2 * i + 1], h2);
+                Polinomial::calculateH1H2(h1, h2, fPol, tPol);
             }
 
             extend(2, ctx, zkey, ptr["cm2_n"], ptr["cm2_2ns"], ptr["cm2_coefs"], nBits, nBitsExtZK, fflonkInfo->mapSectionsN.section[cm2_n], factorZK);
@@ -453,16 +475,16 @@ namespace PilFflonk
         cout << "> Computing challenges gamma and delta" << endl;
 
         // Compute challenge gamma
-        transcript->addScalar(challenges["beta"]);
+        transcript->addScalar(challenges[1]);
 
-        challenges["gamma"] = transcript->getChallenge();
-        cout << "··· challenges.gamma: " << E.fr.toString(challenges["gamma"]) << endl;
+        challenges[2] = transcript->getChallenge();
+        cout << "··· challenges.gamma: " << E.fr.toString(challenges[2]) << endl;
 
         // Compute challenge delta
         transcript->reset();
-        transcript->addScalar(challenges["gamma"]);
-        challenges["delta"] = transcript->getChallenge();
-        cout << "··· challenges.delta: " << E.fr.toString(challenges["delta"]) << endl;
+        transcript->addScalar(challenges[2]);
+        challenges[3] = transcript->getChallenge();
+        cout << "··· challenges.delta: " << E.fr.toString(challenges[3]) << endl;
 
         if (!fflonkInfo->mapSectionsN.section[cm3_n]) return;
 
@@ -471,47 +493,47 @@ namespace PilFflonk
         auto nPermutations = fflonkInfo->peCtx.size();
         auto nConnections = fflonkInfo->ciCtx.size();
 
-        callCalculateExps("step3prev", "n", pool, ctx, fflonkInfo, false);
+        #pragma omp parallel for
+        for (uint64_t i = 0; i < N; i++)
+        {
+            steps->step3prev_first(params, i);
+        }
 
         auto nCm3 = fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->mapSectionsN.section[cm2_n];
 
-        for (u_int32_t i = 0; i < nPlookups; i++) {
-            cout << "··· Calculating z for plookup " << i << endl;
 
-            auto pu = fflonkInfo->puCtx[i];
-            auto pNum = getPol(ctx, fflonkInfo, fflonkInfo->exp2pol[pu.numId]);
-            auto pDen = getPol(ctx, fflonkInfo, fflonkInfo->exp2pol[pu.denId]);
-            auto z = new Polinomial(E.fr);
-            Polinomial::calculateZ(z, pNum, pDen);
-
-            setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm3 + i], z);
+        for (uint64_t i = 0; i < nPlookups; i++)
+        {
+            cout << "··· Calculating z for plookup check " << i << endl;
+            Polinomial pNum = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
+            Polinomial pDen = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
+            Polinomial z = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm3 + i]);
+            Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
-        for (u_int32_t i = 0; i < nPermutations; i++) {
+        for (uint64_t i = 0; i < nPermutations; i++)
+        {
             cout << "··· Calculating z for permutation check " << i << endl;
-
-            auto pe = fflonkInfo->peCtx[i];
-            auto pNum = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[pe.numId]);
-            auto pDen = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[pe.denId]);
-            auto z = new Polinomial(E.fr);
-            Polinomial::calculateZ(z, pNum, pDen);
-
-            setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm3 + nPlookups + i], z);
+            Polinomial pNum = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
+            Polinomial pDen = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
+            Polinomial z = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm3 + nPlookups + i]);
+            Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
-        for (u_int32_t i = 0; i < nConnections; i++) {
-            cout << "··· Calculating z for connection " << i << endl;
-
-            auto ci = fflonkInfo->ciCtx[i];
-            auto pNum = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[ci.numId]);
-            auto pDen = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[ci.denId]);
-            auto z = new Polinomial(E.fr);
-            Polinomial::calculateZ(z, pNum, pDen);
-
-            setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i], z);
+        for (uint64_t i = 0; i < nConnections; i++)
+        {
+            cout << "··· Calculating z for connection check " << i << endl;
+            Polinomial pNum = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
+            Polinomial pDen = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
+            Polinomial z = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
+            Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
-        callCalculateExps("step3", "n", pool, ctx, fflonkInfo);
+        #pragma omp parallel for
+        for (uint64_t i = 0; i < N * factorZK; i++)
+        {
+            steps->step3_first(params, i);
+        }
 
         extend(3, ctx, zkey, ptr["cm3_n"], ptr["cm3_2ns"], ptr["cm3_coefs"], nBits, nBitsExtZK, fflonkInfo->mapSectionsN.section[cm3_n], factorZK);
     }
@@ -524,17 +546,70 @@ namespace PilFflonk
         cout << "> Computing challenge a" << endl;
 
         // Compute challenge a
-        transcript->addScalar(challenges["delta"]);
+        transcript->addScalar(challenges[3]);
 
-        challenges["a"] = transcript->getChallenge();
-        cout << "··· challenges.a: " << E.fr.toString(challenges["a"]) << endl;
+        challenges[4] = transcript->getChallenge();
+        cout << "··· challenges.a: " << E.fr.toString(challenges[4]) << endl;
 
         // STEP 4.2 - Compute stage 4 polynomial --> Q polynomial
-        callCalculateExps("step42ns", "2ns", pool, ctx, fflonkInfo, { factorZK: factorZK});
+        #pragma omp parallel for
+        for (uint64_t i = 0; i < NExt * factorZK; i++)
+        {
+            steps->step42ns_first(params, i);
+        }
 
-        ptr["Q"] = Polynomial.fromEvaluations(ptr["q_2ns"], curve, logger);
-        ptr["Q"].divZh(ctx.N, 1 << extendBitsTotal);
+        ShPlonkProver->polynomialsShPlonk["Q"] = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptr["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
+        ShPlonkProver->polynomialsShPlonk["Q"]->divZh(N, 1 << extendBitsTotal);
     }
+
+    // async function extend(stage, ctx, zkey, buffFrom, buffTo, buffCoefs, nBits, nBitsExt, nPols, factorZK, Fr, logger) {
+    //     const n = 1 << nBits;
+
+    //     const polsNamesMap = zkey.polsNamesStage[stage];
+
+    //     await ifft(buffFrom, nPols, nBits, buffCoefs, Fr);
+
+    //     if (stage !== 0) {
+    //         const polsOpenings = zkey.polsOpenings;
+
+    //         for (let i = 0; i < nPols; i++) {
+    //             const name = polsNamesMap[i];
+    //             let coefs = new BigBuffer(n * factorZK * Fr.n8);
+    //             for (let j = 0; j < n * factorZK; j++) {
+    //                 coefs.set(buffCoefs.slice((i + j * nPols) * Fr.n8, (i + j * nPols + 1) * Fr.n8), j * Fr.n8);
+    //             }
+    //             blindPolynomial(buffCoefs, n, i, nPols, polsOpenings[name], Fr);
+    //         }
+    //     }
+
+    //     // Store coefs to context
+    //     for (let i = 0; i < nPols; i++) {
+    //         const name = polsNamesMap[i];
+    //         let coefs = new BigBuffer(n * factorZK * Fr.n8);
+    //         for (let j = 0; j < n * factorZK; j++) {
+    //             coefs.set(buffCoefs.slice((i + j * nPols) * Fr.n8, (i + j * nPols + 1) * Fr.n8), j * Fr.n8);
+    //         }
+    //         ctx[name] = new Polynomial(coefs, ctx.curve, logger);
+    //     }
+
+    //     await fft(buffCoefs, nPols, nBitsExt, buffTo, Fr);
+    // }
+
+    // function blindPolynomial(buff, domainSize, idPol, nPols, nPolOpenings, Fr) {
+    //     for (let i = 0; i < nPolOpenings; i++) {
+    //         const b = Fr.random();
+    //         blindBuffer(buff, i, idPol, nPols, Fr.neg(b), Fr);
+    //         blindBuffer(buff, domainSize + i, idPol, nPols, b, Fr);
+    //     }
+
+    //     function blindBuffer(buff, idx, idPol, nPols, blindingFactor, Fr) {
+    //         const offset = (idx * nPols + idPol) * Fr.n8;
+    //         const val = buff.slice(offset, offset + Fr.n8);
+
+    //         buff.set(Fr.add(val, blindingFactor), offset);
+    //     }
+    // }
+
 
     BinFilePolsData* PilFflonkProver::loadPolynomialsFromBinFile(BinFileUtils::BinFile *fd)
     {

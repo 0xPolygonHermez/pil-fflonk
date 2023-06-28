@@ -1,17 +1,18 @@
 #ifndef STEPS_HPP
 #define STEPS_HPP
 
+#include <alt_bn128.hpp>
+
 struct StepsParams
 {
     AltBn128::FrElement *pols;
-    ConstantPolsStarks *pConstPols;
-    ConstantPolsStarks *pConstPols2ns;
-    Polinomial &challenges;
-    Polinomial &x_n;
-    Polinomial &x_2ns;
-    Polinomial &evals;
-    AltBn128::FrElement *publicInputs;
-    AltBn128::FrElement *q_2ns;
+    ConstantPolsFflonk *pConstPols;
+    ConstantPolsFflonk *pConstPols2ns;
+    AltBn128::FrElement* challenges;
+    AltBn128::FrElement* x_n;
+    AltBn128::FrElement* x_2ns;
+    AltBn128::FrElement* publicInputs;
+    AltBn128::FrElement* q_2ns;
 };
 
 class Steps

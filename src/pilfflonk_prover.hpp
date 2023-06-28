@@ -8,10 +8,13 @@
 #include "zkey_pilfflonk.hpp"
 #include "shplonk.hpp"
 #include "polynomial/polynomial.hpp"
+#include "polinomial.hpp"
 #include "zkey.hpp"
+#include "steps.hpp"
 #include "snark_proof.hpp"
 #include "fflonk_info.hpp"
 #include "keccak_256_transcript.hpp"
+#include "commit_pols_fflonk.hpp"
 #include "constant_pols_fflonk.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
@@ -55,12 +58,15 @@ namespace PilFflonk {
         u_int32_t extendBitsTotal;
         u_int32_t nBitsExtZK;
 
-        std::map<std::string, FrElement> challenges;
+        FrElement challenges[5];
 
         FflonkInfo* fflonkInfo;
 
         BinFilePolsData* cnstPols;
         BinFilePolsData* cmtdPols;
+
+        ConstantPolsFflonk* pConstPols;
+        ConstantPolsFflonk* pConstPols2ns;
 
         ShPlonk::ShPlonkProver* shPlonkProver;
 
