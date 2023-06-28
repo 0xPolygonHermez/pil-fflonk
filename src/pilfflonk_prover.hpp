@@ -16,6 +16,7 @@
 #include "keccak_256_transcript.hpp"
 #include "commit_pols_fflonk.hpp"
 #include "constant_pols_fflonk.hpp"
+#include "chelpers/pilfflonk_steps.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
 
@@ -70,6 +71,9 @@ namespace PilFflonk {
 
         ShPlonk::ShPlonkProver* shPlonkProver;
 
+        PilFflonkSteps pilFflonkSteps;
+        PilFflonkSteps *steps = &pilFflonkSteps;
+
         // void *pConstPolsAddress;
         // void *pConstPolsAddress2ns;
         // ConstantPolsFflonk *pConstPols;
@@ -105,6 +109,8 @@ namespace PilFflonk {
 
         std::map<std::string, AltBn128::FrElement *> ptr;
         std::map<std::string, AltBn128::FrElement *> ptrConst;
+
+        StepsParams params;
 
         // u_int64_t lengthNonPrecomputedBigBuffer;
         // FrElement *nonPrecomputedBigBuffer;

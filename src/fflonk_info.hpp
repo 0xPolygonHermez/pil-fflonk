@@ -4,10 +4,10 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 #include <string>
-#include "polynomial.hpp"
+#include "polinomial.hpp"
 #include "zkassert.hpp"
 #include "zklog.hpp"
-// #include "exit_process.hpp"
+#include "exit_process.hpp"
 #include <alt_bn128.hpp>
 
 using json = nlohmann::json;

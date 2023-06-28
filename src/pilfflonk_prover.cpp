@@ -193,23 +193,6 @@ namespace PilFflonk
             pConstPols = new ConstantPolsFflonk(ptrConst["const_n"], N, fflonkInfo->nConstants);
             pConstPols2ns = new ConstantPolsFflonk(ptrConst["const_2ns"], NExt * factorZK, fflonkInfo->nConstants);
 
-            // Initialize vars
-            TimerStart(FFLONK_INITIALIZATION);
-
-            uint64_t numCommited = fflonkInfo->nCm1;
-
-            StepsParams params = {
-                pols : &bBuffer,
-                pConstPols :  pConstPols,
-                pConstPols2ns :  pConstPols2ns,
-                challenges : challenges,
-                x_n : ptr["x_n"],
-                x_2ns : ptr["x_2ns"],
-                publicInputs : publicInputs,
-                q_2ns : ptr["q_2ns"],
-            };
-
-            TimerStopAndLog(FFLONK_INITIALIZATION);
         }
 
         catch (const std::exception &e)
@@ -237,8 +220,21 @@ namespace PilFflonk
 
         try
         {   
+           
             cout << "PIL-FFLONK PROVER STARTED" << endl << endl;
 
+            // Initialize vars
+            params = {
+                pols : &bBuffer,
+                pConstPols :  pConstPols,
+                pConstPols2ns :  pConstPols2ns,
+                challenges : challenges,
+                x_n : ptr["x_n"],
+                x_2ns : ptr["x_2ns"],
+                publicInputs : publicInputs,
+                q_2ns : ptr["q_2ns"],
+            };
+            
             // if(NULL != wtnsHeader) {
             //     if (mpz_cmp(zkey->rPrime, wtnsHeader->prime) != 0)
             //     {
@@ -453,10 +449,10 @@ namespace PilFflonk
 
             for (uint64_t i = 0; i < fflonkInfo->puCtx.size(); i++)
             {
-                Polinomial fPol = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].fExpId)]);
-                Polinomial tPol = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].tExpId)]);
-                Polinomial h1 = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm2 + 2*i]);
-                Polinomial h2 = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm2 + 2*i + 1]);
+                Polinomial fPol = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].fExpId)]);
+                Polinomial tPol = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].tExpId)]);
+                Polinomial h1 = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->cm_n[nCm2 + 2*i]);
+                Polinomial h2 = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->cm_n[nCm2 + 2*i + 1]);
 
                 Polinomial::calculateH1H2(h1, h2, fPol, tPol);
             }
@@ -505,27 +501,27 @@ namespace PilFflonk
         for (uint64_t i = 0; i < nPlookups; i++)
         {
             cout << "··· Calculating z for plookup check " << i << endl;
-            Polinomial pNum = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
-            Polinomial pDen = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
-            Polinomial z = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm3 + i]);
+            Polinomial pNum = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
+            Polinomial pDen = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
+            Polinomial z = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->cm_n[nCm3 + i]);
             Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
         for (uint64_t i = 0; i < nPermutations; i++)
         {
             cout << "··· Calculating z for permutation check " << i << endl;
-            Polinomial pNum = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
-            Polinomial pDen = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
-            Polinomial z = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm3 + nPlookups + i]);
+            Polinomial pNum = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
+            Polinomial pDen = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
+            Polinomial z = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->cm_n[nCm3 + nPlookups + i]);
             Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
         for (uint64_t i = 0; i < nConnections; i++)
         {
             cout << "··· Calculating z for connection check " << i << endl;
-            Polinomial pNum = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
-            Polinomial pDen = fflonkInfo->getPolinomial(ptr, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
-            Polinomial z = fflonkInfo->getPolinomial(ptr, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
+            Polinomial pNum = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
+            Polinomial pDen = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
+            Polinomial z = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
             Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
@@ -558,39 +554,54 @@ namespace PilFflonk
             steps->step42ns_first(params, i);
         }
 
-        ShPlonkProver->polynomialsShPlonk["Q"] = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptr["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
-        ShPlonkProver->polynomialsShPlonk["Q"]->divZh(N, 1 << extendBitsTotal);
+        shPlonkProver->polynomialsShPlonk["Q"] = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptr["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
+        shPlonkProver->polynomialsShPlonk["Q"]->divZh(N, 1 << extendBitsTotal);
+    }
+
+    void extend(u_int32_t stage, u_int32_t nPols, u_int32_t polOffset, u_int32_t length) {
+        
+        for(u_int32_t i = 0; i < nPols; ++i) {
+            Polinomial pol = fflonkInfo->getPolinomial(bBuffer, fflonkInfo->cm_n[polOffset + i]);
+            
+            // FFT
+            fft->fft(pol, length);
+
+            // Blind pol
+            if(stage != 0) {
+                // TODO
+            }
+
+            // IFFT 
+            fft->ifft(pol, )
+
+            // SET POL
+            
+        }
     }
 
     // async function extend(stage, ctx, zkey, buffFrom, buffTo, buffCoefs, nBits, nBitsExt, nPols, factorZK, Fr, logger) {
-    //     const n = 1 << nBits;
-
-    //     const polsNamesMap = zkey.polsNamesStage[stage];
 
     //     await ifft(buffFrom, nPols, nBits, buffCoefs, Fr);
 
-    //     if (stage !== 0) {
-    //         const polsOpenings = zkey.polsOpenings;
+    //    if (stage != 0) {
+    //        for(u_int32_t i = 0; i < nPols; i++) {
+                // let coefs = new BigBuffer(n * factorZK * Fr.n8);
+                // for (let j = 0; j < n * factorZK; j++) {
+                //     coefs.set(buffCoefs.slice((i + j * nPols) * Fr.n8, (i + j * nPols + 1) * Fr.n8), j * Fr.n8);
+                // }
+                // blindPolynomial(buffCoefs, n, i, nPols, zkey->polsOpenings[zkey->polsNamesMap[i]], Fr);
+    //        }
+    //    }
 
-    //         for (let i = 0; i < nPols; i++) {
-    //             const name = polsNamesMap[i];
-    //             let coefs = new BigBuffer(n * factorZK * Fr.n8);
-    //             for (let j = 0; j < n * factorZK; j++) {
-    //                 coefs.set(buffCoefs.slice((i + j * nPols) * Fr.n8, (i + j * nPols + 1) * Fr.n8), j * Fr.n8);
-    //             }
-    //             blindPolynomial(buffCoefs, n, i, nPols, polsOpenings[name], Fr);
-    //         }
-    //     }
-
-    //     // Store coefs to context
-    //     for (let i = 0; i < nPols; i++) {
-    //         const name = polsNamesMap[i];
-    //         let coefs = new BigBuffer(n * factorZK * Fr.n8);
-    //         for (let j = 0; j < n * factorZK; j++) {
-    //             coefs.set(buffCoefs.slice((i + j * nPols) * Fr.n8, (i + j * nPols + 1) * Fr.n8), j * Fr.n8);
-    //         }
-    //         ctx[name] = new Polynomial(coefs, ctx.curve, logger);
-    //     }
+        // // Store coefs to context
+        // for (let i = 0; i < nPols; i++) {
+        //     std::string name = zkey->polsNamesMap[i];
+        //     let coefs = new BigBuffer(n * factorZK * Fr.n8);
+        //     for (let j = 0; j < n * factorZK; j++) {
+        //         coefs.set(buffCoefs.slice((i + j * nPols) * Fr.n8, (i + j * nPols + 1) * Fr.n8), j * Fr.n8);
+        //     }
+        //     ctx[name] = new Polynomial(coefs, ctx.curve, logger);
+        // }
 
     //     await fft(buffCoefs, nPols, nBitsExt, buffTo, Fr);
     // }

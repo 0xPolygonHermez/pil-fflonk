@@ -3,6 +3,7 @@
 
 #include <math.h> /* log2 */
 #include "zklog.hpp"
+#include "zkassert.hpp"
 #include "exit_process.hpp"
 #include <alt_bn128.hpp>
 
@@ -197,7 +198,7 @@ public:
     //     }
     // };
 
-    static void calculateZ(AltBn128::Engine &E, Polinomial &z, Polinomial &num, Polinomial &den)
+    void calculateZ(AltBn128::Engine &E, Polinomial &z, Polinomial &num, Polinomial &den)
     {
         uint64_t size = num.degree();
 
@@ -206,18 +207,18 @@ public:
         AltBn128::FrElement *pZ = z[0];
         E.fr.copy((AltBn128::FrElement *)&pZ[0], E.fr.one());
 
-        batchInverse(denI, den);
+        Polinomial::batchInverse(E, denI, den);
         for (uint64_t i = 1; i < size; i++)
         {
             Polinomial tmp(E, 1);
-            Polinomial.mulElement(tmp, 0, num, i - 1, denI, i - 1);
-            Polinomial.mulElement(z, i, z, i - 1, tmp, 0);
+            mulElement(tmp, 0, num, i - 1, denI, i - 1);
+            mulElement(z, i, z, i - 1, tmp, 0);
         }
         Polinomial tmp(E, 1);
-        Polinomial.mulElement(tmp, 0, num, size - 1, denI, size - 1);
-        Polinomial.mulElement(checkVal, 0, z, size - 1, tmp, 0);
+        mulElement(tmp, 0, num, size - 1, denI, size - 1);
+        mulElement(checkVal, 0, z, size - 1, tmp, 0);
 
-        // zkassert(E.fr.isOne((AltBn128::FrElement &)*checkVal[0]));
+        zkassert(E.fr.eq((AltBn128::FrElement &)*checkVal[0], E.fr.one()));
     }
 
     void batchInverse(AltBn128::Engine &E, Polinomial &res, Polinomial &src)
