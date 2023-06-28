@@ -4,6 +4,7 @@
 BUILD_DIR := build
 SRC_DIRS  := src
 DPNDS_DIR := depends/ffiasm/c
+TEST_DIRS := ./test
 
 # Libraries
 LIBOMP := $(shell find /usr/lib/llvm-* -name "libomp.so" | sed 's/libomp.so//')
@@ -16,7 +17,7 @@ CXX := g++
 AS := nasm
 
 CXXFLAGS := -std=c++17 -g3 -Wall -pthread -flarge-source-files -Wno-unused-label -rdynamic -mavx2 -lgmp #-Wfatal-errors
-LDFLAGS := -lsodium -lpthread -lgmp -lstdc++ -lomp -lgmpxx -L$(LIBOMP)
+LDFLAGS := -lsodium -lpthread -lgmp -lstdc++ -lomp -lgmpxx -L$(LIBOMP) -lgtest
 CFLAGS := -fopenmp
 ASFLAGS := -felf64
 
@@ -34,9 +35,18 @@ SRCS_PFP += $(shell find $(DPNDS_DIR) -name *.asm)
 OBJS_PFP := $(patsubst %,$(BUILD_DIR)/%.o,$(SRCS_PFP))
 DEPS_PFP := $(OBJS_PFP:.o=.d)
 
+# Test Files
+SRCS_TEST := $(shell find $(TEST_DIRS) -name *.cpp)
+SRCS_TEST += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp binfile_utils.cpp naf.cpp splitparstr.cpp)
+SRCS_TEST += $(shell find $(DPNDS_DIR) -name *.asm)
+OBJS_TEST := $(patsubst %,$(BUILD_DIR)/%.o,$(SRCS_TEST))
+DEPS_TEST := $(OBJS_TEST:.o=.d)
+
 # Default target
 all: $(BUILD_DIR)/$(TARGET_PFP)
-	
+
+test: $(BUILD_DIR)/$(TARGET_TEST)
+
 # Build pilFflonkProver target
 $(BUILD_DIR)/$(TARGET_PFP): $(OBJS_PFP)
 	$(CXX) $(OBJS_PFP) $(CXXFLAGS) $(LDFLAGS) -o $@
@@ -49,6 +59,11 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 $(BUILD_DIR)/%.asm.o: %.asm
 	$(MKDIR_P) $(dir $@)
 	$(AS) $(ASFLAGS) $< -o $@
+
+### TEST
+# Build pilFflonkProver test target
+$(BUILD_DIR)/$(TARGET_TEST): $(OBJS_TEST)
+	$(CXX) $(OBJS_TEST) $(CXXFLAGS) $(LDFLAGS) $(LDFLAGS_TEST) -o $@
 
 init:
 	cd $(DPNDS_DIR) && node ../src/buildzqfield.js -q 21888242871839275222246405745257275088696311157297823662689037894645226208583 -n Fq
