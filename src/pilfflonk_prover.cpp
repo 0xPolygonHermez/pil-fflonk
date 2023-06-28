@@ -35,7 +35,7 @@ namespace PilFflonk
     }
 
     void PilFflonkProver::removePrecomputedData() {
-        // // DELETE RESERVED MEMORY (if necessary)
+        // DELETE RESERVED MEMORY (if necessary)
         // delete[] precomputedBigBuffer;
         // delete[] mapBuffersBigBuffer;
         // delete[] buffInternalWitness;
@@ -52,26 +52,6 @@ namespace PilFflonk
 
         // for (auto const &x : roots) delete[] x.second;
         // roots.clear();
-
-        // delete polynomials["QL"];
-        // delete polynomials["QR"];
-        // delete polynomials["QM"];
-        // delete polynomials["QO"];
-        // delete polynomials["QC"];
-        // delete polynomials["Sigma1"];
-        // delete polynomials["Sigma2"];
-        // delete polynomials["Sigma3"];
-        // delete polynomials["C0"];
-
-        // delete evaluations["QL"];
-        // delete evaluations["QR"];
-        // delete evaluations["QM"];
-        // delete evaluations["QO"];
-        // delete evaluations["QC"];
-        // delete evaluations["Sigma1"];
-        // delete evaluations["Sigma2"];
-        // delete evaluations["Sigma3"];
-        // delete evaluations["lagrange"];
 
         delete shPlonkProver;
     }
@@ -130,14 +110,6 @@ namespace PilFflonk
             {
                 throw std::invalid_argument("zkey curve not supported");
             }
-
-
-
-
-        // G1PointAffine *PTau;
-
-        // std::map<std::string, FrElement *> ptr;
-        // std::map<std::string, FrElement *> ptrConst;
 
             // //////////////////////////////////////////////////
             // CONSTANT BIG BUFFER
@@ -214,237 +186,8 @@ namespace PilFflonk
                                 (G1PointAffine *)(fdZkey->getSectionData(PilFflonkZkey::ZKEY_PF_PTAU_SECTION)),
                                 lenPTau, nThreads);
 
-            // // Read Q selectors polynomials and evaluations
-            // LOG_TRACE("... Loading QL, QR, QM, QO, & QC polynomial coefficients and evaluations");
-
-            // // Reserve memory for Q's polynomials
-            // polynomials["QL"] = new Polynomial<Engine>(E, polPtr["QL"], zkey->domainSize);
-            // polynomials["QR"] = new Polynomial<Engine>(E, polPtr["QR"], zkey->domainSize);
-            // polynomials["QM"] = new Polynomial<Engine>(E, polPtr["QM"], zkey->domainSize);
-            // polynomials["QO"] = new Polynomial<Engine>(E, polPtr["QO"], zkey->domainSize);
-            // polynomials["QC"] = new Polynomial<Engine>(E, polPtr["QC"], zkey->domainSize);
-
-
-            // // Read Q's polynomial coefficients from zkey file
-            // ThreadUtils::parcpy(polynomials["QL"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QL_SECTION),
-            //                     sDomain, nThreads);
-            // ThreadUtils::parcpy(polynomials["QR"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QR_SECTION),
-            //                     sDomain, nThreads);
-            // ThreadUtils::parcpy(polynomials["QM"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QM_SECTION),
-            //                     sDomain, nThreads);
-            // ThreadUtils::parcpy(polynomials["QO"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QO_SECTION),
-            //                     sDomain, nThreads);
-            // ThreadUtils::parcpy(polynomials["QC"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QC_SECTION),
-            //                     sDomain, nThreads);
-
-            // polynomials["QL"]->fixDegree();
-            // polynomials["QR"]->fixDegree();
-            // polynomials["QM"]->fixDegree();
-            // polynomials["QO"]->fixDegree();
-            // polynomials["QC"]->fixDegree();
-
-            // std::ostringstream ss;
-            // ss << "... Reading Q selector evaluations ";
-
-            // // Reserve memory for Q's evaluations
-            // evaluations["QL"] = new Evaluations<Engine>(E, evalPtr["QL"], zkey->domainSize * 4);
-            // evaluations["QR"] = new Evaluations<Engine>(E, evalPtr["QR"], zkey->domainSize * 4);
-            // evaluations["QM"] = new Evaluations<Engine>(E, evalPtr["QM"], zkey->domainSize * 4);
-            // evaluations["QO"] = new Evaluations<Engine>(E, evalPtr["QO"], zkey->domainSize * 4);
-            // evaluations["QC"] = new Evaluations<Engine>(E, evalPtr["QC"], zkey->domainSize * 4);
-
-            // // Read Q's evaluations from zkey file
-            // ThreadUtils::parcpy(evaluations["QL"]->eval,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QL_SECTION) + zkey->domainSize,
-            //                     sDomain * 4, nThreads);
-            // ThreadUtils::parcpy(evaluations["QR"]->eval,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QR_SECTION) + zkey->domainSize,
-            //                     sDomain * 4, nThreads);
-            // ThreadUtils::parcpy(evaluations["QM"]->eval,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QM_SECTION) + zkey->domainSize,
-            //                     sDomain * 4, nThreads);
-            // ThreadUtils::parcpy(evaluations["QO"]->eval,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QO_SECTION) + zkey->domainSize,
-            //                     sDomain * 4, nThreads);
-            // ThreadUtils::parcpy(evaluations["QC"]->eval,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_QC_SECTION) + zkey->domainSize,
-            //                     sDomain * 4, nThreads);
-
-            // // Read Sigma polynomial coefficients and evaluations from zkey file
-            // LOG_TRACE("... Loading Sigma1, Sigma2 & Sigma3 polynomial coefficients and evaluations");
-
-            // polynomials["Sigma1"] = new Polynomial<Engine>(E, polPtr["Sigma1"], zkey->domainSize);
-            // polynomials["Sigma2"] = new Polynomial<Engine>(E, polPtr["Sigma2"], zkey->domainSize);
-            // polynomials["Sigma3"] = new Polynomial<Engine>(E, polPtr["Sigma3"], zkey->domainSize);
-
-            // ThreadUtils::parcpy(polynomials["Sigma1"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_SIGMA1_SECTION),
-            //                     sDomain, nThreads);
-            // ThreadUtils::parcpy(polynomials["Sigma2"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_SIGMA2_SECTION),
-            //                     sDomain, nThreads);
-            // ThreadUtils::parcpy(polynomials["Sigma3"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_SIGMA3_SECTION),
-            //                     sDomain, nThreads);
-
-            // polynomials["Sigma1"]->fixDegree();
-            // polynomials["Sigma2"]->fixDegree();
-            // polynomials["Sigma3"]->fixDegree();
-
-            // evaluations["Sigma1"] = new Evaluations<Engine>(E, evalPtr["Sigma1"], zkey->domainSize * 4);
-            // evaluations["Sigma2"] = new Evaluations<Engine>(E, evalPtr["Sigma2"], zkey->domainSize * 4);
-            // evaluations["Sigma3"] = new Evaluations<Engine>(E, evalPtr["Sigma3"], zkey->domainSize * 4);
-
-            // ThreadUtils::parcpy(evaluations["Sigma1"]->eval,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_SIGMA1_SECTION) + zkey->domainSize,
-            //                     sDomain * 4, nThreads);
-            // ThreadUtils::parcpy(evaluations["Sigma2"]->eval,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_SIGMA2_SECTION) + zkey->domainSize,
-            //                     sDomain * 4, nThreads);
-            // ThreadUtils::parcpy(evaluations["Sigma3"]->eval,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_SIGMA3_SECTION) + zkey->domainSize,
-            //                     sDomain * 4, nThreads);
-
-            // LOG_TRACE("... Loading C0 polynomial coefficients");
-            // polynomials["C0"] = new Polynomial<Engine>(E, polPtr["C0"], zkey->domainSize * 8);
-            // ThreadUtils::parcpy(polynomials["C0"]->coef,
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_C0_SECTION),
-            //                     sDomain * 8, nThreads);
-            // polynomials["C0"]->fixDegree();
-
-            // // Read Lagrange polynomials & evaluations from zkey file
-            // LOG_TRACE("... Loading Lagrange evaluations");
-            // evaluations["lagrange"] = new Evaluations<Engine>(E, evalPtr["lagrange"], zkey->domainSize * 4 * zkey->nPublic);
-            // for(uint64_t i = 0 ; i < zkey->nPublic ; i++) {
-            //     ThreadUtils::parcpy(evaluations["lagrange"]->eval + zkey->domainSize * 4 * i,
-            //                         (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_LAGRANGE_SECTION) + zkey->domainSize + zkey->domainSize * 5 * i,
-            //                         sDomain * 4, nThreads);
-            // }
-            // LOG_TRACE("... Loading Powers of Tau evaluations");
-
-            // // Load A, B & C map buffers
-            // LOG_TRACE("... Loading A, B & C map buffers");
-
-            // u_int64_t byteLength = sizeof(u_int32_t) * zkey->nConstraints;
-
-            // mapBuffersBigBuffer = new u_int32_t[zkey->nConstraints * 3];
-
-            // mapBuffers["A"] = mapBuffersBigBuffer;
-            // mapBuffers["B"] = mapBuffers["A"] + zkey->nConstraints;
-            // mapBuffers["C"] = mapBuffers["B"] + zkey->nConstraints;
-
-            // buffInternalWitness = new FrElement[zkey->nAdditions];
-
-            // LOG_TRACE("··· Loading additions");
-            // additionsBuff = (Zkey::Addition<Engine> *)fdZkey->getSectionData(Zkey::ZKEY_FF_ADDITIONS_SECTION);
-
-            // LOG_TRACE("··· Loading map buffers");
-            // ThreadUtils::parset(mapBuffers["A"], 0, byteLength * 3, nThreads);
-
-            // // Read zkey sections and fill the buffers
-            // ThreadUtils::parcpy(mapBuffers["A"],
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_A_MAP_SECTION),
-            //                     byteLength, nThreads);
-            // ThreadUtils::parcpy(mapBuffers["B"],
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_B_MAP_SECTION),
-            //                     byteLength, nThreads);
-            // ThreadUtils::parcpy(mapBuffers["C"],
-            //                     (FrElement *)fdZkey->getSectionData(Zkey::ZKEY_FF_C_MAP_SECTION),
-            //                     byteLength, nThreads);
-
             transcript = new Keccak256Transcript(E);
             proof = new SnarkProof(E, "pilfflonk");
-
-            // roots["w8"] = new FrElement[8];
-            // roots["w4"] = new FrElement[4];
-            // roots["w3"] = new FrElement[3];
-            // roots["S0h0"] = new FrElement[8];
-            // roots["S1h1"] = new FrElement[4];
-            // roots["S2h2"] = new FrElement[3];
-            // roots["S2h3"] = new FrElement[3];
-
-            // lengthBatchInversesBuffer = zkey->domainSize * 2;
-
-            // if(NULL == this->reservedMemoryPtr) {
-            //     inverses = new FrElement[zkey->domainSize];
-            //     products = new FrElement[zkey->domainSize];
-            // } else {
-            //     inverses = this->reservedMemoryPtr;
-            //     products = inverses + zkey->domainSize;
-            // }
-
-            // ////////////////////////////////////////////////////
-            // // NON-PRECOMPUTED BIG BUFFER
-            // ////////////////////////////////////////////////////
-            // // Non-precomputed 1 > polynomials buffer
-            // lengthNonPrecomputedBigBuffer = 0;
-            // lengthNonPrecomputedBigBuffer += zkey->domainSize * 16 * 1; // Polynomial L (A, B & C will (re)use this buffer)
-            // lengthNonPrecomputedBigBuffer += zkey->domainSize * 8  * 1; // Polynomial C1
-            // lengthNonPrecomputedBigBuffer += zkey->domainSize * 16 * 1; // Polynomial C2
-            // lengthNonPrecomputedBigBuffer += zkey->domainSize * 16 * 1; // Polynomial F
-            // lengthNonPrecomputedBigBuffer += zkey->domainSize * 16 * 1; // Polynomial tmp (Z, T0, T1, T1z, T2 & T2z will (re)use this buffer)
-            // // Non-precomputed 2 > evaluations buffer
-            // lengthNonPrecomputedBigBuffer += zkey->domainSize * 4  * 3; // Evaluations A, B & C
-            // lengthNonPrecomputedBigBuffer += zkey->domainSize * 4  * 1; // Evaluations Z
-            // // Non-precomputed 3 > buffers buffer
-            // buffersLength = 0;
-            // buffersLength   += zkey->domainSize * 4  * 3; // Evaluations A, B & C
-            // buffersLength   += zkey->domainSize * 16 * 1; // Evaluations tmp (Z, numArr, denArr, T0, T1, T1z, T2 & T2z will (re)use this buffer)
-            // lengthNonPrecomputedBigBuffer += buffersLength;
-
-            // if(NULL == this->reservedMemoryPtr) {
-            //     nonPrecomputedBigBuffer = new FrElement[lengthNonPrecomputedBigBuffer];
-            // } else {
-            //     if((lengthBatchInversesBuffer + lengthNonPrecomputedBigBuffer) * sizeof(FrElement) > reservedMemorySize) {
-            //         ss.str("");
-            //         ss << "Not enough reserved memory to generate a prove. Increase reserved memory size at least to "
-            //             << (lengthBatchInversesBuffer + lengthNonPrecomputedBigBuffer) * sizeof(FrElement) << " bytes";
-            //         throw std::runtime_error(ss.str());
-            //     }
-
-            //     nonPrecomputedBigBuffer = this->reservedMemoryPtr + lengthBatchInversesBuffer;
-            // }
-            
-            // polPtr["L"] = &nonPrecomputedBigBuffer[0];
-            // polPtr["C1"]  = polPtr["L"]  + zkey->domainSize * 16;
-            // polPtr["C2"]  = polPtr["C1"] + zkey->domainSize * 8;
-            // polPtr["F"]   = polPtr["C2"] + zkey->domainSize * 16;
-            // polPtr["tmp"] = polPtr["F"]  + zkey->domainSize * 16;
-            // // Reuses
-            // polPtr["A"]   = polPtr["L"];
-            // polPtr["B"]   = polPtr["A"]  + zkey->domainSize;
-            // polPtr["C"]   = polPtr["B"]  + zkey->domainSize;
-            // polPtr["Z"]   = polPtr["tmp"];
-            // polPtr["T0"]  = polPtr["Z"]  + zkey->domainSize * 2;
-            // polPtr["T1"]  = polPtr["T0"] + zkey->domainSize * 4;
-            // polPtr["T1z"] = polPtr["T1"] + zkey->domainSize * 2;
-            // polPtr["T2"]  = polPtr["T1"] + zkey->domainSize * 2;
-            // polPtr["T2z"] = polPtr["T2"] + zkey->domainSize * 4;
-
-            // evalPtr["A"] = polPtr["F"];
-            // evalPtr["B"] = evalPtr["A"]  + zkey->domainSize * 4;
-            // evalPtr["C"] = evalPtr["B"]  + zkey->domainSize * 4;
-            // evalPtr["Z"] = evalPtr["C"]  + zkey->domainSize * 4;
-
-            // buffers["A"]   = polPtr["tmp"]  + zkey->domainSize * 16;
-            // buffers["B"]   = buffers["A"]  + zkey->domainSize;
-            // buffers["C"]   = buffers["B"]  + zkey->domainSize;
-            // buffers["tmp"] = buffers["C"]  + zkey->domainSize;
-
-            // // Reuses
-            // buffers["Z"]      = buffers["tmp"];
-            // buffers["numArr"] = buffers["tmp"];
-            // buffers["denArr"] = buffers["numArr"] + zkey->domainSize;
-            // buffers["T0"]     = buffers["tmp"];
-            // buffers["T1"]     = buffers["tmp"];
-            // buffers["T1z"]    = buffers["tmp"] + zkey->domainSize * 2;
-            // buffers["T2"]     = buffers["tmp"];
-            // buffers["T2z"]    = buffers["tmp"] + zkey->domainSize * 4;
         }
 
         catch (const std::exception &e)
@@ -461,28 +204,6 @@ namespace PilFflonk
 
         cmtdPols = loadPolynomialsFromBinFile(fdCmtdPols);
 
-        // shPlonkProver->polynomialsShPlonk["Simple.a"] = new Polynomial<AltBn128::Engine>(E, 11);
-        // shPlonkProver->polynomialsShPlonk["Simple.b"] = new Polynomial<AltBn128::Engine>(E, 11);
-        // shPlonkProver->polynomialsShPlonk["Q"] = new Polynomial<AltBn128::Engine>(E, 17);
-
-        // for (u_int64_t i = 0; i < 11; i++) {
-        //     shPlonkProver->polynomialsShPlonk["Simple.a"]->coef[i] = E.fr.set(i);
-        //     shPlonkProver->polynomialsShPlonk["Simple.b"]->coef[i] = E.fr.set(i);
-        // }
-
-        // for (u_int64_t i = 0; i < 17; i++) {
-        //     shPlonkProver->polynomialsShPlonk["Q"]->coef[i] = E.fr.set(i);
-        // }
-
-        // shPlonkProver->polynomialsShPlonk["Simple.a"]->fixDegree();
-        // shPlonkProver->polynomialsShPlonk["Simple.b"]->fixDegree();
-        // shPlonkProver->polynomialsShPlonk["Q"]->fixDegree();
-        
-        // shPlonkProver->commit(1, PTau, true);
-
-        // shPlonkProver->commit(4, PTau, true);
-
-        // shPlonkProver->open(PTau, E.fr.set(1));
         return this->prove(fdCmtdPols);
     }
 
@@ -494,9 +215,7 @@ namespace PilFflonk
 
         try
         {
-            // LOG_TRACE("FFLONK PROVER STARTED");
-
-            // this->buffWitness = buffWitness;
+            cout << "PIL-FFLONK PROVER STARTED" << endl << endl;
 
             // if(NULL != wtnsHeader) {
             //     if (mpz_cmp(zkey->rPrime, wtnsHeader->prime) != 0)
@@ -527,8 +246,6 @@ namespace PilFflonk
             cout << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n]<< endl;
             cout << "-----------------------------" << endl;
 
-            cout << "PIL-FFLONK PROVER STARTED" << endl << endl;
-
             transcript->reset();
             proof->reset();
 
@@ -540,8 +257,6 @@ namespace PilFflonk
             for (u_int64_t i = 0; i < NExt * factorZK; i++) {
                 ptr["x_2ns"][i] = fft->root(nBitsExtZK, i);
             }
-
-            //const committedPols = {};
 
             // STAGE 0. Store constants and committed values. Calculate publics
             stage0();
@@ -565,10 +280,10 @@ namespace PilFflonk
             // const [cmts, evaluations, xiSeed] = await open(zkey, PTau, ctx, committedPols, curve, { logger, fflonkPreviousChallenge: ctx.challenges[4], nonCommittedPols: ["Q"] });
 
             // // Compute xiSeed 
-            // let challengeXi = curve.Fr.exp(xiSeed, zkey.powerW);
+            // FrElement challengeXi = E.fr.exp(xiSeed, zkey.powerW);
 
-            // const xN = curve.Fr.exp(challengeXi, ctx.N);
-            // const Z = curve.Fr.sub(xN, curve.Fr.one);
+            // auto xN = E.fr.exp(challengeXi, N);
+            // auto Z = E.fr.sub(xN, E.fr.one());
 
             // evaluations.invZh = curve.Fr.inv(Z);
 
@@ -594,47 +309,6 @@ namespace PilFflonk
             //     proof,
             //     publicSignals,
             // };
-
-            //             // First element in plonk is not used and can be any value. (But always the same).
-            //             // We set it to zero to go faster in the exponentiations.
-            //             buffWitness[0] = E.fr.zero();
-
-            //             // To divide prime fields the Extended Euclidean Algorithm for computing modular inverses is needed.
-            //             // NOTE: This is the equivalent of compute 1/denominator and then multiply it by the numerator.
-            //             // The Extended Euclidean Algorithm is expensive in terms of computation.
-            //             // For the special case where we need to do many modular inverses, there's a simple mathematical trick
-            //             // that allows us to compute many inverses, called Montgomery batch inversion.
-            //             // More info: https://vitalik.ca/general/2018/07/21/starks_part_3.html
-            //             // Montgomery batch inversion reduces the n inverse computations to a single one
-            //             // To save this (single) inverse computation on-chain, will compute it in proving time and send it to the verifier.
-            //             // The verifier will have to check:
-            //             // 1) the denominator is correct multiplying by himself non-inverted -> a * 1/a == 1
-            //             // 2) compute the rest of the denominators using the Montgomery batch inversion
-            //             // The inversions are:
-            //             //   · denominator needed in step 8 and 9 of the verifier to multiply by 1/Z_H(xi)
-            //             //   · denominator needed in step 10 and 11 of the verifier
-            //             //   · denominator needed in the verifier when computing L_i^{S1}(X) and L_i^{S2}(X)
-            //             //   · L_i i=1 to num public inputs, needed in step 6 and 7 of the verifier to compute L_1(xi) and PI(xi)
-            //             // toInverse property is the variable to store the values to be inverted
-
-            //             // Until this point all calculations made are circuit depending and independent from the data, so we could
-            //             // this big function into two parts: until here circuit dependent and from here is the proof calculation
-
-            //             double startTime = omp_get_wtime();
-
-            //             LOG_TRACE("> Computing Additions");
-
-            //             int nThreads = omp_get_max_threads() / 2;
-            //             // Set 0's to buffers["A"], buffers["B"], buffers["C"] & buffers["Z"]
-            //             ThreadUtils::parset(buffers["A"], 0, buffersLength * sizeof(FrElement), nThreads);
-
-            //             calculateAdditions();
-
-            //             // START FFLONK PROVER PROTOCOL
-
-            //             // ROUND 1. Compute C1(X) polynomial
-            //             LOG_TRACE("> ROUND 1");
-            //             round1();
         }
         catch (const std::exception &e)
         {
@@ -692,25 +366,25 @@ namespace PilFflonk
 
     void PilFflonkProver::stage1()
     {
-    //     // STEP 1.1 - Compute random challenge
-    //     // TODO Add preprocessed polynomials to the transcript ????
+        // STEP 1.1 - Compute random challenge
+        // TODO Add preprocessed polynomials to the transcript ????
 
-    //     // STEP 1.2 - Compute constant polynomials (coefficients + evaluations) and commit them
-    //     if (fflonkInfo.nConstants > 0) {
-    //         extend(0, zkey, ptr["const_n"], ptr["const_2ns"], ptr["const_coefs"], nBits, nBitsExtZK, fflonkInfo.nConstants, factorZK);
+        // STEP 1.2 - Compute constant polynomials (coefficients + evaluations) and commit them
+        if (fflonkInfo->nConstants > 0)
+        {
+             extend(0, zkey, ptr["const_n"], ptr["const_2ns"], ptr["const_coefs"], nBits, nBitsExtZK, fflonkInfo->nConstants, factorZK);
 
-    //         //auto commitsConstants = commit(0, zkey, ctx, PTau, curve, { multiExp: false, logger });
-    //         commitsConstants.forEach((com) => committedPols[`${com.index}`] = { pol: com.pol });
-    //     }
+             shPlonkProver->commit(1, PTau, false);
+        }
 
-    //     // STEP 1.3 - Compute commit polynomials (coefficients + evaluations) and commit them
-    //     if (!fflonkInfo.mapSectionsN.cm1_n) return;
+        // STEP 1.3 - Compute commit polynomials (coefficients + evaluations) and commit them
+        if (!fflonkInfo->mapSectionsN.section[cm1_n])
+             return;
 
-    //     extend(1, ctx, zkey, ptr["cm1_n"], ptr["cm1_2ns"], ptr["cm1_coefs"], nBits, nBitsExtZK, fflonkInfo.mapSectionsN.cm1_n, factorZK);
+        extend(1, ctx, zkey, ptr["cm1_n"], ptr["cm1_2ns"], ptr["cm1_coefs"], nBits, nBitsExtZK, fflonkInfo->mapSectionsN.section[cm1_n], factorZK);
 
-    //     // STEP 1.4 - Commit stage 1 polynomials
-    //     auto commitsStage1 = commit(1, zkey, ctx, PTau, curve, { multiExp: true });
-    //     commitsStage1.forEach((com) => committedPols[`${com.index}`] = { commit: com.commit, pol: com.pol });
+        // STEP 1.4 - Commit stage 1 polynomials
+        shPlonkProver->commit(1, PTau, true);
     }
 
     void PilFflonkProver::stage2()
@@ -718,151 +392,148 @@ namespace PilFflonk
         // STEP 2.1 - Compute random challenges
         cout << "> Computing challenges alpha and beta" << endl;
 
-    //     // auto cnstCommitPols = Object.keys(zkey).filter(k => k.match(/^f\d/));
-    //     // for (let i = 0; i < cnstCommitPols.length; ++i) {
-    //     //     transcript.addPolCommitment(zkey[cnstCommitPols[i]]);
-    //     //     committedPols[`${cnstCommitPols[i]}`].commit = zkey[cnstCommitPols[i]];
-    //     // }
+        // auto cnstCommitPols = Object.keys(zkey).filter(k => k.match(/^f\d/));
+        // for (let i = 0; i < cnstCommitPols.length; ++i) {
+        //     transcript.addPolCommitment(zkey[cnstCommitPols[i]]);
+        //     committedPols[`${cnstCommitPols[i]}`].commit = zkey[cnstCommitPols[i]];
+        // }
 
-    //     // Add all the publics to the transcript
-    //     for (u_int32_t i = 0; i < fflonkInfo.publics.length; i++) {
-    //         transcript->addScalar(ptr["publics"][i]);
-    //     }
+        // Add all the publics to the transcript
+        for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
+        {
+             transcript->addScalar(ptr["publics"][i]);
+        }
 
-    //     if (0 == transcript->nElements()) {
-    //         transcript->addScalar(E.fr.one());
-    //     }
+        if (0 == transcript->nElements()) {
+            transcript->addScalar(E.fr.one());
+        }
 
-    //     // Compute challenge alpha
-    //     challenges["alpha"] = transcript->getChallenge();
-    //     cout << "··· challenges.alpha: " << E.fr.toString(challenges["alpha"]) << endl;
+        // Compute challenge alpha
+        challenges["alpha"] = transcript->getChallenge();
+        cout << "··· challenges.alpha: " << E.fr.toString(challenges["alpha"]) << endl;
 
-    //     // Compute challenge beta
-    //     transcript->reset();
-    //     transcript->addScalar(challenges["alpha"]);
-    //     challenges["beta"] = transcript->getChallenge();
-    //     cout << "··· challenges.beta: " << E.fr.toString(challenges["beta"]) << endl;
+        // Compute challenge beta
+        transcript->reset();
+        transcript->addScalar(challenges["alpha"]);
+        challenges["beta"] = transcript->getChallenge();
+        cout << "··· challenges.beta: " << E.fr.toString(challenges["beta"]) << endl;
 
-    //     if (!fflonkInfo.mapSectionsN.cm2_n) return;
+        if (!fflonkInfo->mapSectionsN.section[cm2_n])
+            return;
 
-    //     // STEP 2.2 - Compute stage 2 polynomials --> h1, h2
-    //     callCalculateExps("step2prev", "n", pool, ctx, fflonkInfo, false);
+            // STEP 2.2 - Compute stage 2 polynomials --> h1, h2
+            callCalculateExps("step2prev", "n", pool, ctx, fflonkInfo, false);
 
-    //     auto nCm2 = fflonkInfo.mapSectionsN.cm1_n;
+            auto nCm2 = fflonkInfo->mapSectionsN.section[cm2_n];
 
-    //     for (u_int32_t i = 0; i < fflonkInfo.puCtx.length; i++)
-    //     {
-    //         auto puCtx = fflonkInfo.puCtx[i];
+            for (u_int32_t i = 0; i < fflonkInfo->puCtx.size(); i++)
+            {
+                auto puCtx = fflonkInfo->puCtx[i];
 
-    //         auto fPol = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[puCtx.fExpId]);
-    //         auto tPol = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[puCtx.tExpId]);
+                auto fPol = getPol(ctx, fflonkInfo, fflonkInfo->exp2pol[puCtx.fExpId]);
+                auto tPol = getPol(ctx, fflonkInfo, fflonkInfo->exp2pol[puCtx.tExpId]);
 
-    //         const[h1, h2] = calculateH1H2(Fr, fPol, tPol);
-    //         setPol(ctx, fflonkInfo, fflonkInfo.cm_n[nCm2 + 2 * i], h1);
-    //         setPol(ctx, fflonkInfo, fflonkInfo.cm_n[nCm2 + 2 * i + 1], h2);
-    //     }
+                const[h1, h2] = Polinomial::calculateH1H2_opt1(h1, h2, fPol, tPol);
+                
+                setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm2 + 2 * i], h1);
+                setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm2 + 2 * i + 1], h2);
+            }
 
-    //     extend(2, ctx, zkey, ptr["cm2_n"], ptr["cm2_2ns"], ptr["cm2_coefs"], nBits, nBitsExtZK, fflonkInfo.mapSectionsN.cm2_n, factorZK);
+            extend(2, ctx, zkey, ptr["cm2_n"], ptr["cm2_2ns"], ptr["cm2_coefs"], nBits, nBitsExtZK, fflonkInfo->mapSectionsN.section[cm2_n], factorZK);
 
-    //     // STEP 2.3 - Commit stage 2 polynomials
-    //     const commitsStage2 = await commit(2, zkey, ctx, PTau, curve, { multiExp: true, logger });
-    //     commitsStage2.forEach((com) => committedPols[`${com.index}`] = { commit: com.commit, pol: com.pol });
+            // STEP 2.3 - Commit stage 2 polynomials
+            shPlonkProver->commit(2, PTau, true);
     }
 
     void PilFflonkProver::stage3()
     {
-    //     // STEP 3.1 - Compute random challenges
-    //     transcript->reset();
+        // STEP 3.1 - Compute random challenges
+        transcript->reset();
 
-    //     cout << "> Computing challenges gamma and delta" << endl;
+        cout << "> Computing challenges gamma and delta" << endl;
 
-    //     // Compute challenge gamma
-    //     transcript->addScalar(challenges["beta"]);
+        // Compute challenge gamma
+        transcript->addScalar(challenges["beta"]);
 
-    //     challenges["gamma"] = transcript->getChallenge();
-    //     cout << "··· challenges.gamma: " << E.fr.toString(challenges["gamma"]) << endl;
+        challenges["gamma"] = transcript->getChallenge();
+        cout << "··· challenges.gamma: " << E.fr.toString(challenges["gamma"]) << endl;
 
-    //     // Compute challenge delta
-    //     transcript->reset();
-    //     transcript->addScalar(challenges["gamma"]);
-    //     challenges["delta"] = transcript->getChallenge();
-    //     cout << "··· challenges.delta: " << E.fr.toString(challenges["delta"]) << endl;
+        // Compute challenge delta
+        transcript->reset();
+        transcript->addScalar(challenges["gamma"]);
+        challenges["delta"] = transcript->getChallenge();
+        cout << "··· challenges.delta: " << E.fr.toString(challenges["delta"]) << endl;
 
-    //     if (!fflonkInfo.mapSectionsN.cm3_n) return;
+        if (!fflonkInfo->mapSectionsN.section[cm3_n]) return;
 
-    //     // STEP 3.2 - Compute stage 3 polynomials --> Plookup Z, Permutations Z & ConnectionZ polynomials
-    //     auto nPlookups = fflonkInfo.puCtx.length;
-    //     auto nPermutations = fflonkInfo.peCtx.length;
-    //     auto nConnections = fflonkInfo.ciCtx.length;
+        // STEP 3.2 - Compute stage 3 polynomials --> Plookup Z, Permutations Z & ConnectionZ polynomials
+        auto nPlookups = fflonkInfo->puCtx.size();
+        auto nPermutations = fflonkInfo->peCtx.size();
+        auto nConnections = fflonkInfo->ciCtx.size();
 
-    //     callCalculateExps("step3prev", "n", pool, ctx, fflonkInfo, false);
+        callCalculateExps("step3prev", "n", pool, ctx, fflonkInfo, false);
 
-    //     auto nCm3 = fflonkInfo.mapSectionsN.cm1_n + fflonkInfo.mapSectionsN.cm2_n;
+        auto nCm3 = fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->mapSectionsN.section[cm2_n];
 
-    //     for (u_int32_t i = 0; i < nPlookups; i++) {
-    //         cout << "··· Calculating z for plookup " << i << endl;
+        for (u_int32_t i = 0; i < nPlookups; i++) {
+            cout << "··· Calculating z for plookup " << i << endl;
 
-    //         auto pu = fflonkInfo.puCtx[i];
-    //         auto pNum = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[pu.numId]);
-    //         auto pDen = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[pu.denId]);
-    //         auto z = await calculateZ(Fr, pNum, pDen);
+            auto pu = fflonkInfo->puCtx[i];
+            auto pNum = getPol(ctx, fflonkInfo, fflonkInfo->exp2pol[pu.numId]);
+            auto pDen = getPol(ctx, fflonkInfo, fflonkInfo->exp2pol[pu.denId]);
+            auto z = new Polinomial(E.fr);
+            Polinomial::calculateZ(z, pNum, pDen);
 
-    //         setPol(ctx, fflonkInfo, fflonkInfo.cm_n[nCm3 + i], z);
-    //     }
+            setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm3 + i], z);
+        }
 
-    //     for (u_int32_t i = 0; i < nPermutations; i++) {
-    //         cout << "··· Calculating z for permutation check " << i << endl;
+        for (u_int32_t i = 0; i < nPermutations; i++) {
+            cout << "··· Calculating z for permutation check " << i << endl;
 
-    //         auto pe = fflonkInfo.peCtx[i];
-    //         auto pNum = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[pe.numId]);
-    //         auto pDen = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[pe.denId]);
-    //         auto z = await calculateZ(Fr, pNum, pDen);
+            auto pe = fflonkInfo->peCtx[i];
+            auto pNum = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[pe.numId]);
+            auto pDen = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[pe.denId]);
+            auto z = new Polinomial(E.fr);
+            Polinomial::calculateZ(z, pNum, pDen);
 
-    //         setPol(ctx, fflonkInfo, fflonkInfo.cm_n[nCm3 + nPlookups + i], z);
-    //     }
+            setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm3 + nPlookups + i], z);
+        }
 
-    //     for (u_int32_t i = 0; i < nConnections; i++) {
-    //         cout << "··· Calculating z for connection " << i << endl;
+        for (u_int32_t i = 0; i < nConnections; i++) {
+            cout << "··· Calculating z for connection " << i << endl;
 
-    //         auto ci = fflonkInfo.ciCtx[i];
-    //         auto pNum = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[ci.numId]);
-    //         auto pDen = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[ci.denId]);
-    //         auto z = await calculateZ(Fr, pNum, pDen);
+            auto ci = fflonkInfo->ciCtx[i];
+            auto pNum = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[ci.numId]);
+            auto pDen = getPol(ctx, fflonkInfo, fflonkInfo.exp2pol[ci.denId]);
+            auto z = new Polinomial(E.fr);
+            Polinomial::calculateZ(z, pNum, pDen);
 
-    //         setPol(ctx, fflonkInfo, fflonkInfo.cm_n[nCm3 + nPlookups + nPermutations + i], z);
-    //     }
+            setPol(ctx, fflonkInfo, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i], z);
+        }
 
-    //     callCalculateExps("step3", "n", pool, ctx, fflonkInfo);
+        callCalculateExps("step3", "n", pool, ctx, fflonkInfo);
 
-    //     extend(3, ctx, zkey, ptr["cm3_n"], ptr["cm3_2ns"], ptr["cm3_coefs"], nBits, nBitsExtZK, fflonkInfo.mapSectionsN.cm3_n, factorZK);
-
-    //     // STEP 3.3 - Commit stage 3 polynomials
-    //     const commitsStage3 = await commit(3, zkey, ctx, PTau, curve, { multiExp: true, logger });
-    //     commitsStage3.forEach((com) => committedPols[`${com.index}`] = { commit: com.commit, pol: com.pol });
+        extend(3, ctx, zkey, ptr["cm3_n"], ptr["cm3_2ns"], ptr["cm3_coefs"], nBits, nBitsExtZK, fflonkInfo->mapSectionsN.section[cm3_n], factorZK);
     }
 
     void PilFflonkProver::stage4()
     {
         // STEP 4.1 - Compute random challenges
-    //     transcript->reset();
+        transcript->reset();
 
-    //     cout << "> Computing challenge a" << endl;
+        cout << "> Computing challenge a" << endl;
 
-    //     // Compute challenge a
-    //     transcript->addScalar(challenges["delta"]);
+        // Compute challenge a
+        transcript->addScalar(challenges["delta"]);
 
-    //     challenges["a"] = transcript->getChallenge();
-    //     cout << "··· challenges.a: " << E.fr.toString(challenges["a"]) << endl;
+        challenges["a"] = transcript->getChallenge();
+        cout << "··· challenges.a: " << E.fr.toString(challenges["a"]) << endl;
 
-    //     // STEP 4.2 - Compute stage 4 polynomial --> Q polynomial
-    //     callCalculateExps("step42ns", "2ns", pool, ctx, fflonkInfo, { factorZK: factorZK});
+        // STEP 4.2 - Compute stage 4 polynomial --> Q polynomial
+        callCalculateExps("step42ns", "2ns", pool, ctx, fflonkInfo, { factorZK: factorZK});
 
-    //     // ctx["Q"] = await Polynomial.fromEvaluations(ctx.q_2ns, curve, logger);
-    //     // ctx["Q"].divZh(ctx.N, 1 << extendBitsTotal);
-
-    //     // STEP 4.3 - Commit stage 4 polynomials
-    //     const commitsStage4 = await commit(4, zkey, ctx, PTau, curve, { multiExp: true, logger });
-    //     commitsStage4.forEach((com) => committedPols[`${com.index}`] = { commit: com.commit, pol: com.pol });    
+        ptr["Q"] = Polynomial.fromEvaluations(ptr["q_2ns"], curve, logger);
+        ptr["Q"].divZh(ctx.N, 1 << extendBitsTotal);
     }
 
     BinFilePolsData* PilFflonkProver::loadPolynomialsFromBinFile(BinFileUtils::BinFile *fd)
@@ -898,20 +569,25 @@ namespace PilFflonk
 
         ThreadUtils::parcpy(polsData->buffer, (FrElement *)fd->getSectionData(3), lenSection, nThreads);
 
-        u_int8_t* data = (uint8_t *)&polsData->buffer[0];
+        // u_int8_t* data = (uint8_t *)&polsData->buffer[0];
         // for(int i =0;i< lenSection;i++) {
-        //     cout << 
+        //     cout << *(data + 48) << " " << endl;;
         // }
-        // u_int64_t bytes = 0;
-        // u_int8_t data2[32];
+        // cout << endl;
+        
+//         u_int64_t bytes = 0;
+//         u_int8_t data2[32];
 
 
-        // for(u_int64_t i = 0; i < lenArray; i++)
-        // {
-        //     FrElement element = std::any_cast<FrElement>(polsData->buffer[i]);
-        //     bytes += E.fr.toRprBE(element, data2/* + bytes*/, E.fr.bytes());
-        //     int a = 3;
-        // }
+//         FrElement element;
+//         for(u_int64_t i = 0; i < lenArray; i++)
+//         {
+//             element = std::any_cast<FrElement>(polsData->buffer[i]);
+
+// //            cout << E.fr.toString(element) << endl;
+//             E.fr.toRprBE(element, data2, E.fr.bytes());
+//             cout << E.fr.toString(element) << endl;
+//         }
 
         return polsData;
     }

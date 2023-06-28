@@ -148,144 +148,144 @@ public:
 //         return Goldilocks::toU64(_pAddress[idx * _offset]);
 //     }
 
-    // static void calculateH1H2_opt1(Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol, uint64_t pNumber, uint64_t *buffer, uint64_t size_keys, uint64_t size_values)
-    // {
-    //     vector<int> counter(tPol.degree(), 1);  // this 1 is important, space of the original buffer could be used
-    //     vector<bool> touched(size_keys, false); // faster use this than initialize buffer, bitmask could be used
-    //     uint32_t pos = 0;
+    static void calculateH1H2_opt1(Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol, uint64_t pNumber, uint64_t *buffer, uint64_t size_keys, uint64_t size_values)
+    {
+        vector<int> counter(tPol.degree(), 1);  // this 1 is important, space of the original buffer could be used
+        vector<bool> touched(size_keys, false); // faster use this than initialize buffer, bitmask could be used
+        uint32_t pos = 0;
 
-    //     // double time1 = omp_get_wtime();
-    //     for (uint64_t i = 0; i < tPol.degree(); i++)
-    //     {
-    //         uint64_t key = tPol.firstValueU64(i);
-    //         uint64_t ind = key % size_keys;
-    //         if (!touched[ind])
-    //         {
-    //             buffer[ind] = pos;
-    //             uint32_t offset = size_keys + 3 * pos;
-    //             buffer[offset] = key;
-    //             buffer[offset + 1] = i;
-    //             buffer[offset + 2] = 0;
-    //             pos += 1;
-    //             touched[ind] = true;
-    //         }
-    //         else
-    //         {
-    //             uint64_t pos_ = buffer[ind];
-    //             bool exit_ = false;
-    //             do
-    //             {
-    //                 uint32_t offset = size_keys + 3 * pos_;
-    //                 if (key == buffer[offset])
-    //                 {
-    //                     buffer[offset + 1] = i;
-    //                     exit_ = true;
-    //                 }
-    //                 else
-    //                 {
-    //                     if (buffer[offset + 2] != 0)
-    //                     {
-    //                         pos_ = buffer[offset + 2];
-    //                     }
-    //                     else
-    //                     {
-    //                         buffer[offset + 2] = pos;
-    //                         // new offset
-    //                         offset = size_keys + 3 * pos;
-    //                         buffer[offset] = key;
-    //                         buffer[offset + 1] = i;
-    //                         buffer[offset + 2] = 0;
-    //                         pos += 1;
-    //                         exit_ = true;
-    //                     }
-    //                 }
-    //             } while (!exit_);
-    //         }
-    //     }
+        // double time1 = omp_get_wtime();
+        for (uint64_t i = 0; i < tPol.degree(); i++)
+        {
+            uint64_t key = tPol.firstValueU64(i);
+            uint64_t ind = key % size_keys;
+            if (!touched[ind])
+            {
+                buffer[ind] = pos;
+                uint32_t offset = size_keys + 3 * pos;
+                buffer[offset] = key;
+                buffer[offset + 1] = i;
+                buffer[offset + 2] = 0;
+                pos += 1;
+                touched[ind] = true;
+            }
+            else
+            {
+                uint64_t pos_ = buffer[ind];
+                bool exit_ = false;
+                do
+                {
+                    uint32_t offset = size_keys + 3 * pos_;
+                    if (key == buffer[offset])
+                    {
+                        buffer[offset + 1] = i;
+                        exit_ = true;
+                    }
+                    else
+                    {
+                        if (buffer[offset + 2] != 0)
+                        {
+                            pos_ = buffer[offset + 2];
+                        }
+                        else
+                        {
+                            buffer[offset + 2] = pos;
+                            // new offset
+                            offset = size_keys + 3 * pos;
+                            buffer[offset] = key;
+                            buffer[offset + 1] = i;
+                            buffer[offset + 2] = 0;
+                            pos += 1;
+                            exit_ = true;
+                        }
+                    }
+                } while (!exit_);
+            }
+        }
 
-    //     // double time2 = omp_get_wtime();
+        // double time2 = omp_get_wtime();
 
-    //     for (uint64_t i = 0; i < fPol.degree(); i++)
-    //     {
-    //         uint64_t indx = 0;
-    //         uint64_t key = fPol.firstValueU64(i);
-    //         uint64_t ind = key % size_keys;
-    //         if (!touched[ind])
-    //         {
-    //             zklog.error("Polynomial::calculateH1H2() Number not included: w=" + to_string(i) + " plookup_number=" + to_string(pNumber) + "\nPol:" + Goldilocks::toString(fPol[i], 16));
-    //             exitProcess();
-    //         }
-    //         uint64_t pos_ = buffer[ind];
-    //         bool exit_ = false;
-    //         do
-    //         {
-    //             uint32_t offset = size_keys + 3 * pos_;
-    //             if (key == buffer[offset])
-    //             {
-    //                 indx = buffer[offset + 1];
-    //                 exit_ = true;
-    //             }
-    //             else
-    //             {
-    //                 if (buffer[offset + 2] != 0)
-    //                 {
-    //                     pos_ = buffer[offset + 2];
-    //                 }
-    //                 else
-    //                 {
-    //                     zklog.error("Polynomial::calculateH1H2() Number not included: w=" + to_string(i) + " plookup_number=" + to_string(pNumber) + "\nPol:" + Goldilocks::toString(fPol[i], 16));
-    //                     exitProcess();
-    //                 }
-    //             }
-    //         } while (!exit_);
-    //         ++counter[indx];
-    //     }
+        for (uint64_t i = 0; i < fPol.degree(); i++)
+        {
+            uint64_t indx = 0;
+            uint64_t key = fPol.firstValueU64(i);
+            uint64_t ind = key % size_keys;
+            if (!touched[ind])
+            {
+                zklog.error("Polynomial::calculateH1H2() Number not included: w=" + to_string(i) + " plookup_number=" + to_string(pNumber) + "\nPol:" + Goldilocks::toString(fPol[i], 16));
+                exitProcess();
+            }
+            uint64_t pos_ = buffer[ind];
+            bool exit_ = false;
+            do
+            {
+                uint32_t offset = size_keys + 3 * pos_;
+                if (key == buffer[offset])
+                {
+                    indx = buffer[offset + 1];
+                    exit_ = true;
+                }
+                else
+                {
+                    if (buffer[offset + 2] != 0)
+                    {
+                        pos_ = buffer[offset + 2];
+                    }
+                    else
+                    {
+                        zklog.error("Polynomial::calculateH1H2() Number not included: w=" + to_string(i) + " plookup_number=" + to_string(pNumber) + "\nPol:" + Goldilocks::toString(fPol[i], 16));
+                        exitProcess();
+                    }
+                }
+            } while (!exit_);
+            ++counter[indx];
+        }
 
-    //     // double time3 = omp_get_wtime();
-    //     uint64_t id = 0;
-    //     for (u_int64_t i = 0; i < tPol.degree(); ++i)
-    //     {
-    //         if (counter[id] == 0)
-    //         {
-    //             ++id;
-    //         }
+        // double time3 = omp_get_wtime();
+        uint64_t id = 0;
+        for (u_int64_t i = 0; i < tPol.degree(); ++i)
+        {
+            if (counter[id] == 0)
+            {
+                ++id;
+            }
 
-    //         counter[id] -= 1;
-    //         Polinomial::copyElement(h1, i, tPol, id);
+            counter[id] -= 1;
+            Polinomial::copyElement(h1, i, tPol, id);
 
-    //         if (counter[id] == 0)
-    //         {
-    //             ++id;
-    //         }
-    //         counter[id] -= 1;
-    //         Polinomial::copyElement(h2, i, tPol, id);
-    //     }
-    //     // double time4 = omp_get_wtime();
-    //     // std::cout << "holu: " << id << " " << pos << " times: " << time2 - time1 << " " << time3 - time2 << " " << time4 - time3 << " " << h2.dim() << std::endl;
-    // }
+            if (counter[id] == 0)
+            {
+                ++id;
+            }
+            counter[id] -= 1;
+            Polinomial::copyElement(h2, i, tPol, id);
+        }
+        // double time4 = omp_get_wtime();
+        // std::cout << "holu: " << id << " " << pos << " times: " << time2 - time1 << " " << time3 - time2 << " " << time4 - time3 << " " << h2.dim() << std::endl;
+    }
 
-    // void calculateZ(Polinomial &z, Polinomial &num, Polinomial &den)
-    // {
-    //     uint64_t size = num.degree();
+    static void calculateZ(Polinomial &z, Polinomial &num, Polinomial &den)
+    {
+        uint64_t size = num.degree();
 
-    //     Polinomial denI(E, size);
-    //     Polinomial checkVal(E, 1);
-    //     AltBn128::FrElement *pZ = z[0];
-    //     E.fr.copy((AltBn128::FrElement *)&pZ[0], E.fr.one());
+        Polinomial denI(E, size);
+        Polinomial checkVal(E, 1);
+        AltBn128::FrElement *pZ = z[0];
+        E.fr.copy((AltBn128::FrElement *)&pZ[0], E.fr.one());
 
-    //     batchInverse(denI, den);
-    //     for (uint64_t i = 1; i < size; i++)
-    //     {
-    //         Polinomial tmp(E, 1);
-    //         Polinomial::mulElement(tmp, 0, num, i - 1, denI, i - 1);
-    //         Polinomial::mulElement(z, i, z, i - 1, tmp, 0);
-    //     }
-    //     Polinomial tmp(E, 1);
-    //     Polinomial::mulElement(tmp, 0, num, size - 1, denI, size - 1);
-    //     Polinomial::mulElement(checkVal, 0, z, size - 1, tmp, 0);
+        batchInverse(denI, den);
+        for (uint64_t i = 1; i < size; i++)
+        {
+            Polinomial tmp(E, 1);
+            Polinomial::mulElement(tmp, 0, num, i - 1, denI, i - 1);
+            Polinomial::mulElement(z, i, z, i - 1, tmp, 0);
+        }
+        Polinomial tmp(E, 1);
+        Polinomial::mulElement(tmp, 0, num, size - 1, denI, size - 1);
+        Polinomial::mulElement(checkVal, 0, z, size - 1, tmp, 0);
 
-    //     // zkassert(E.fr.isOne((AltBn128::FrElement &)*checkVal[0]));
-    // }
+        // zkassert(E.fr.isOne((AltBn128::FrElement &)*checkVal[0]));
+    }
 
     // void batchInverse(Polinomial &res, Polinomial &src)
     // {
