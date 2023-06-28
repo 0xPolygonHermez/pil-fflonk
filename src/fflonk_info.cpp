@@ -401,7 +401,7 @@ Polinomial FflonkInfo::getPolinomial(AltBn128::FrElement *pAddress, uint64_t idP
     uint64_t offset = mapOffsets.section[polInfo.section];
     offset += polInfo.sectionPos;
     uint64_t next = mapSectionsN.section[polInfo.section];
-    return Polinomial(E, &pAddress[offset], N, next, std::to_string(idPol));
+    return Polinomial(&pAddress[offset], N, next, std::to_string(idPol));
 }
 
 eSection string2section(const std::string s)

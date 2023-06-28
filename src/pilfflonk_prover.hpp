@@ -5,6 +5,7 @@
 #include <string.h>
 #include <binfile_utils.hpp>
 #include <nlohmann/json.hpp>
+#include <sodium.h>
 #include "zkey_pilfflonk.hpp"
 #include "shplonk.hpp"
 #include "polynomial/polynomial.hpp"
@@ -100,15 +101,15 @@ namespace PilFflonk {
         // FrElement *precomputedBigBuffer;
         // G1PointAffine *PTau;
 
+        u_int64_t lengthBufferCommitted;
         u_int64_t lengthBuffer;
-        u_int64_t lengthBufferConst;
 
+        FrElement *bBufferCommitted;
         FrElement *bBuffer;
-        FrElement *bBufferConst;
         G1PointAffine *PTau;
 
+        std::map<std::string, AltBn128::FrElement *> ptrCommitted;
         std::map<std::string, AltBn128::FrElement *> ptr;
-        std::map<std::string, AltBn128::FrElement *> ptrConst;
 
         StepsParams params;
 
@@ -167,6 +168,8 @@ namespace PilFflonk {
         void stage3();
 
         void stage4();
+
+        void extend(u_int32_t stage, AltBn128::FrElement *buffFrom, AltBn128::FrElement *buffTo, AltBn128::FrElement *buffCoefs, u_int32_t nPols);
 
         BinFilePolsData* loadPolynomialsFromBinFile(BinFileUtils::BinFile *fd);
     };
