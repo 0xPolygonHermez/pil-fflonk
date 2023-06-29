@@ -4,7 +4,7 @@
 BUILD_DIR := build
 SRC_DIRS  := src
 DPNDS_DIR := depends/ffiasm/c
-TEST_DIRS := ./test
+TEST_DIRS := src test
 
 # Libraries
 LIBOMP := $(shell find /usr/lib/llvm-* -name "libomp.so" | sed 's/libomp.so//')

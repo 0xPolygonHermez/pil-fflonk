@@ -194,7 +194,7 @@ TEST(BN128_TEST, LDE)
         a[i] = E.fr.add(a[i - 1], a[i - 2]);
     }
 
-    AltBn128::FrElement shift = E.fr.set(49); // TODO: ask for this number, where to put it how to calculate it
+    AltBn128::FrElement shift = E.fr.set(25); // TODO: ask for this number, where to put it how to calculate it
     bn128ntt.INTT(a, a, FFT_SIZE);
 
     // TODO: This can be pre-generated
@@ -285,7 +285,7 @@ TEST(BN128_TEST, LDE_block)
     r[0] = E.fr.one();
     for (int i = 1; i < FFT_SIZE; i++)
     {
-        r[i] = r[i - 1] * Goldilocks::shift();
+        r[i] = E.fr.mul(r[i - 1], E.fr.shift());
     }
 
 #pragma omp parallel for
