@@ -219,38 +219,38 @@ TEST(BN128_TEST, LDE)
     {
         std::cout << std::showbase << std::hex << std::uppercase << Goldilocks::toU64(a[k]) << std::endl;
     }*/
-    ASSERT_TRUE(E.fr.eq(a[0], E.fr.fromUI((unsigned long int)0XCBA857825D02DA98)));
-    ASSERT_EQ(Goldilocks::toU64(a[1]), 0X46B25F2EB8DC45C6);
-    ASSERT_EQ(Goldilocks::toU64(a[2]), 0X53CD52572B82CE93);
-    ASSERT_EQ(Goldilocks::toU64(a[3]), 0X6A1C4033524890BC);
-    ASSERT_EQ(Goldilocks::toU64(a[4]), 0XA9103D6B086AC1F6);
-    ASSERT_EQ(Goldilocks::toU64(a[5]), 0XF9EDB8DE1C59C93D);
-    ASSERT_EQ(Goldilocks::toU64(a[6]), 0XDAF72007263AED14);
-    ASSERT_EQ(Goldilocks::toU64(a[7]), 0X4761FD742111A2C6);
-    ASSERT_EQ(Goldilocks::toU64(a[8]), 0X91998C571BDAFBFE);
-    ASSERT_EQ(Goldilocks::toU64(a[9]), 0X89B28028BF5894EC);
-    ASSERT_EQ(Goldilocks::toU64(a[10]), 0XDD2FD6CB9F5A0A28);
-    ASSERT_EQ(Goldilocks::toU64(a[11]), 0X43C4A931E1A7D68B);
-    ASSERT_EQ(Goldilocks::toU64(a[12]), 0X88EB7870B0E49F21);
-    ASSERT_EQ(Goldilocks::toU64(a[13]), 0X99A28535EABA76E9);
-    ASSERT_EQ(Goldilocks::toU64(a[14]), 0XC05CC85A86046420);
-    ASSERT_EQ(Goldilocks::toU64(a[15]), 0XE1DED0726EC6AB22);
-    ASSERT_EQ(Goldilocks::toU64(a[16]), 0XFF4F0AFB9C48AA53);
-    ASSERT_EQ(Goldilocks::toU64(a[17]), 0X2B3524757554A236);
-    ASSERT_EQ(Goldilocks::toU64(a[18]), 0XB867D06B39F63E5B);
-    ASSERT_EQ(Goldilocks::toU64(a[19]), 0X9D65B701D0DC0203);
-    ASSERT_EQ(Goldilocks::toU64(a[20]), 0XDB653DED8EB0E8B1);
-    ASSERT_EQ(Goldilocks::toU64(a[21]), 0X6431B1E66D89DEB8);
-    ASSERT_EQ(Goldilocks::toU64(a[22]), 0XF1CB543225A25142);
-    ASSERT_EQ(Goldilocks::toU64(a[23]), 0X199DD3926164C43A);
-    ASSERT_EQ(Goldilocks::toU64(a[24]), 0XA7B8E1EFC3CFBBF5);
-    ASSERT_EQ(Goldilocks::toU64(a[25]), 0X186D4972B303DB54);
-    ASSERT_EQ(Goldilocks::toU64(a[26]), 0X249276F9AF9641DF);
-    ASSERT_EQ(Goldilocks::toU64(a[27]), 0X2B1235BB52390A00);
-    ASSERT_EQ(Goldilocks::toU64(a[28]), 0XEE3147DB1601B67B);
-    ASSERT_EQ(Goldilocks::toU64(a[29]), 0XB8B579BA5E655721);
-    ASSERT_EQ(Goldilocks::toU64(a[30]), 0X650D467042BCD196);
-    ASSERT_EQ(Goldilocks::toU64(a[31]), 0X8249D169442CB677);
+    ASSERT_TRUE(E.fr.eq(a[0], E.fr.fromUI(0XCBA857825D02DA98)));
+    ASSERT_TRUE(E.fr.eq(a[1], E.fr.fromUI(0X46B25F2EB8DC45C6)));
+    ASSERT_TRUE(E.fr.eq(a[2], E.fr.fromUI(0X53CD52572B82CE93)));
+    ASSERT_TRUE(E.fr.eq(a[3], E.fr.fromUI(0X6A1C4033524890BC)));
+    ASSERT_TRUE(E.fr.eq(a[4], E.fr.fromUI(0XA9103D6B086AC1F6)));
+    ASSERT_TRUE(E.fr.eq(a[5], E.fr.fromUI(0XF9EDB8DE1C59C93D)));
+    ASSERT_TRUE(E.fr.eq(a[6], E.fr.fromUI(0XDAF72007263AED14)));
+    ASSERT_TRUE(E.fr.eq(a[7], E.fr.fromUI(0X4761FD742111A2C6)));
+    ASSERT_TRUE(E.fr.eq(a[8], E.fr.fromUI(0X91998C571BDAFBFE)));
+    ASSERT_TRUE(E.fr.eq(a[9], E.fr.fromUI(0X89B28028BF5894EC)));
+    ASSERT_TRUE(E.fr.eq(a[10], E.fr.fromUI(0XDD2FD6CB9F5A0A28)));
+    ASSERT_TRUE(E.fr.eq(a[11], E.fr.fromUI(0X43C4A931E1A7D68B)));
+    ASSERT_TRUE(E.fr.eq(a[12], E.fr.fromUI(0X88EB7870B0E49F21)));
+    ASSERT_TRUE(E.fr.eq(a[13], E.fr.fromUI(0X99A28535EABA76E9)));
+    ASSERT_TRUE(E.fr.eq(a[14], E.fr.fromUI(0XC05CC85A86046420)));
+    ASSERT_TRUE(E.fr.eq(a[15], E.fr.fromUI(0XE1DED0726EC6AB22)));
+    ASSERT_TRUE(E.fr.eq(a[16], E.fr.fromUI(0XFF4F0AFB9C48AA53)));
+    ASSERT_TRUE(E.fr.eq(a[17], E.fr.fromUI(0X2B3524757554A236)));
+    ASSERT_TRUE(E.fr.eq(a[18], E.fr.fromUI(0XB867D06B39F63E5B)));
+    ASSERT_TRUE(E.fr.eq(a[19], E.fr.fromUI(0X9D65B701D0DC0203)));
+    ASSERT_TRUE(E.fr.eq(a[20], E.fr.fromUI(0XDB653DED8EB0E8B1)));
+    ASSERT_TRUE(E.fr.eq(a[21], E.fr.fromUI(0X6431B1E66D89DEB8)));
+    ASSERT_TRUE(E.fr.eq(a[22], E.fr.fromUI(0XF1CB543225A25142)));
+    ASSERT_TRUE(E.fr.eq(a[23], E.fr.fromUI(0X199DD3926164C43A)));
+    ASSERT_TRUE(E.fr.eq(a[24], E.fr.fromUI(0XA7B8E1EFC3CFBBF5)));
+    ASSERT_TRUE(E.fr.eq(a[25], E.fr.fromUI(0X186D4972B303DB54)));
+    ASSERT_TRUE(E.fr.eq(a[26], E.fr.fromUI(0X249276F9AF9641DF)));
+    ASSERT_TRUE(E.fr.eq(a[27], E.fr.fromUI(0X2B1235BB52390A00)));
+    ASSERT_TRUE(E.fr.eq(a[28], E.fr.fromUI(0XEE3147DB1601B67B)));
+    ASSERT_TRUE(E.fr.eq(a[29], E.fr.fromUI(0XB8B579BA5E655721)));
+    ASSERT_TRUE(E.fr.eq(a[30], E.fr.fromUI(0X650D467042BCD196)));
+    ASSERT_TRUE(E.fr.eq(a[31], E.fr.fromUI(0X8249D169442CB677)));
 
     free(a);
     free(zeros_array);
@@ -260,13 +260,13 @@ TEST(BN128_TEST, LDE_block)
 {
     AltBn128::FrElement *a = (AltBn128::FrElement *)malloc((FFT_SIZE << BLOWUP_FACTOR) * NUM_COLUMNS * sizeof(AltBn128::FrElement));
     NTT_AltBn128 bn128ntt(E, FFT_SIZE);
-    NTT_Bn128 gntt_extension((FFT_SIZE << BLOWUP_FACTOR));
+    NTT_AltBn128 gntt_extension(E, FFT_SIZE << BLOWUP_FACTOR);
 
     for (uint i = 0; i < 2; i++)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            Goldilocks::add(a[i * NUM_COLUMNS + j], E.fr.one(), Goldilocks::fromU64(j));
+            a[i * NUM_COLUMNS + j] = E.fr.add(E.fr.one(), E.fr.set(j));
         }
     }
 
@@ -274,7 +274,7 @@ TEST(BN128_TEST, LDE_block)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            a[i * NUM_COLUMNS + j] = a[NUM_COLUMNS * (i - 1) + j] + a[NUM_COLUMNS * (i - 2) + j];
+            a[i * NUM_COLUMNS + j] = E.fr.add(a[NUM_COLUMNS * (i - 1) + j], a[NUM_COLUMNS * (i - 2) + j]);
         }
     }
 
@@ -293,13 +293,13 @@ TEST(BN128_TEST, LDE_block)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            a[i * NUM_COLUMNS + j] = a[NUM_COLUMNS * i + j] * r[i];
+            a[i * NUM_COLUMNS + j] = E.fr.mul(a[NUM_COLUMNS * i + j], r[i]);
         }
     }
 #pragma omp parallel for schedule(static)
     for (uint i = FFT_SIZE * NUM_COLUMNS; i < (FFT_SIZE << BLOWUP_FACTOR) * NUM_COLUMNS; i++)
     {
-        a[i] = Goldilocks::zero();
+        a[i] = E.fr.zero();
     }
 
     gntt_extension.NTT(a, a, (FFT_SIZE << BLOWUP_FACTOR), NUM_COLUMNS, NULL, NUM_PHASES);
@@ -307,38 +307,38 @@ TEST(BN128_TEST, LDE_block)
     {
         std::cout << std::showbase << std::hex << std::uppercase << Goldilocks::toU64(a[k * NUM_COLUMNS]) << std::endl;
     }*/
-    ASSERT_EQ(Goldilocks::toU64(a[0 * NUM_COLUMNS]), 0X3E7CA26D67147C31);
-    ASSERT_EQ(Goldilocks::toU64(a[1 * NUM_COLUMNS]), 0X1310720153E0ABE4);
-    ASSERT_EQ(Goldilocks::toU64(a[2 * NUM_COLUMNS]), 0X20446D2EA50E8F96);
-    ASSERT_EQ(Goldilocks::toU64(a[3 * NUM_COLUMNS]), 0XEAB91008C3444102);
-    ASSERT_EQ(Goldilocks::toU64(a[4 * NUM_COLUMNS]), 0X68523AC1294A2);
-    ASSERT_EQ(Goldilocks::toU64(a[5 * NUM_COLUMNS]), 0X8A0BB8A3EBA8260A);
-    ASSERT_EQ(Goldilocks::toU64(a[6 * NUM_COLUMNS]), 0X515CEC478A438B2);
-    ASSERT_EQ(Goldilocks::toU64(a[7 * NUM_COLUMNS]), 0XA087431602851263);
-    ASSERT_EQ(Goldilocks::toU64(a[8 * NUM_COLUMNS]), 0XF09629139EA12C82);
-    ASSERT_EQ(Goldilocks::toU64(a[9 * NUM_COLUMNS]), 0X175DC5A131392734);
-    ASSERT_EQ(Goldilocks::toU64(a[10 * NUM_COLUMNS]), 0X72991CA43B50D824);
-    ASSERT_EQ(Goldilocks::toU64(a[11 * NUM_COLUMNS]), 0XDE85A385ABE2A817);
-    ASSERT_EQ(Goldilocks::toU64(a[12 * NUM_COLUMNS]), 0X281F1BF7178650C);
-    ASSERT_EQ(Goldilocks::toU64(a[13 * NUM_COLUMNS]), 0XA0C663876DFF41A7);
-    ASSERT_EQ(Goldilocks::toU64(a[14 * NUM_COLUMNS]), 0XD49C07EA43D3806C);
-    ASSERT_EQ(Goldilocks::toU64(a[15 * NUM_COLUMNS]), 0XBCEB714F2E6B299A);
-    ASSERT_EQ(Goldilocks::toU64(a[16 * NUM_COLUMNS]), 0XC46EE848F93207D8);
-    ASSERT_EQ(Goldilocks::toU64(a[17 * NUM_COLUMNS]), 0XF70EC69883DEE2A);
-    ASSERT_EQ(Goldilocks::toU64(a[18 * NUM_COLUMNS]), 0XEE28CDAF6C30F9D9);
-    ASSERT_EQ(Goldilocks::toU64(a[19 * NUM_COLUMNS]), 0X6356B93C02C259B3);
-    ASSERT_EQ(Goldilocks::toU64(a[20 * NUM_COLUMNS]), 0XD19A89639BC31A16);
-    ASSERT_EQ(Goldilocks::toU64(a[21 * NUM_COLUMNS]), 0XB097AE217FC93344);
-    ASSERT_EQ(Goldilocks::toU64(a[22 * NUM_COLUMNS]), 0X29BB681AF743F8F6);
-    ASSERT_EQ(Goldilocks::toU64(a[23 * NUM_COLUMNS]), 0X8E874011A158B00B);
-    ASSERT_EQ(Goldilocks::toU64(a[24 * NUM_COLUMNS]), 0XC95F0B718235B6D7);
-    ASSERT_EQ(Goldilocks::toU64(a[25 * NUM_COLUMNS]), 0XFE51B4A575AFECA0);
-    ASSERT_EQ(Goldilocks::toU64(a[26 * NUM_COLUMNS]), 0XC68CF305A6F17F4F);
-    ASSERT_EQ(Goldilocks::toU64(a[27 * NUM_COLUMNS]), 0XC7912AE75E2DD36D);
-    ASSERT_EQ(Goldilocks::toU64(a[28 * NUM_COLUMNS]), 0X6EFC40795CF38959);
-    ASSERT_EQ(Goldilocks::toU64(a[29 * NUM_COLUMNS]), 0X6BD4745D238824D9);
-    ASSERT_EQ(Goldilocks::toU64(a[30 * NUM_COLUMNS]), 0XB4FF76AAC16372AA);
-    ASSERT_EQ(Goldilocks::toU64(a[31 * NUM_COLUMNS]), 0XA0705C72DD9F9A2F);
+    ASSERT_TRUE(E.fr.eq(a[0 * NUM_COLUMNS], E.fr.fromUI(0X3E7CA26D67147C31)));
+    ASSERT_TRUE(E.fr.eq(a[1 * NUM_COLUMNS], E.fr.fromUI(0X1310720153E0ABE4)));
+    ASSERT_TRUE(E.fr.eq(a[2 * NUM_COLUMNS], E.fr.fromUI(0X20446D2EA50E8F96)));
+    ASSERT_TRUE(E.fr.eq(a[3 * NUM_COLUMNS], E.fr.fromUI(0XEAB91008C3444102)));
+    ASSERT_TRUE(E.fr.eq(a[4 * NUM_COLUMNS], E.fr.fromUI(0X68523AC1294A2)));
+    ASSERT_TRUE(E.fr.eq(a[5 * NUM_COLUMNS], E.fr.fromUI(0X8A0BB8A3EBA8260A)));
+    ASSERT_TRUE(E.fr.eq(a[6 * NUM_COLUMNS], E.fr.fromUI(0X515CEC478A438B2)));
+    ASSERT_TRUE(E.fr.eq(a[7 * NUM_COLUMNS], E.fr.fromUI(0XA087431602851263)));
+    ASSERT_TRUE(E.fr.eq(a[8 * NUM_COLUMNS], E.fr.fromUI(0XF09629139EA12C82)));
+    ASSERT_TRUE(E.fr.eq(a[9 * NUM_COLUMNS], E.fr.fromUI(0X175DC5A131392734)));
+    ASSERT_TRUE(E.fr.eq(a[10 * NUM_COLUMNS], E.fr.fromUI(0X72991CA43B50D824)));
+    ASSERT_TRUE(E.fr.eq(a[11 * NUM_COLUMNS], E.fr.fromUI(0XDE85A385ABE2A817)));
+    ASSERT_TRUE(E.fr.eq(a[12 * NUM_COLUMNS], E.fr.fromUI(0X281F1BF7178650C)));
+    ASSERT_TRUE(E.fr.eq(a[13 * NUM_COLUMNS], E.fr.fromUI(0XA0C663876DFF41A7)));
+    ASSERT_TRUE(E.fr.eq(a[14 * NUM_COLUMNS], E.fr.fromUI(0XD49C07EA43D3806C)));
+    ASSERT_TRUE(E.fr.eq(a[15 * NUM_COLUMNS], E.fr.fromUI(0XBCEB714F2E6B299A)));
+    ASSERT_TRUE(E.fr.eq(a[16 * NUM_COLUMNS], E.fr.fromUI(0XC46EE848F93207D8)));
+    ASSERT_TRUE(E.fr.eq(a[17 * NUM_COLUMNS], E.fr.fromUI(0XF70EC69883DEE2A)));
+    ASSERT_TRUE(E.fr.eq(a[18 * NUM_COLUMNS], E.fr.fromUI(0XEE28CDAF6C30F9D9)));
+    ASSERT_TRUE(E.fr.eq(a[19 * NUM_COLUMNS], E.fr.fromUI(0X6356B93C02C259B3)));
+    ASSERT_TRUE(E.fr.eq(a[20 * NUM_COLUMNS], E.fr.fromUI(0XD19A89639BC31A16)));
+    ASSERT_TRUE(E.fr.eq(a[21 * NUM_COLUMNS], E.fr.fromUI(0XB097AE217FC93344)));
+    ASSERT_TRUE(E.fr.eq(a[22 * NUM_COLUMNS], E.fr.fromUI(0X29BB681AF743F8F6)));
+    ASSERT_TRUE(E.fr.eq(a[23 * NUM_COLUMNS], E.fr.fromUI(0X8E874011A158B00B)));
+    ASSERT_TRUE(E.fr.eq(a[24 * NUM_COLUMNS], E.fr.fromUI(0XC95F0B718235B6D7)));
+    ASSERT_TRUE(E.fr.eq(a[25 * NUM_COLUMNS], E.fr.fromUI(0XFE51B4A575AFECA0)));
+    ASSERT_TRUE(E.fr.eq(a[26 * NUM_COLUMNS], E.fr.fromUI(0XC68CF305A6F17F4F)));
+    ASSERT_TRUE(E.fr.eq(a[27 * NUM_COLUMNS], E.fr.fromUI(0XC7912AE75E2DD36D)));
+    ASSERT_TRUE(E.fr.eq(a[28 * NUM_COLUMNS], E.fr.fromUI(0X6EFC40795CF38959)));
+    ASSERT_TRUE(E.fr.eq(a[29 * NUM_COLUMNS], E.fr.fromUI(0X6BD4745D238824D9)));
+    ASSERT_TRUE(E.fr.eq(a[30 * NUM_COLUMNS], E.fr.fromUI(0XB4FF76AAC16372AA)));
+    ASSERT_TRUE(E.fr.eq(a[31 * NUM_COLUMNS], E.fr.fromUI(0XA0705C72DD9F9A2F)));
 
     free(a);
     free(r);
@@ -349,13 +349,13 @@ TEST(BN128_TEST, extendePol)
     AltBn128::FrElement *a = (AltBn128::FrElement *)malloc((FFT_SIZE << BLOWUP_FACTOR) * NUM_COLUMNS * sizeof(AltBn128::FrElement));
     AltBn128::FrElement *b = (AltBn128::FrElement *)malloc((FFT_SIZE << BLOWUP_FACTOR) * NUM_COLUMNS * sizeof(AltBn128::FrElement));
 
-    NTT_Bn128 ntt(FFT_SIZE);
+    NTT_AltBn128 ntt(E,FFT_SIZE);
 
     for (uint i = 0; i < 2; i++)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            Goldilocks::add(a[i * NUM_COLUMNS + j], E.fr.one(), Goldilocks::fromU64(j));
+            a[i * NUM_COLUMNS + j] = E.fr.add(E.fr.one(), E.fr.set(j));
         }
     }
 
@@ -363,44 +363,44 @@ TEST(BN128_TEST, extendePol)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            a[i * NUM_COLUMNS + j] = a[NUM_COLUMNS * (i - 1) + j] + a[NUM_COLUMNS * (i - 2) + j];
+            a[i * NUM_COLUMNS + j] = E.fr.add(a[NUM_COLUMNS * (i - 1) + j], a[NUM_COLUMNS * (i - 2) + j]);
         }
     }
 
     ntt.extendPol(a, a, FFT_SIZE << BLOWUP_FACTOR, FFT_SIZE, NUM_COLUMNS, b);
 
-    ASSERT_EQ(Goldilocks::toU64(a[0 * NUM_COLUMNS]), 0X3E7CA26D67147C31);
-    ASSERT_EQ(Goldilocks::toU64(a[1 * NUM_COLUMNS]), 0X1310720153E0ABE4);
-    ASSERT_EQ(Goldilocks::toU64(a[2 * NUM_COLUMNS]), 0X20446D2EA50E8F96);
-    ASSERT_EQ(Goldilocks::toU64(a[3 * NUM_COLUMNS]), 0XEAB91008C3444102);
-    ASSERT_EQ(Goldilocks::toU64(a[4 * NUM_COLUMNS]), 0X68523AC1294A2);
-    ASSERT_EQ(Goldilocks::toU64(a[5 * NUM_COLUMNS]), 0X8A0BB8A3EBA8260A);
-    ASSERT_EQ(Goldilocks::toU64(a[6 * NUM_COLUMNS]), 0X515CEC478A438B2);
-    ASSERT_EQ(Goldilocks::toU64(a[7 * NUM_COLUMNS]), 0XA087431602851263);
-    ASSERT_EQ(Goldilocks::toU64(a[8 * NUM_COLUMNS]), 0XF09629139EA12C82);
-    ASSERT_EQ(Goldilocks::toU64(a[9 * NUM_COLUMNS]), 0X175DC5A131392734);
-    ASSERT_EQ(Goldilocks::toU64(a[10 * NUM_COLUMNS]), 0X72991CA43B50D824);
-    ASSERT_EQ(Goldilocks::toU64(a[11 * NUM_COLUMNS]), 0XDE85A385ABE2A817);
-    ASSERT_EQ(Goldilocks::toU64(a[12 * NUM_COLUMNS]), 0X281F1BF7178650C);
-    ASSERT_EQ(Goldilocks::toU64(a[13 * NUM_COLUMNS]), 0XA0C663876DFF41A7);
-    ASSERT_EQ(Goldilocks::toU64(a[14 * NUM_COLUMNS]), 0XD49C07EA43D3806C);
-    ASSERT_EQ(Goldilocks::toU64(a[15 * NUM_COLUMNS]), 0XBCEB714F2E6B299A);
-    ASSERT_EQ(Goldilocks::toU64(a[16 * NUM_COLUMNS]), 0XC46EE848F93207D8);
-    ASSERT_EQ(Goldilocks::toU64(a[17 * NUM_COLUMNS]), 0XF70EC69883DEE2A);
-    ASSERT_EQ(Goldilocks::toU64(a[18 * NUM_COLUMNS]), 0XEE28CDAF6C30F9D9);
-    ASSERT_EQ(Goldilocks::toU64(a[19 * NUM_COLUMNS]), 0X6356B93C02C259B3);
-    ASSERT_EQ(Goldilocks::toU64(a[20 * NUM_COLUMNS]), 0XD19A89639BC31A16);
-    ASSERT_EQ(Goldilocks::toU64(a[21 * NUM_COLUMNS]), 0XB097AE217FC93344);
-    ASSERT_EQ(Goldilocks::toU64(a[22 * NUM_COLUMNS]), 0X29BB681AF743F8F6);
-    ASSERT_EQ(Goldilocks::toU64(a[23 * NUM_COLUMNS]), 0X8E874011A158B00B);
-    ASSERT_EQ(Goldilocks::toU64(a[24 * NUM_COLUMNS]), 0XC95F0B718235B6D7);
-    ASSERT_EQ(Goldilocks::toU64(a[25 * NUM_COLUMNS]), 0XFE51B4A575AFECA0);
-    ASSERT_EQ(Goldilocks::toU64(a[26 * NUM_COLUMNS]), 0XC68CF305A6F17F4F);
-    ASSERT_EQ(Goldilocks::toU64(a[27 * NUM_COLUMNS]), 0XC7912AE75E2DD36D);
-    ASSERT_EQ(Goldilocks::toU64(a[28 * NUM_COLUMNS]), 0X6EFC40795CF38959);
-    ASSERT_EQ(Goldilocks::toU64(a[29 * NUM_COLUMNS]), 0X6BD4745D238824D9);
-    ASSERT_EQ(Goldilocks::toU64(a[30 * NUM_COLUMNS]), 0XB4FF76AAC16372AA);
-    ASSERT_EQ(Goldilocks::toU64(a[31 * NUM_COLUMNS]), 0XA0705C72DD9F9A2F);
+    ASSERT_TRUE(E.fr.eq(a[0 * NUM_COLUMNS], E.fr.fromUI(0X3E7CA26D67147C31)));
+    ASSERT_TRUE(E.fr.eq(a[1 * NUM_COLUMNS], E.fr.fromUI(0X1310720153E0ABE4)));
+    ASSERT_TRUE(E.fr.eq(a[2 * NUM_COLUMNS], E.fr.fromUI(0X20446D2EA50E8F96)));
+    ASSERT_TRUE(E.fr.eq(a[3 * NUM_COLUMNS], E.fr.fromUI(0XEAB91008C3444102)));
+    ASSERT_TRUE(E.fr.eq(a[4 * NUM_COLUMNS], E.fr.fromUI(0X68523AC1294A2)));
+    ASSERT_TRUE(E.fr.eq(a[5 * NUM_COLUMNS], E.fr.fromUI(0X8A0BB8A3EBA8260A)));
+    ASSERT_TRUE(E.fr.eq(a[6 * NUM_COLUMNS], E.fr.fromUI(0X515CEC478A438B2)));
+    ASSERT_TRUE(E.fr.eq(a[7 * NUM_COLUMNS], E.fr.fromUI(0XA087431602851263)));
+    ASSERT_TRUE(E.fr.eq(a[8 * NUM_COLUMNS], E.fr.fromUI(0XF09629139EA12C82)));
+    ASSERT_TRUE(E.fr.eq(a[9 * NUM_COLUMNS], E.fr.fromUI(0X175DC5A131392734)));
+    ASSERT_TRUE(E.fr.eq(a[10 * NUM_COLUMNS], E.fr.fromUI(0X72991CA43B50D824)));
+    ASSERT_TRUE(E.fr.eq(a[11 * NUM_COLUMNS], E.fr.fromUI(0XDE85A385ABE2A817)));
+    ASSERT_TRUE(E.fr.eq(a[12 * NUM_COLUMNS], E.fr.fromUI(0X281F1BF7178650C)));
+    ASSERT_TRUE(E.fr.eq(a[13 * NUM_COLUMNS], E.fr.fromUI(0XA0C663876DFF41A7)));
+    ASSERT_TRUE(E.fr.eq(a[14 * NUM_COLUMNS], E.fr.fromUI(0XD49C07EA43D3806C)));
+    ASSERT_TRUE(E.fr.eq(a[15 * NUM_COLUMNS], E.fr.fromUI(0XBCEB714F2E6B299A)));
+    ASSERT_TRUE(E.fr.eq(a[16 * NUM_COLUMNS], E.fr.fromUI(0XC46EE848F93207D8)));
+    ASSERT_TRUE(E.fr.eq(a[17 * NUM_COLUMNS], E.fr.fromUI(0XF70EC69883DEE2A)));
+    ASSERT_TRUE(E.fr.eq(a[18 * NUM_COLUMNS], E.fr.fromUI(0XEE28CDAF6C30F9D9)));
+    ASSERT_TRUE(E.fr.eq(a[19 * NUM_COLUMNS], E.fr.fromUI(0X6356B93C02C259B3)));
+    ASSERT_TRUE(E.fr.eq(a[20 * NUM_COLUMNS], E.fr.fromUI(0XD19A89639BC31A16)));
+    ASSERT_TRUE(E.fr.eq(a[21 * NUM_COLUMNS], E.fr.fromUI(0XB097AE217FC93344)));
+    ASSERT_TRUE(E.fr.eq(a[22 * NUM_COLUMNS], E.fr.fromUI(0X29BB681AF743F8F6)));
+    ASSERT_TRUE(E.fr.eq(a[23 * NUM_COLUMNS], E.fr.fromUI(0X8E874011A158B00B)));
+    ASSERT_TRUE(E.fr.eq(a[24 * NUM_COLUMNS], E.fr.fromUI(0XC95F0B718235B6D7)));
+    ASSERT_TRUE(E.fr.eq(a[25 * NUM_COLUMNS], E.fr.fromUI(0XFE51B4A575AFECA0)));
+    ASSERT_TRUE(E.fr.eq(a[26 * NUM_COLUMNS], E.fr.fromUI(0XC68CF305A6F17F4F)));
+    ASSERT_TRUE(E.fr.eq(a[27 * NUM_COLUMNS], E.fr.fromUI(0XC7912AE75E2DD36D)));
+    ASSERT_TRUE(E.fr.eq(a[28 * NUM_COLUMNS], E.fr.fromUI(0X6EFC40795CF38959)));
+    ASSERT_TRUE(E.fr.eq(a[29 * NUM_COLUMNS], E.fr.fromUI(0X6BD4745D238824D9)));
+    ASSERT_TRUE(E.fr.eq(a[30 * NUM_COLUMNS], E.fr.fromUI(0XB4FF76AAC16372AA)));
+    ASSERT_TRUE(E.fr.eq(a[31 * NUM_COLUMNS], E.fr.fromUI(0XA0705C72DD9F9A2F)));
 
     free(a);
     free(b);
