@@ -2,9 +2,9 @@
 
 # Directories
 BUILD_DIR := build
-SRC_DIRS  := src
+SRC_DIRS  := src src/chelpers
 DPNDS_DIR := depends/ffiasm/c
-TEST_DIRS := src test
+TEST_DIRS := src src/helpers test
 
 # Libraries
 LIBOMP := $(shell find /usr/lib/llvm-* -name "libomp.so" | sed 's/libomp.so//')
@@ -25,7 +25,7 @@ ASFLAGS := -felf64
 TARGET_PFP := pfProver
 TARGET_TEST := pfProverTest
 
-INC_DIRS := depends/ffiasm/c depends/json/single_include/nlohmann depends/xkcp/Standalone/CompactFIPS202/C
+INC_DIRS := depends/ffiasm/c depends/json/single_include/nlohmann depends/xkcp/Standalone/CompactFIPS202/C src/chelpers
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Files
@@ -40,6 +40,7 @@ SRCS_TEST := $(shell find $(TEST_DIRS) -name *.cpp)
 SRCS_TEST += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp binfile_utils.cpp naf.cpp splitparstr.cpp)
 SRCS_TEST += $(shell find $(DPNDS_DIR) -name *.asm)
 OBJS_TEST := $(patsubst %,$(BUILD_DIR)/%.o,$(SRCS_TEST))
+OBJS_TEST := $(filter-out $(BUILD_DIR)/src/main.cpp.o, $(OBJS_TEST)) # Exclude main.cpp from test build
 DEPS_TEST := $(OBJS_TEST:.o=.d)
 
 # Default target
