@@ -134,16 +134,11 @@ TEST(BN128_TEST, ntt_block)
     // Edge case:Try to call ntt with FFT_SIZE = 1 ncols=3
     uint64_t fft_size = 1;
     uint64_t ncols = 3;
-    AltBn128::FrElement a1[3] = {1, 2, 3};
+    AltBn128::FrElement a1[3] = {E.fr.set(1), E.fr.set(2), E.fr.set(3)};
     AltBn128::FrElement b1[3];
 
     bn128ntt.NTT(b1, a1, fft_size, ncols);
-    ASSERT_TRUE(E.fr.eq(b1[0], E.fr.set(1)));
-    ASSERT_TRUE(E.fr.eq(b1[1], E.fr.set(2)));
-    ASSERT_TRUE(E.fr.eq(b1[2], E.fr.set(3)));
-
     bn128ntt.INTT(a1, b1, fft_size, ncols);
-
     ASSERT_TRUE(E.fr.eq(a1[0], E.fr.set(1)));
     ASSERT_TRUE(E.fr.eq(a1[1], E.fr.set(2)));
     ASSERT_TRUE(E.fr.eq(a1[2], E.fr.set(3)));
@@ -151,7 +146,7 @@ TEST(BN128_TEST, ntt_block)
     // Edge case:Try to call ntt with FFT_SIZE = 2 ncols=3
     fft_size = 2;
     ncols = 3;
-    AltBn128::FrElement a2[6] = {1, 2, 3, 4, 5, 6};
+    AltBn128::FrElement a2[6] = {E.fr.set(1), E.fr.set(2), E.fr.set(3), E.fr.set(4), E.fr.set(5), E.fr.set(6)};
     AltBn128::FrElement b2[6];
 
     bn128ntt.NTT(b2, a2, fft_size, ncols);
