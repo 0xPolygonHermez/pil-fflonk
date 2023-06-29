@@ -63,7 +63,7 @@ $(BUILD_DIR)/%.asm.o: %.asm
 ### TEST
 # Build pilFflonkProver test target
 $(BUILD_DIR)/$(TARGET_TEST): $(OBJS_TEST)
-	$(CXX) $(OBJS_TEST) $(CXXFLAGS) $(LDFLAGS) $(LDFLAGS_TEST) -o $@
+	$(CXX) $(OBJS_TEST) $(CXXFLAGS) $(LDFLAGS) -o $@
 
 init:
 	cd $(DPNDS_DIR) && node ../src/buildzqfield.js -q 21888242871839275222246405745257275088696311157297823662689037894645226208583 -n Fq

@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include <iostream>
 
 #include <alt_bn128.hpp>
@@ -10,20 +11,22 @@
 #define NUM_COLUMNS 8
 #define NPHASES 4
 
+AltBn128::Engine E;
+
 TEST(BN128_TEST, ntt)
 {
     AltBn128::FrElement *a = (AltBn128::FrElement *)malloc(FFT_SIZE * sizeof(AltBn128::FrElement));
     AltBn128::FrElement *initial = (AltBn128::FrElement *)malloc(FFT_SIZE * sizeof(AltBn128::FrElement));
-    NTT_Bn128 bn128ntt(FFT_SIZE);
+    NTT_AltBn128 bn128ntt(E, FFT_SIZE);
 
-    a[0] = Goldilocks::one();
-    a[1] = Goldilocks::one();
+    a[0] = E.fr.one();
+    a[1] = E.fr.one();
     for (uint64_t i = 2; i < FFT_SIZE; i++)
     {
-        a[i] = a[i - 1] + a[i - 2];
+        a[i] = E.fr.mul(a[i - 1], a[i - 2]);
     }
 
-    std::memcpy(initial, a, FFT_SIZE * sizeof(AltBn128::FrElement));
+    memcpy(initial, a, FFT_SIZE * sizeof(AltBn128::FrElement));
 
     for (int i = 0; i < NUM_REPS; i++)
     {
@@ -33,7 +36,7 @@ TEST(BN128_TEST, ntt)
 
     for (int i = 0; i < FFT_SIZE; i++)
     {
-        ASSERT_EQ(Goldilocks::toU64(a[i]), Goldilocks::toU64(initial[i]));
+        ASSERT_TRUE(E.fr.eq(a[i], initial[i]));
     }
     free(a);
     free(initial);
@@ -43,13 +46,13 @@ TEST(BN128_TEST, ntt_block)
 {
     AltBn128::FrElement *a = (AltBn128::FrElement *)malloc(FFT_SIZE * NUM_COLUMNS * sizeof(AltBn128::FrElement));
     AltBn128::FrElement *initial = (AltBn128::FrElement *)malloc(FFT_SIZE * NUM_COLUMNS * sizeof(AltBn128::FrElement));
-    NTT_Bn128 bn128ntt(FFT_SIZE);
+    NTT_AltBn128 bn128ntt(E, FFT_SIZE);
 
     for (uint i = 0; i < 2; i++)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            Goldilocks::add(a[i * NUM_COLUMNS + j], Goldilocks::one(), Goldilocks::fromU64(j));
+            E.fr.add(a[i * NUM_COLUMNS + j], E.fr.one(), E.fr.set(j));
         }
     }
 
@@ -57,11 +60,11 @@ TEST(BN128_TEST, ntt_block)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            a[i * NUM_COLUMNS + j] = a[NUM_COLUMNS * (i - 1) + j] + a[NUM_COLUMNS * (i - 2) + j];
+            a[i * NUM_COLUMNS + j] = E.fr.add(a[NUM_COLUMNS * (i - 1) + j], a[NUM_COLUMNS * (i - 2) + j]);
         }
     }
 
-    std::memcpy(initial, a, FFT_SIZE * NUM_COLUMNS * sizeof(AltBn128::FrElement));
+    memcpy(initial, a, FFT_SIZE * NUM_COLUMNS * sizeof(AltBn128::FrElement));
 
     // Option 1: dst is a NULL pointer
     for (int i = 0; i < NUM_REPS; i++)
@@ -72,7 +75,7 @@ TEST(BN128_TEST, ntt_block)
 
     for (int i = 0; i < FFT_SIZE * NUM_COLUMNS; i++)
     {
-        ASSERT_EQ(Goldilocks::toU64(a[i]), Goldilocks::toU64(initial[i]));
+        ASSERT_TRUE(E.fr.eq(a[i], initial[i]));
     }
 
     // Option 2: dst = src
@@ -84,7 +87,7 @@ TEST(BN128_TEST, ntt_block)
 
     for (int i = 0; i < FFT_SIZE * NUM_COLUMNS; i++)
     {
-        ASSERT_EQ(Goldilocks::toU64(a[i]), Goldilocks::toU64(initial[i]));
+        ASSERT_TRUE(E.fr.eq(a[i], initial[i]));
     }
 
     // Option 3: dst != src
@@ -93,13 +96,13 @@ TEST(BN128_TEST, ntt_block)
     {
         bn128ntt.NTT(dst, a, FFT_SIZE, NUM_COLUMNS);
         for (uint64_t k = 0; k < FFT_SIZE * NUM_COLUMNS; ++k)
-            a[k] = Goldilocks::zero();
+            a[k] = E.fr.zero();
         bn128ntt.INTT(a, dst, FFT_SIZE, NUM_COLUMNS);
     }
 
     for (int i = 0; i < FFT_SIZE * NUM_COLUMNS; i++)
     {
-        ASSERT_EQ(Goldilocks::toU64(a[i]), Goldilocks::toU64(initial[i]));
+        ASSERT_TRUE(E.fr.eq(a[i], initial[i]));
     }
 
     // Option 4: different configurations of phases and blocks
@@ -111,7 +114,7 @@ TEST(BN128_TEST, ntt_block)
 
     for (int i = 0; i < FFT_SIZE * NUM_COLUMNS; i++)
     {
-        ASSERT_EQ(Goldilocks::toU64(a[i]), Goldilocks::toU64(initial[i]));
+        ASSERT_TRUE(E.fr.eq(a[i], initial[i]));
     }
 
     // Option 5: out of range parameters
@@ -123,7 +126,7 @@ TEST(BN128_TEST, ntt_block)
 
     for (int i = 0; i < FFT_SIZE * NUM_COLUMNS; i++)
     {
-        ASSERT_EQ(Goldilocks::toU64(a[i]), Goldilocks::toU64(initial[i]));
+        ASSERT_TRUE(E.fr.eq(a[i], initial[i]));
     }
     free(a);
     free(initial);
@@ -135,15 +138,15 @@ TEST(BN128_TEST, ntt_block)
     AltBn128::FrElement b1[3];
 
     bn128ntt.NTT(b1, a1, fft_size, ncols);
-    ASSERT_EQ(Goldilocks::toU64(b1[0]), 1);
-    ASSERT_EQ(Goldilocks::toU64(b1[1]), 2);
-    ASSERT_EQ(Goldilocks::toU64(b1[2]), 3);
+    ASSERT_TRUE(E.fr.eq(b1[0], E.fr.set(1)));
+    ASSERT_TRUE(E.fr.eq(b1[1], E.fr.set(2)));
+    ASSERT_TRUE(E.fr.eq(b1[2], E.fr.set(3)));
 
     bn128ntt.INTT(a1, b1, fft_size, ncols);
 
-    ASSERT_EQ(Goldilocks::toU64(a1[0]), 1);
-    ASSERT_EQ(Goldilocks::toU64(a1[1]), 2);
-    ASSERT_EQ(Goldilocks::toU64(a1[2]), 3);
+    ASSERT_TRUE(E.fr.eq(a1[0], E.fr.set(1)));
+    ASSERT_TRUE(E.fr.eq(a1[1], E.fr.set(2)));
+    ASSERT_TRUE(E.fr.eq(a1[2], E.fr.set(3)));
 
     // Edge case:Try to call ntt with FFT_SIZE = 2 ncols=3
     fft_size = 2;
@@ -154,12 +157,12 @@ TEST(BN128_TEST, ntt_block)
     bn128ntt.NTT(b2, a2, fft_size, ncols);
     bn128ntt.INTT(a2, b2, fft_size, ncols);
 
-    ASSERT_EQ(Goldilocks::toU64(a2[0]), 1);
-    ASSERT_EQ(Goldilocks::toU64(a2[1]), 2);
-    ASSERT_EQ(Goldilocks::toU64(a2[2]), 3);
-    ASSERT_EQ(Goldilocks::toU64(a2[3]), 4);
-    ASSERT_EQ(Goldilocks::toU64(a2[4]), 5);
-    ASSERT_EQ(Goldilocks::toU64(a2[5]), 6);
+    ASSERT_TRUE(E.fr.eq(a2[0], E.fr.set(1)));
+    ASSERT_TRUE(E.fr.eq(a2[1], E.fr.set(2)));
+    ASSERT_TRUE(E.fr.eq(a2[2], E.fr.set(3)));
+    ASSERT_TRUE(E.fr.eq(a2[3], E.fr.set(4)));
+    ASSERT_TRUE(E.fr.eq(a2[4], E.fr.set(5)));
+    ASSERT_TRUE(E.fr.eq(a2[5], E.fr.set(6)));
 
     // Edge case: It does not crash with size==0 or ncols==0
     fft_size = 0;
@@ -174,41 +177,41 @@ TEST(BN128_TEST, ntt_block)
 TEST(BN128_TEST, LDE)
 {
     AltBn128::FrElement *a = (AltBn128::FrElement *)malloc((FFT_SIZE << BLOWUP_FACTOR) * sizeof(AltBn128::FrElement));
-    NTT_Bn128 bn128ntt(FFT_SIZE);
-    NTT_Bn128 gntt_extension((FFT_SIZE << BLOWUP_FACTOR));
+    NTT_AltBn128 bn128ntt(E, FFT_SIZE);
+    NTT_AltBn128 gntt_extension(E, FFT_SIZE << BLOWUP_FACTOR);
 
     AltBn128::FrElement *zeros_array = (AltBn128::FrElement *)malloc(((FFT_SIZE << BLOWUP_FACTOR) - FFT_SIZE) * sizeof(AltBn128::FrElement));
 #pragma omp parallel for
     for (uint i = 0; i < ((FFT_SIZE << BLOWUP_FACTOR) - FFT_SIZE); i++)
     {
-        zeros_array[i] = Goldilocks::zero();
+        zeros_array[i] = E.fr.zero();
     }
 
-    a[0] = Goldilocks::one();
-    a[1] = Goldilocks::one();
+    a[0] = E.fr.one();
+    a[1] = E.fr.one();
     for (uint64_t i = 2; i < FFT_SIZE; i++)
     {
-        a[i] = a[i - 1] + a[i - 2];
+        a[i] = E.fr.add(a[i - 1], a[i - 2]);
     }
 
-    AltBn128::FrElement shift = Goldilocks::fromU64(49); // TODO: ask for this number, where to put it how to calculate it
+    AltBn128::FrElement shift = E.fr.set(49); // TODO: ask for this number, where to put it how to calculate it
     bn128ntt.INTT(a, a, FFT_SIZE);
 
     // TODO: This can be pre-generated
     AltBn128::FrElement *r = (AltBn128::FrElement *)malloc(FFT_SIZE * sizeof(AltBn128::FrElement));
-    r[0] = Goldilocks::one();
+    r[0] = E.fr.one();
     for (int i = 1; i < FFT_SIZE; i++)
     {
-        r[i] = r[i - 1] * shift;
+        r[i] = E.fr.mul(r[i - 1], shift);
     }
 
 #pragma omp parallel for
     for (int i = 0; i < FFT_SIZE; i++)
     {
-        a[i] = a[i] * r[i];
+        a[i] = E.fr.mul(a[i], r[i]);
     }
 
-    std::memcpy(&a[FFT_SIZE], zeros_array, ((FFT_SIZE << BLOWUP_FACTOR) - FFT_SIZE) * sizeof(AltBn128::FrElement));
+    memcpy(&a[FFT_SIZE], zeros_array, ((FFT_SIZE << BLOWUP_FACTOR) - FFT_SIZE) * sizeof(AltBn128::FrElement));
 
     gntt_extension.NTT(a, a, (FFT_SIZE << BLOWUP_FACTOR));
 
@@ -216,7 +219,7 @@ TEST(BN128_TEST, LDE)
     {
         std::cout << std::showbase << std::hex << std::uppercase << Goldilocks::toU64(a[k]) << std::endl;
     }*/
-    ASSERT_EQ(Goldilocks::toU64(a[0]), 0XCBA857825D02DA98);
+    ASSERT_TRUE(E.fr.eq(a[0], E.fr.fromUI((unsigned long int)0XCBA857825D02DA98)));
     ASSERT_EQ(Goldilocks::toU64(a[1]), 0X46B25F2EB8DC45C6);
     ASSERT_EQ(Goldilocks::toU64(a[2]), 0X53CD52572B82CE93);
     ASSERT_EQ(Goldilocks::toU64(a[3]), 0X6A1C4033524890BC);
@@ -256,14 +259,14 @@ TEST(BN128_TEST, LDE)
 TEST(BN128_TEST, LDE_block)
 {
     AltBn128::FrElement *a = (AltBn128::FrElement *)malloc((FFT_SIZE << BLOWUP_FACTOR) * NUM_COLUMNS * sizeof(AltBn128::FrElement));
-    NTT_Bn128 bn128ntt(FFT_SIZE);
+    NTT_AltBn128 bn128ntt(E, FFT_SIZE);
     NTT_Bn128 gntt_extension((FFT_SIZE << BLOWUP_FACTOR));
 
     for (uint i = 0; i < 2; i++)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            Goldilocks::add(a[i * NUM_COLUMNS + j], Goldilocks::one(), Goldilocks::fromU64(j));
+            Goldilocks::add(a[i * NUM_COLUMNS + j], E.fr.one(), Goldilocks::fromU64(j));
         }
     }
 
@@ -279,7 +282,7 @@ TEST(BN128_TEST, LDE_block)
 
     // TODO: This can be pre-generated
     AltBn128::FrElement *r = (AltBn128::FrElement *)malloc(FFT_SIZE * sizeof(AltBn128::FrElement));
-    r[0] = Goldilocks::one();
+    r[0] = E.fr.one();
     for (int i = 1; i < FFT_SIZE; i++)
     {
         r[i] = r[i - 1] * Goldilocks::shift();
@@ -352,7 +355,7 @@ TEST(BN128_TEST, extendePol)
     {
         for (uint j = 0; j < NUM_COLUMNS; j++)
         {
-            Goldilocks::add(a[i * NUM_COLUMNS + j], Goldilocks::one(), Goldilocks::fromU64(j));
+            Goldilocks::add(a[i * NUM_COLUMNS + j], E.fr.one(), Goldilocks::fromU64(j));
         }
     }
 
