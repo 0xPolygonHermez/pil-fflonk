@@ -11,7 +11,7 @@ static inline u_int64_t BR(u_int64_t x, u_int64_t domainPow)
     return (((x & 0xAAAAAAAA) >> 1) | ((x & 0x55555555) << 1)) >> (32 - domainPow);
 }
 
-void NTT_AltBn128::NTT_iters(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t offset_cols, u_int64_t ncols, u_int64_t ncols_all, u_int64_t nphase, AltBn128::FrElement *aux, bool inverse, bool extend)
+void NTT_AltBn128::NTT_iters(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t offset_cols, u_int64_t ncols, u_int64_t ncols_all, u_int64_t nphase, AltBn128::FrElement *aux, bool inverse)
 {
     AltBn128::FrElement *dst_;
     if (dst != NULL)
@@ -20,8 +20,8 @@ void NTT_AltBn128::NTT_iters(AltBn128::FrElement *dst, AltBn128::FrElement *src,
     }
     else
     {
-        dst_ = src;
-    }
+        dst_ = src; 
+    } 
     AltBn128::FrElement *a = dst_;
     AltBn128::FrElement *a2 = aux;
     AltBn128::FrElement *tmp;
@@ -123,30 +123,14 @@ void NTT_AltBn128::NTT_iters(AltBn128::FrElement *dst, AltBn128::FrElement *src,
             }
             else
             {
-                if (extend)
+                for (u_int64_t x = 0; x < batchSize; x++)
                 {
-                    for (u_int64_t x = 0; x < batchSize; x++)
+                    u_int64_t dsty = intt_idx((x * nBatches + b), size);
+                    u_int64_t offset_dstY = dsty * ncols;
+                    u_int64_t offset_src = (b * batchSize + x) * ncols;
+                    for (uint64_t k = 0; k < ncols; k++)
                     {
-                        u_int64_t dsty = intt_idx((x * nBatches + b), size);
-                        u_int64_t offset_dstY = dsty * ncols;
-                        u_int64_t offset_src = (b * batchSize + x) * ncols;
-                        for (uint64_t k = 0; k < ncols; k++)
-                        {
-                            E.fr.mul(a2[offset_dstY + k], a[offset_src + k], r_[dsty]);
-                        }
-                    }
-                }
-                else
-                {
-                    for (u_int64_t x = 0; x < batchSize; x++)
-                    {
-                        u_int64_t dsty = intt_idx((x * nBatches + b), size);
-                        u_int64_t offset_dstY = dsty * ncols;
-                        u_int64_t offset_src = (b * batchSize + x) * ncols;
-                        for (uint64_t k = 0; k < ncols; k++)
-                        {
-                            E.fr.mul(a2[offset_dstY + k], a[offset_src + k], powTwoInv[domainPow]);
-                        }
+                        E.fr.mul(a2[offset_dstY + k], a[offset_src + k], powTwoInv[domainPow]);
                     }
                 }
             }
@@ -165,7 +149,7 @@ void NTT_AltBn128::NTT_iters(AltBn128::FrElement *dst, AltBn128::FrElement *src,
     }
 }
 
-void NTT_AltBn128::NTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols, AltBn128::FrElement *buffer, u_int64_t nphase, u_int64_t nblock, bool inverse, bool extend)
+void NTT_AltBn128::NTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols, AltBn128::FrElement *buffer, u_int64_t nphase, u_int64_t nblock, bool inverse)
 {
     if (ncols == 0 || size == 0)
     {
@@ -211,7 +195,7 @@ void NTT_AltBn128::NTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int
         uint64_t aux_ncols = ncols_block;
         if (ib < ncols_res)
             aux_ncols += 1;
-        NTT_AltBn128::NTT_iters(dst_, src, size, offset_cols, aux_ncols, ncols, nphase, aux, inverse, extend);
+        NTT_AltBn128::NTT_iters(dst_, src, size, offset_cols, aux_ncols, ncols, nphase, aux, inverse);
         if (nblock > 1)
         {
 #pragma omp parallel for schedule(static)
@@ -306,7 +290,7 @@ void NTT_AltBn128::reversePermutation(AltBn128::FrElement *dst, AltBn128::FrElem
     }
 }
 
-void NTT_AltBn128::INTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols, AltBn128::FrElement *buffer, u_int64_t nphase, u_int64_t nblock, bool extend)
+void NTT_AltBn128::INTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols, AltBn128::FrElement *buffer, u_int64_t nphase, u_int64_t nblock)
 {
 
     if (ncols == 0 || size == 0)
@@ -322,7 +306,7 @@ void NTT_AltBn128::INTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_in
     {
         dst_ = dst;
     }
-    NTT(dst_, src, size, ncols, buffer, nphase, nblock, true, extend);
+    NTT(dst_, src, size, ncols, buffer, nphase, nblock, true);
 }
 
 void NTT_AltBn128::extendPol(AltBn128::FrElement *output, AltBn128::FrElement *input, uint64_t N_Extended, uint64_t N, uint64_t ncols, AltBn128::FrElement *buffer, u_int64_t nphase, u_int64_t nblock)
@@ -338,13 +322,8 @@ void NTT_AltBn128::extendPol(AltBn128::FrElement *output, AltBn128::FrElement *i
     {
         tmp = buffer;
     }
-    // TODO: Pre-compute r
-    if (r == NULL)
-    {
-        computeR(N);
-    }
 
-    INTT(output, input, N, ncols, tmp, nphase, nblock, true);
+    INTT(output, input, N, ncols, tmp, nphase, nblock);
     ntt_extension.NTT(output, output, N_Extended, ncols, tmp, nphase, nblock);
 
     if (buffer == NULL)

@@ -66,7 +66,7 @@ namespace PilFflonkZkey
 
         std::map<u_int32_t, u_int32_t> openingPoints;
 
-        std::map<std::string, AltBn128::G1Point *> committedConstants;
+        std::map<std::string, void *> committedConstants;
 
         std::map<std::string, std::map<u_int32_t, std::string>*> polsMap;
 

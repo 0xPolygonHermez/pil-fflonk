@@ -196,52 +196,52 @@ public:
     //     }
     // };
 
-    static void calculateZ(AltBn128::Engine &E, Polinomial &z, Polinomial &num, Polinomial &den)
-    {
-        uint64_t size = num.degree();
+    // static void calculateZ(AltBn128::Engine &E, Polinomial &z, Polinomial &num, Polinomial &den)
+    // {
+    //     uint64_t size = num.degree();
 
-        Polinomial denI(size);
-        Polinomial checkVal(1);
-        AltBn128::FrElement *pZ = z[0];
-        E.fr.copy((AltBn128::FrElement *)&pZ[0], E.fr.one());
+    //     Polinomial denI(size);
+    //     Polinomial checkVal(1);
+    //     AltBn128::FrElement *pZ = z[0];
+    //     E.fr.copy((AltBn128::FrElement *)&pZ[0], E.fr.one());
 
-        Polinomial::batchInverse(E, denI, den);
-        for (uint64_t i = 1; i < size; i++)
-        {
-            Polinomial tmp(1);
-            mulElement(E, tmp, 0, num, i - 1, denI, i - 1);
-            mulElement(E, z, i, z, i - 1, tmp, 0);
-        }
-        Polinomial tmp(1);
-        mulElement(E, tmp, 0, num, size - 1, denI, size - 1);
-        mulElement(E, checkVal, 0, z, size - 1, tmp, 0);
+    //     Polinomial::batchInverse(E, denI, den);
+    //     for (uint64_t i = 1; i < size; i++)
+    //     {
+    //         Polinomial tmp(1);
+    //         mulElement(E, tmp, 0, num, i - 1, denI, i - 1);
+    //         mulElement(E, z, i, z, i - 1, tmp, 0);
+    //     }
+    //     Polinomial tmp(1);
+    //     mulElement(E, tmp, 0, num, size - 1, denI, size - 1);
+    //     mulElement(E, checkVal, 0, z, size - 1, tmp, 0);
 
-        zkassert(E.fr.eq((AltBn128::FrElement &)*checkVal[0], E.fr.one()));
-    }
+    //     zkassert(E.fr.eq((AltBn128::FrElement &)*checkVal[0], E.fr.one()));
+    // }
 
-    inline static void batchInverse(AltBn128::Engine &E, Polinomial &res, Polinomial &src)
-    {
-        uint64_t size = src.degree();
-        Polinomial tmp(size);
-        Polinomial z(2);
+    // inline static void batchInverse(AltBn128::Engine &E, Polinomial &res, Polinomial &src)
+    // {
+    //     uint64_t size = src.degree();
+    //     Polinomial tmp(size);
+    //     Polinomial z(2);
 
-        Polinomial::copyElement(tmp, 0, src, 0);
+    //     Polinomial::copyElement(tmp, 0, src, 0);
 
-        for (uint64_t i = 1; i < size; i++)
-        {
-            Polinomial::mulElement(E, tmp, i, tmp, i - 1, src, i);
-        }
+    //     for (uint64_t i = 1; i < size; i++)
+    //     {
+    //         Polinomial::mulElement(E, tmp, i, tmp, i - 1, src, i);
+    //     }
 
-        E.fr.inv((AltBn128::FrElement *)z[0], tmp[size - 1]);
+    //     E.fr.inv((AltBn128::FrElement *)z[0], tmp[size - 1]);
 
-        for (uint64_t i = size - 1; i > 0; i--) 
-        {
-            Polinomial::mulElement(E, z, 1, z, 0, src, i);
-            Polinomial::mulElement(E, res, i, z, 0, tmp, i - 1);
-            Polinomial::copyElement(z, 0, z, 1);
-        }
-        Polinomial::copyElement(res, 0, z, 0);
-    }
+    //     for (uint64_t i = size - 1; i > 0; i--) 
+    //     {
+    //         Polinomial::mulElement(E, z, 1, z, 0, src, i);
+    //         Polinomial::mulElement(E, res, i, z, 0, tmp, i - 1);
+    //         Polinomial::copyElement(z, 0, z, 1);
+    //     }
+    //     Polinomial::copyElement(res, 0, z, 0);
+    // }
 };
 
 #endif

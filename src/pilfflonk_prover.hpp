@@ -17,7 +17,7 @@
 #include "keccak_256_transcript.hpp"
 #include "commit_pols_fflonk.hpp"
 #include "constant_pols_fflonk.hpp"
-#include "chelpers/pilfflonk_steps.hpp"
+// #include "chelpers/pilfflonk_steps.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
 
@@ -72,8 +72,8 @@ namespace PilFflonk {
 
         ShPlonk::ShPlonkProver* shPlonkProver;
 
-        PilFflonkSteps pilFflonkSteps;
-        PilFflonkSteps *steps = &pilFflonkSteps;
+        // PilFflonkSteps pilFflonkSteps;
+        // PilFflonkSteps *steps = &pilFflonkSteps;
 
         // void *pConstPolsAddress;
         // void *pConstPolsAddress2ns;

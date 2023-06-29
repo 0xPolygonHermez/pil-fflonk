@@ -224,16 +224,16 @@ namespace PilFflonk
             cout << "PIL-FFLONK PROVER STARTED" << endl << endl;
 
             // Initialize vars
-            params = {
-                pols : &bBufferCommitted,
-                pConstPols :  pConstPols,
-                pConstPols2ns :  pConstPols2ns,
-                challenges : challenges,
-                x_n : ptr["x_n"],
-                x_2ns : ptr["x_2ns"],
-                publicInputs : publicInputs,
-                q_2ns : ptrCommitted["q_2ns"],
-            };
+            // params = {
+            //     pols : &bBufferCommitted,
+            //     pConstPols :  pConstPols,
+            //     pConstPols2ns :  pConstPols2ns,
+            //     challenges : challenges,
+            //     x_n : ptr["x_n"],
+            //     x_2ns : ptr["x_2ns"],
+            //     publicInputs : publicInputs,
+            //     q_2ns : ptrCommitted["q_2ns"]
+            // }
             
             // if(NULL != wtnsHeader) {
             //     if (mpz_cmp(zkey->rPrime, wtnsHeader->prime) != 0)
@@ -448,7 +448,7 @@ namespace PilFflonk
             #pragma omp parallel for
             for (uint64_t i = 0; i < N * factorZK; i++)
             {
-                steps->step2prev_first(E, params, i);
+                // steps->step2prev_first(E, params, i);
             }
 
             auto nCm2 = fflonkInfo->mapSectionsN.section[cm2_n];
@@ -460,7 +460,7 @@ namespace PilFflonk
                 Polinomial h1 = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm2 + 2*i]);
                 Polinomial h2 = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm2 + 2*i + 1]);
 
-                Polinomial::calculateH1H2(h1, h2, fPol, tPol);
+                // Polinomial::calculateH1H2(h1, h2, fPol, tPol);
             }
 
             extend(2, ptrCommitted["cm2_n"], ptrCommitted["cm2_2ns"], ptrCommitted["cm2_coefs"], fflonkInfo->mapSectionsN.section[cm2_n]);
@@ -498,7 +498,7 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < N; i++)
         {
-            steps->step3prev_first(E, params, i);
+            // steps->step3prev_first(E, params, i);
         }
 
         auto nCm3 = fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->mapSectionsN.section[cm2_n];
@@ -510,7 +510,7 @@ namespace PilFflonk
             Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
             Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
             Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + i]);
-            Polinomial::calculateZ(E, z, pNum, pDen);
+            // Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
         for (uint64_t i = 0; i < nPermutations; i++)
@@ -519,7 +519,7 @@ namespace PilFflonk
             Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
             Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
             Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + nPlookups + i]);
-            Polinomial::calculateZ(E, z, pNum, pDen);
+            // Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
         for (uint64_t i = 0; i < nConnections; i++)
@@ -528,13 +528,13 @@ namespace PilFflonk
             Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
             Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
             Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
-            Polinomial::calculateZ(E, z, pNum, pDen);
+            // Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
         #pragma omp parallel for
         for (uint64_t i = 0; i < N * factorZK; i++)
         {
-            steps->step3_first(E, params, i);
+            // steps->step3_first(E, params, i);
         }
 
         extend(3, ptrCommitted["cm3_n"], ptrCommitted["cm3_2ns"], ptrCommitted["cm3_coefs"], fflonkInfo->mapSectionsN.section[cm3_n]);
@@ -557,7 +557,7 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < NExt * factorZK; i++)
         {
-            steps->step42ns_first(E, params, i);
+            // steps->step42ns_first(E, params, i);
         }
 
         shPlonkProver->polynomialsShPlonk["Q"] = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);

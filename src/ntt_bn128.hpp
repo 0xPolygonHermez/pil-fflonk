@@ -20,8 +20,8 @@ private:
     AltBn128::FrElement nqr;
     AltBn128::FrElement *roots;
     AltBn128::FrElement *powTwoInv;
-    AltBn128::FrElement *r;
-    AltBn128::FrElement *r_;
+    AltBn128::FrElement *rrrrr;
+    AltBn128::FrElement *rrrrr_;
     int extension;
 
     static u_int32_t log2(u_int64_t size)
@@ -38,7 +38,7 @@ private:
         }
     }
 
-    void NTT_iters(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t offset_cols, u_int64_t ncols, u_int64_t ncols_all, u_int64_t nphase, AltBn128::FrElement *aux, bool inverse, bool extend);
+    void NTT_iters(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t offset_cols, u_int64_t ncols, u_int64_t ncols_all, u_int64_t nphase, AltBn128::FrElement *aux, bool inverse);
 
     inline int intt_idx(int i, int N)
     {
@@ -53,8 +53,6 @@ private:
 public:
     NTT_AltBn128(AltBn128::Engine &E, u_int64_t maxDomainSize, u_int32_t _nThreads = 0, int extension_ = 1) : E(E)
     {
-        r = NULL;
-        r_ = NULL;
         if (maxDomainSize == 0) return;
         nThreads = _nThreads == 0 ? omp_get_max_threads() : _nThreads;
         extension = extension_;
@@ -142,33 +140,11 @@ public:
             free(roots);
             free(powTwoInv);
         }
-        if (r != NULL)
-        {
-            delete (r);
-        }
-        if (r_ != NULL)
-        {
-            delete (r_);
-        }
     }
 
-    inline void computeR(int N)
-    {
-        u_int64_t domainPow = log2(N);
-        r = new AltBn128::FrElement[N];
-        r_ = new AltBn128::FrElement[N];
-        r[0] = E.fr.one();
-        r_[0] = powTwoInv[domainPow];
-        for (int i = 1; i < N; i++)
-        {
-            E.fr.mul(r[i], r[i - 1], E.fr.shift());
-            E.fr.mul(r_[i], r[i], powTwoInv[domainPow]);
-        }
-    }
+    void NTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols = 1, AltBn128::FrElement *buffer = NULL, u_int64_t nphase = NUM_PHASES, u_int64_t nblock = NUM_BLOCKS, bool inverse = false);
 
-    void NTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols = 1, AltBn128::FrElement *buffer = NULL, u_int64_t nphase = NUM_PHASES, u_int64_t nblock = NUM_BLOCKS, bool inverse = false, bool extend = false);
-
-    void INTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols = 1, AltBn128::FrElement *buffer = NULL, u_int64_t nphase = NUM_PHASES, u_int64_t nblock = NUM_BLOCKS, bool extend = false);
+    void INTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols = 1, AltBn128::FrElement *buffer = NULL, u_int64_t nphase = NUM_PHASES, u_int64_t nblock = NUM_BLOCKS);
 
     void reversePermutation(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t offset_cols, u_int64_t ncols, u_int64_t ncols_all);
 
