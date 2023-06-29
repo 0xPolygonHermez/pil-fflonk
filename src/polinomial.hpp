@@ -3,7 +3,9 @@
 
 #include <math.h> /* log2 */
 #include "zklog.hpp"
+#include <iostream>
 #include "zkassert.hpp"
+#include "compare_fe.hpp"
 #include "exit_process.hpp"
 #include <alt_bn128.hpp>
 
@@ -12,7 +14,6 @@ class Polinomial
 private:
     AltBn128::FrElement *_pAddress = NULL;
     uint64_t _degree = 0;
-    uint64_t _offset = 0;
     bool _allocated = false;
     std::string _name = "";
 
@@ -21,15 +22,12 @@ public:
     {
         _pAddress = NULL;
         _degree = 0;
-        _offset = 0;
         _allocated = false;
     }
     Polinomial(void *pAddress,
                uint64_t degree,
-               uint64_t offset = 0,
                std::string name = "") : _pAddress((AltBn128::FrElement *)pAddress),
                                         _degree(degree),
-                                        _offset(offset),
                                         _name(name){};
     Polinomial(uint64_t degree,
                std::string name = "") : _degree(degree),
@@ -43,7 +41,6 @@ public:
             zklog.error("Polinomial::Polinomial() failed allocating polinomial with size: " + to_string(_degree * sizeof(AltBn128::FrElement)));
             exitProcess();
         }
-        _offset = 1; //TODO: Is this correct?
         _allocated = true;
     };
 
@@ -54,12 +51,10 @@ public:
     };
 
     void potConstruct(AltBn128::FrElement *pAddress,
-                      uint64_t degree,
-                      uint64_t offset = 0)
+                      uint64_t degree)
     {
         _pAddress = pAddress;
         _degree = degree;
-        _offset = offset;
         _allocated = false;
     }
 
@@ -67,9 +62,8 @@ public:
     inline uint64_t degree(void) { return _degree; }
     inline uint64_t length(void) { return _degree; }
     inline uint64_t size(void) { return _degree * sizeof(AltBn128::FrElement); }
-    inline uint64_t offset(void) { return _offset; }
 
-    AltBn128::FrElement *operator[](uint64_t i) { return &_pAddress[i * _offset]; };
+    AltBn128::FrElement *operator[](uint64_t i) { return &_pAddress[i]; };
 
     std::string toString(AltBn128::Engine &E, uint numElements = 0, uint radix = 10)
     {
@@ -77,7 +71,7 @@ public:
         std::string res = (_name != "") ? _name + ":\n" : "";
         for (uint i = 0; i < elements; i++)
         {
-            res += E.fr.toString(_pAddress[i * _offset]);
+            res += E.fr.toString(_pAddress[i]);
             if (i != elements - 1) res += " ";
         }
         return res;
@@ -86,38 +80,27 @@ public:
     static void copy(Polinomial &a, Polinomial &b, uint64_t size = 0)
     {
         assert(a.degree() == b.degree());
-        if (b._offset == 1 && a._offset == 1)
-        {
-            std::memcpy(a.address(), b.address(), b.size());
-        }
-        else
-        {
-#pragma omp parallel for
-            for (uint64_t i = 0; i < b.degree(); i++)
-            {
-                std::memcpy(a[i], b[i], sizeof(AltBn128::FrElement));
-            }
-        }
+        memcpy(a.address(), b.address(), b.size());
     };
 
     static void copyElement(Polinomial &a, uint64_t idx_a, Polinomial &b, uint64_t idx_b)
     {;
-        std::memcpy(a[idx_a], b[idx_b], sizeof(AltBn128::FrElement));
+        memcpy(a[idx_a], b[idx_b], sizeof(AltBn128::FrElement));
     };
 
-    static void copyElement(Polinomial &a, uint64_t idx_a, std::vector<AltBn128::FrElement> b)
+    static void copyElement(Polinomial &a, uint64_t idx_a, AltBn128::FrElement b)
     {
-        std::memcpy(a[idx_a], &b[0], sizeof(AltBn128::FrElement));
+        memcpy(a[idx_a], &b, sizeof(AltBn128::FrElement));
     };
 
     static inline void addElement(AltBn128::Engine &E, Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Polinomial &in_b, uint64_t idx_b)
     {
-        out[idx_out][0] = E.fr.add(in_a[idx_a][0],in_b[idx_b][0]);
+        *out[idx_out] = E.fr.add(*in_a[idx_a],*in_b[idx_b]);
     }
 
     static inline void subElement(AltBn128::Engine &E, Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Polinomial &in_b, uint64_t idx_b)
     {
-        out[idx_out][0] = E.fr.sub(in_a[idx_a][0], in_b[idx_b][0]);
+        *out[idx_out] = E.fr.sub(*in_a[idx_a], *in_b[idx_b]);
     }
 
     static inline void mulElement(AltBn128::Engine &E, Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, AltBn128::FrElement &b)
@@ -128,30 +111,79 @@ public:
 
     static inline void mulElement(AltBn128::Engine &E, Polinomial &out, uint64_t idx_out, Polinomial &in_a, uint64_t idx_a, Polinomial &in_b, uint64_t idx_b)
     {
-         out[idx_out][0] = E.fr.mul(in_a[idx_a][0], in_b[idx_b][0]);
+        *out[idx_out] = E.fr.mul(*in_a[idx_a], *in_b[idx_b]);
     };
 
-    inline std::vector<AltBn128::FrElement> toVector(uint64_t idx)
+    static void calculateH1H2(AltBn128::Engine &E, Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol)
     {
-        std::vector<AltBn128::FrElement> result;
-        result.assign(&_pAddress[idx * _offset], &_pAddress[idx * _offset] + 1);
-        return result;
-    }
+        map<AltBn128::FrElement, uint64_t, CompareFe> idx_t(E);
+        multimap<AltBn128::FrElement, uint64_t, CompareFe> s(E);
+        multimap<AltBn128::FrElement, uint64_t>::iterator it;
+        uint64_t i = 0; 
 
-    // static void calculateH1H2(Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol)
+        for (uint64_t i = 0; i < tPol.degree(); i++)
+        {
+            AltBn128::FrElement key = *tPol[i];
+            std::pair<AltBn128::FrElement, uint64_t> pr(key, i);
+
+            auto const result = idx_t.insert(pr);
+            if (not result.second)
+            {
+                result.first->second = i;
+            }
+
+            s.insert(pr);
+        }
+
+        for (uint64_t i = 0; i < fPol.degree(); i++)
+        {
+            AltBn128::FrElement key = *fPol[i];
+
+            if (idx_t.find(key) == idx_t.end())
+            {
+                zklog.error("Polinomial::calculateH1H2() Number not included: " + E.fr.toString(*fPol[i]));
+                exitProcess();
+            }
+            uint64_t idx = idx_t[key];
+            s.insert(pair<AltBn128::FrElement, uint64_t>(key, idx));
+        }
+
+        multimap<uint64_t, AltBn128::FrElement> s_sorted;
+        multimap<uint64_t, AltBn128::FrElement>::iterator it_sorted;
+
+        cout << s.size() << endl;
+        for (it = s.begin(); it != s.end(); it++)
+        {
+            cout << E.fr.toString(it->first) << " " << it->second << endl;
+            s_sorted.insert(make_pair(it->second, it->first));
+        }
+
+        for (it_sorted = s_sorted.begin(); it_sorted != s_sorted.end(); it_sorted++, i++)
+        {
+            if ((i & 1) == 0)
+            {
+                Polinomial::copyElement(h1, i / 2, it_sorted->second);
+            }
+            else
+            {
+                Polinomial::copyElement(h2, i / 2, it_sorted->second);
+            }
+        }
+    };
+
+    // static void calculateH1H2(AltBn128::Engine &E, Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol)
     // {
-    //     //TODO
-    //     // map<std::vector<AltBn128::FrElement, CompareFe >, uint64_t> idx_t;
+    //     map< AltBn128::FrElement, uint64_t, CompareFe> idx_t(E);
+    //     multimap< AltBn128::FrElement, uint64_t, CompareFe> s(E);
+    //     multimap<AltBn128::FrElement, uint64_t>::iterator it;
 
-    //     map<std::vector<AltBn128::FrElement>, uint64_t> idx_t;
-    //     map<std::vector<AltBn128::FrElement>, uint64_t> s;
-    //     map<std::vector<AltBn128::FrElement>, uint64_t>::iterator it;
     //     uint64_t i = 0;
 
+    //     cout << "tPolDegree " << tPol.degree() << endl;
     //     for (uint64_t i = 0; i < tPol.degree(); i++)
     //     {
-    //         vector<AltBn128::FrElement> key = tPol.toVector(i);
-    //         std::pair<vector<AltBn128::FrElement>, uint64_t> pr(key, i);
+    //         AltBn128::FrElement key = *tPol[i];
+    //         std::pair<AltBn128::FrElement, uint64_t> pr(key, i);
 
     //         auto const result = idx_t.insert(pr);
     //         if (not result.second)
@@ -164,19 +196,23 @@ public:
 
     //     for (uint64_t i = 0; i < fPol.degree(); i++)
     //     {
-    //         vector<AltBn128::FrElement> key = fPol.toVector(i);
+    //          AltBn128::FrElement key = *fPol[i];
 
     //         if (idx_t.find(key) == idx_t.end())
     //         {
-    //             zklog.error("Polinomial::calculateH1H2() Number not included: " + AltBn128::FrElement::toString(fPol[i], 16));
-    //             exitProcess();
+    //             cerr << "Error: calculateH1H2() Number not included: " << E.fr.toString(*fPol[i]) << endl;
+    //             exit(-1);
     //         }
     //         uint64_t idx = idx_t[key];
-    //         s.insert(pair<vector<AltBn128::FrElement>, uint64_t>(key, idx));
+    //         s.insert(pair< AltBn128::FrElement, uint64_t>(key, idx));
     //     }
 
-    //     map<uint64_t, vector<AltBn128::FrElement>> s_sorted;
-    //     map<uint64_t, vector<AltBn128::FrElement>>::iterator it_sorted;
+    //     multimap<uint64_t, AltBn128::FrElement> s_sorted;
+    //     multimap<uint64_t, AltBn128::FrElement>::iterator it_sorted;
+
+    //     for(auto& x: s) {
+    //         std::cout << E.fr.toString(x.first) << ": " << x.second << std::endl;
+    //     }
 
     //     for (it = s.begin(); it != s.end(); it++)
     //     {
@@ -196,52 +232,53 @@ public:
     //     }
     // };
 
-    // static void calculateZ(AltBn128::Engine &E, Polinomial &z, Polinomial &num, Polinomial &den)
-    // {
-    //     uint64_t size = num.degree();
 
-    //     Polinomial denI(size);
-    //     Polinomial checkVal(1);
-    //     AltBn128::FrElement *pZ = z[0];
-    //     E.fr.copy((AltBn128::FrElement *)&pZ[0], E.fr.one());
+    static void calculateZ(AltBn128::Engine &E, Polinomial &z, Polinomial &num, Polinomial &den)
+    {
+        uint64_t size = num.degree();
 
-    //     Polinomial::batchInverse(E, denI, den);
-    //     for (uint64_t i = 1; i < size; i++)
-    //     {
-    //         Polinomial tmp(1);
-    //         mulElement(E, tmp, 0, num, i - 1, denI, i - 1);
-    //         mulElement(E, z, i, z, i - 1, tmp, 0);
-    //     }
-    //     Polinomial tmp(1);
-    //     mulElement(E, tmp, 0, num, size - 1, denI, size - 1);
-    //     mulElement(E, checkVal, 0, z, size - 1, tmp, 0);
+        Polinomial denI(size);
+        Polinomial checkVal(1);
+        AltBn128::FrElement *pZ = z[0];
+        pZ[0] = E.fr.one();
 
-    //     zkassert(E.fr.eq((AltBn128::FrElement &)*checkVal[0], E.fr.one()));
-    // }
+        Polinomial::batchInverse(E, denI, den);
+        for (uint64_t i = 1; i < size; i++)
+        {
+            Polinomial tmp(1);
+            mulElement(E, tmp, 0, num, i - 1, denI, i - 1);
+            mulElement(E, z, i, z, i - 1, tmp, 0);
+        }
+        Polinomial tmp(1);
+        mulElement(E, tmp, 0, num, size - 1, denI, size - 1);
+        mulElement(E, checkVal, 0, z, size - 1, tmp, 0);
 
-    // inline static void batchInverse(AltBn128::Engine &E, Polinomial &res, Polinomial &src)
-    // {
-    //     uint64_t size = src.degree();
-    //     Polinomial tmp(size);
-    //     Polinomial z(2);
+        zkassert(E.fr.eq((AltBn128::FrElement &)*checkVal[0], E.fr.one()));
+    }
 
-    //     Polinomial::copyElement(tmp, 0, src, 0);
+    inline static void batchInverse(AltBn128::Engine &E, Polinomial &res, Polinomial &src)
+    {
+        uint64_t size = src.degree();
+        Polinomial tmp(size);
+        Polinomial z(2);
 
-    //     for (uint64_t i = 1; i < size; i++)
-    //     {
-    //         Polinomial::mulElement(E, tmp, i, tmp, i - 1, src, i);
-    //     }
+        Polinomial::copyElement(tmp, 0, src, 0);
 
-    //     E.fr.inv((AltBn128::FrElement *)z[0], tmp[size - 1]);
+        for (uint64_t i = 1; i < size; i++)
+        {
+            Polinomial::mulElement(E, tmp, i, tmp, i - 1, src, i);
+        }
 
-    //     for (uint64_t i = size - 1; i > 0; i--) 
-    //     {
-    //         Polinomial::mulElement(E, z, 1, z, 0, src, i);
-    //         Polinomial::mulElement(E, res, i, z, 0, tmp, i - 1);
-    //         Polinomial::copyElement(z, 0, z, 1);
-    //     }
-    //     Polinomial::copyElement(res, 0, z, 0);
-    // }
+        E.fr.inv(*z[0], *tmp[size - 1]);
+
+        for (uint64_t i = size - 1; i > 0; i--) 
+        {
+            Polinomial::mulElement(E, z, 1, z, 0, src, i);
+            Polinomial::mulElement(E, res, i, z, 0, tmp, i - 1);
+            Polinomial::copyElement(z, 0, z, 1);
+        }
+        Polinomial::copyElement(res, 0, z, 0);
+    }
 };
 
 #endif

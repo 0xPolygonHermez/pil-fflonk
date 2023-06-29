@@ -18,6 +18,7 @@
 #include "commit_pols_fflonk.hpp"
 #include "constant_pols_fflonk.hpp"
 // #include "chelpers/pilfflonk_steps.hpp"
+#include "ntt_bn128.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
 
@@ -169,7 +170,7 @@ namespace PilFflonk {
 
         void stage4();
 
-        void extend(u_int32_t stage, AltBn128::FrElement *buffFrom, AltBn128::FrElement *buffTo, AltBn128::FrElement *buffCoefs, u_int32_t nPols);
+        void extend(u_int32_t stage, u_int32_t nPols);
 
         BinFilePolsData* loadPolynomialsFromBinFile(BinFileUtils::BinFile *fd);
     };

@@ -11,7 +11,7 @@
 #define NUM_COLUMNS 8
 #define NPHASES 4
 
-AltBn128::Engine E;
+extern AltBn128::Engine E;
 
 TEST(BN128_TEST, ntt)
 {
@@ -263,9 +263,6 @@ TEST(BN128_TEST, LDE_block)
 
     gntt_extension.NTT(a, a, (FFT_SIZE << BLOWUP_FACTOR), NUM_COLUMNS, NULL, NUM_PHASES);
 
-    for(uint64_t i = 0; i < (FFT_SIZE << BLOWUP_FACTOR) * NUM_COLUMNS; i++) {
-        std::cout << i << " " << E.fr.toString(a[i]) << std::endl;
-    }
 
     ASSERT_TRUE(E.fr.toString(a[0]) == "1");
     ASSERT_TRUE(E.fr.toString(a[1]) == "2");
@@ -365,11 +362,11 @@ TEST(BN128_TEST, extendePol)
     free(b);
 }
 
-int main(int argc, char **argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+// int main(int argc, char **argv)
+// {
+//     ::testing::InitGoogleTest(&argc, argv);
+//     return RUN_ALL_TESTS();
+// }
 
 // Build commands AVX:
 

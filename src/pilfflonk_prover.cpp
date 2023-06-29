@@ -390,7 +390,7 @@ namespace PilFflonk
         // STEP 1.2 - Compute constant polynomials (coefficients + evaluations) and commit them
         if (fflonkInfo->nConstants > 0)
         {
-            extend(0, ptr["const_n"], ptr["const_2ns"], ptr["const_coefs"], fflonkInfo->nConstants);
+            extend(0, fflonkInfo->nConstants);
 
             shPlonkProver->commit(0, PTau, false);
         }
@@ -399,7 +399,7 @@ namespace PilFflonk
         if (!fflonkInfo->mapSectionsN.section[cm1_n])
              return;
 
-        extend(1, ptrCommitted["cm1_n"], ptrCommitted["cm1_2ns"], ptrCommitted["cm1_coefs"], fflonkInfo->mapSectionsN.section[cm1_n]);
+        extend(1, fflonkInfo->mapSectionsN.section[cm1_n]);
 
         // STEP 1.4 - Commit stage 1 polynomials
         shPlonkProver->commit(1, PTau, true);
@@ -451,7 +451,7 @@ namespace PilFflonk
                 // steps->step2prev_first(E, params, i);
             }
 
-            auto nCm2 = fflonkInfo->mapSectionsN.section[cm2_n];
+            auto nCm2 = fflonkInfo->mapSectionsN.section[cm1_n];
 
             for (uint64_t i = 0; i < fflonkInfo->puCtx.size(); i++)
             {
@@ -463,7 +463,7 @@ namespace PilFflonk
                 // Polinomial::calculateH1H2(h1, h2, fPol, tPol);
             }
 
-            extend(2, ptrCommitted["cm2_n"], ptrCommitted["cm2_2ns"], ptrCommitted["cm2_coefs"], fflonkInfo->mapSectionsN.section[cm2_n]);
+            extend(2, fflonkInfo->mapSectionsN.section[cm2_n]);
 
             // STEP 2.3 - Commit stage 2 polynomials
             shPlonkProver->commit(2, PTau, true);
@@ -499,7 +499,7 @@ namespace PilFflonk
         for (uint64_t i = 0; i < N; i++)
         {
             // steps->step3prev_first(E, params, i);
-        }
+        }   
 
         auto nCm3 = fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->mapSectionsN.section[cm2_n];
 
@@ -510,7 +510,7 @@ namespace PilFflonk
             Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
             Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
             Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + i]);
-            // Polinomial::calculateZ(E, z, pNum, pDen);
+            Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
         for (uint64_t i = 0; i < nPermutations; i++)
@@ -519,7 +519,7 @@ namespace PilFflonk
             Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
             Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
             Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + nPlookups + i]);
-            // Polinomial::calculateZ(E, z, pNum, pDen);
+            Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
         for (uint64_t i = 0; i < nConnections; i++)
@@ -528,7 +528,7 @@ namespace PilFflonk
             Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
             Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
             Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
-            // Polinomial::calculateZ(E, z, pNum, pDen);
+            Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
         #pragma omp parallel for
@@ -537,7 +537,7 @@ namespace PilFflonk
             // steps->step3_first(E, params, i);
         }
 
-        extend(3, ptrCommitted["cm3_n"], ptrCommitted["cm3_2ns"], ptrCommitted["cm3_coefs"], fflonkInfo->mapSectionsN.section[cm3_n]);
+        extend(3, fflonkInfo->mapSectionsN.section[cm3_n]);
     }
 
     void PilFflonkProver::stage4()
@@ -564,9 +564,16 @@ namespace PilFflonk
         shPlonkProver->polynomialsShPlonk["Q"]->divZh(N, 1 << extendBitsTotal);
     }
 
-    void PilFflonkProver::extend(u_int32_t stage, AltBn128::FrElement *buffFrom, AltBn128::FrElement *buffTo, AltBn128::FrElement *buffCoefs, u_int32_t nPols) {
+    void PilFflonkProver::extend(u_int32_t stage, u_int32_t nPols) {
         
-        // await ifft(buffFrom, nPols, nBits, buffCoefs, Fr);
+        AltBn128::FrElement *buffSrc = stage == 0 ? ptr["const_n"] : ptrCommitted["cm" + std::to_string(stage) + "_n"];
+        AltBn128::FrElement *buffDst = stage == 0 ? ptr["const_2ns"] : ptrCommitted["cm" + std::to_string(stage) + "_2ns"];
+        AltBn128::FrElement *buffCoefs = stage == 0 ? ptr["const_coefs"] : ptr["cm" + std::to_string(stage) + "_coefs"];
+
+        FrElement* buffer = stage == 0 ? bBuffer : bBufferCommitted;
+
+        NTT_AltBn128 ntt(E, N);
+        ntt.INTT(buffCoefs, buffSrc, nBits, nPols, buffer);
 
         if(stage != 0) {
             for(u_int32_t i = 0; i < nPols; i++) {
@@ -575,9 +582,8 @@ namespace PilFflonk
                     AltBn128::FrElement b;
                     randombytes_buf((void *)&(b), sizeof(FrElement)-1);
 
-                    // ADD ELEMENT FROM POLYNOMIAL CLASS ??
-                    // buffCoefs[j * nPols + i] = E.fr.add(buffCoefs[j * nPols + i], E.fr.neg(b));
-                    // buffCoefs[(j + N) * nPols + i] = E.fr.add(buffCoefs[(j + N) * nPols + i], b);
+                    buffCoefs[j * nPols + i] = E.fr.add(buffCoefs[j * nPols + i], E.fr.neg(b));
+                    buffCoefs[(j + N) * nPols + i] = E.fr.add(buffCoefs[(j + N) * nPols + i], b);
                 } 
             }
         }
@@ -588,7 +594,8 @@ namespace PilFflonk
             //     ctx[zkey.polsNamesStage[stage][i]] = new Polynomial(coefs, ctx.curve, logger);
         }
 
-        //await fft(buffCoefs, nPols, nBitsExt, buffTo, Fr);
+        NTT_AltBn128 nttExtended(E, 1 << nBitsExtZK);
+        nttExtended.NTT(buffDst, buffCoefs, nBitsExtZK, nPols, buffer);
     }
 
     // function getPolFromBuffer(buff, nPols, N, id, Fr) {
