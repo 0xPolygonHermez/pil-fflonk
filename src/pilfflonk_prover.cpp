@@ -194,6 +194,19 @@ namespace PilFflonk
             ptr["const_n"] = static_cast<FrElement*>(copyFile(constPolsFilename, constPolsSize));
             zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsSize) + " bytes from constant file " + constPolsFilename);
             
+            uint8_t* array = static_cast<uint8_t*>(copyFile(constPolsFilename, constPolsSize));
+
+            FrElement element;
+            E.fr.fromRprBE(element, array, 32);
+            for(auto i = 0; i < 32; i++) {
+                cout << hex << (int)array[i] << " ";
+            }
+            cout << endl;
+
+            cout << "HELLO" << endl;
+            cout << E.fr.toString(element) << endl;
+            cout << "HELLO" << endl;
+
             pConstPols = new ConstantPolsFflonk(ptr["const_n"], N, fflonkInfo->nConstants);
 
             ptr["const_2ns"] = static_cast<RawFr::Element*>(calloc(fflonkInfo->nConstants * (1 << nBitsExtZK), sizeof(RawFr::Element)));
@@ -559,14 +572,11 @@ namespace PilFflonk
 
         // AltBn128::FrElement* buffer = stage == 0 ? bBuffer : bBufferCommitted;
 
-        if(stage == 1) {
-            for(auto i = 0; i < fflonkInfo->mapSectionsN.section[cm1_n] * N; ++i) {
-                cout << i << " " << E.fr.toString(ptrCommitted["cm1_n"][i]) << endl;
+        if(stage == 0) {
+            for(auto i = 0; i < fflonkInfo->nConstants * N; ++i) {
+                cout << i << " " << E.fr.toString(ptr["const_n"][i]) << endl;
             }
         }
-        
-        buffSrc[0] = E.fr.set(1);
-        buffSrc[127] = E.fr.set(1);
 
         memcpy(buffCoefs, buffSrc, N * nPols * sizeof(AltBn128::FrElement));
 

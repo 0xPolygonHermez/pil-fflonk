@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/pfProver",
-            "args": ["tmp/fflonk_simple2.zkey","tmp/fflonkinfo_simple2.json","tmp/pols.cnst","tmp/pols.cmtd"],
+            "args": ["fibonacci.zkey","fibonacci.fflonkinfo.json","fibonacci.const","fibonacci.commit"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
