@@ -74,8 +74,10 @@ namespace PilFflonk {
         void *pConstPolsAddress2ns;
         ConstantPolsFflonk* pConstPols;
         ConstantPolsFflonk* pConstPols2ns;
-
+        
         uint64_t constPolsSize;
+
+        void *pCommittedPolsAddress;
 
         ShPlonk::ShPlonkProver* shPlonkProver;
 
@@ -160,8 +162,6 @@ namespace PilFflonk {
         void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);
 
         void removePrecomputedData();
-
-        void stage0();
 
         void stage1();
 
