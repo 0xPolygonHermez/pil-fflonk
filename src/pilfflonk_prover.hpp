@@ -21,6 +21,7 @@
 #include "ntt_bn128.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
+#include "utils.hpp"
 
 using json = nlohmann::json;
 
@@ -68,18 +69,18 @@ namespace PilFflonk {
         BinFilePolsData* cnstPols;
         BinFilePolsData* cmtdPols;
 
+
+        void *pConstPolsAddress;
+        void *pConstPolsAddress2ns;
         ConstantPolsFflonk* pConstPols;
         ConstantPolsFflonk* pConstPols2ns;
+
+        uint64_t constPolsSize;
 
         ShPlonk::ShPlonkProver* shPlonkProver;
 
         // PilFflonkSteps pilFflonkSteps;
         // PilFflonkSteps *steps = &pilFflonkSteps;
-
-        // void *pConstPolsAddress;
-        // void *pConstPolsAddress2ns;
-        // ConstantPolsFflonk *pConstPols;
-        // ConstantPolsFflonk *pConstPols2ns;
 
         // // Polinomial x_n;
         // // Polinomial x_2ns;
@@ -150,10 +151,10 @@ namespace PilFflonk {
 
         ~PilFflonkProver();
 
-        void setZkey(BinFileUtils::BinFile *fdZkey, BinFileUtils::BinFile *fdCnstPols);
+        void setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename);
 
-        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdZkey, BinFileUtils::BinFile *fdCnstPols, BinFileUtils::BinFile *fdCmtdPols);
-        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdCmtdPols);
+        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename);
+        /*tuple <json, json>*/ void prove(std::string committedPolsFilename);
 
     protected:
         void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);
@@ -171,8 +172,6 @@ namespace PilFflonk {
         void stage4();
 
         void extend(u_int32_t stage, u_int32_t nPols);
-
-        BinFilePolsData* loadPolynomialsFromBinFile(BinFileUtils::BinFile *fd);
     };
 }
 

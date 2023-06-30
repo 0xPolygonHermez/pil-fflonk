@@ -11,8 +11,8 @@ struct CompareFe
     
     bool operator()(const AltBn128::FrElement& a, const AltBn128::FrElement& b) const
     {
-        cout << E.fr.toString(a) << " " << E.fr.toString(b) << " " << E.fr.lt(a,b) << endl;
-        return E.fr.lt(a, b);
+        // cout << E.fr.toString(a) << " " << E.fr.toString(b) << " " << E.fr.lt(a,b) << endl;
+        // return E.fr.lt(a, b);
     }
     
 };

@@ -114,72 +114,13 @@ public:
         *out[idx_out] = E.fr.mul(*in_a[idx_a], *in_b[idx_b]);
     };
 
-    static void calculateH1H2(AltBn128::Engine &E, Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol)
-    {
-        map<AltBn128::FrElement, uint64_t, CompareFe> idx_t(E);
-        multimap<AltBn128::FrElement, uint64_t, CompareFe> s(E);
-        multimap<AltBn128::FrElement, uint64_t>::iterator it;
-        uint64_t i = 0; 
-
-        for (uint64_t i = 0; i < tPol.degree(); i++)
-        {
-            AltBn128::FrElement key = *tPol[i];
-            std::pair<AltBn128::FrElement, uint64_t> pr(key, i);
-
-            auto const result = idx_t.insert(pr);
-            if (not result.second)
-            {
-                result.first->second = i;
-            }
-
-            s.insert(pr);
-        }
-
-        for (uint64_t i = 0; i < fPol.degree(); i++)
-        {
-            AltBn128::FrElement key = *fPol[i];
-
-            if (idx_t.find(key) == idx_t.end())
-            {
-                zklog.error("Polinomial::calculateH1H2() Number not included: " + E.fr.toString(*fPol[i]));
-                exitProcess();
-            }
-            uint64_t idx = idx_t[key];
-            s.insert(pair<AltBn128::FrElement, uint64_t>(key, idx));
-        }
-
-        multimap<uint64_t, AltBn128::FrElement> s_sorted;
-        multimap<uint64_t, AltBn128::FrElement>::iterator it_sorted;
-
-        cout << s.size() << endl;
-        for (it = s.begin(); it != s.end(); it++)
-        {
-            cout << E.fr.toString(it->first) << " " << it->second << endl;
-            s_sorted.insert(make_pair(it->second, it->first));
-        }
-
-        for (it_sorted = s_sorted.begin(); it_sorted != s_sorted.end(); it_sorted++, i++)
-        {
-            if ((i & 1) == 0)
-            {
-                Polinomial::copyElement(h1, i / 2, it_sorted->second);
-            }
-            else
-            {
-                Polinomial::copyElement(h2, i / 2, it_sorted->second);
-            }
-        }
-    };
-
     // static void calculateH1H2(AltBn128::Engine &E, Polinomial &h1, Polinomial &h2, Polinomial &fPol, Polinomial &tPol)
     // {
-    //     map< AltBn128::FrElement, uint64_t, CompareFe> idx_t(E);
-    //     multimap< AltBn128::FrElement, uint64_t, CompareFe> s(E);
+    //     map<AltBn128::FrElement, uint64_t, CompareFe> idx_t(E);
+    //     multimap<AltBn128::FrElement, uint64_t, CompareFe> s(E);
     //     multimap<AltBn128::FrElement, uint64_t>::iterator it;
+    //     uint64_t i = 0; 
 
-    //     uint64_t i = 0;
-
-    //     cout << "tPolDegree " << tPol.degree() << endl;
     //     for (uint64_t i = 0; i < tPol.degree(); i++)
     //     {
     //         AltBn128::FrElement key = *tPol[i];
@@ -196,26 +137,24 @@ public:
 
     //     for (uint64_t i = 0; i < fPol.degree(); i++)
     //     {
-    //          AltBn128::FrElement key = *fPol[i];
+    //         AltBn128::FrElement key = *fPol[i];
 
     //         if (idx_t.find(key) == idx_t.end())
     //         {
-    //             cerr << "Error: calculateH1H2() Number not included: " << E.fr.toString(*fPol[i]) << endl;
-    //             exit(-1);
+    //             zklog.error("Polinomial::calculateH1H2() Number not included: " + E.fr.toString(*fPol[i]));
+    //             exitProcess();
     //         }
     //         uint64_t idx = idx_t[key];
-    //         s.insert(pair< AltBn128::FrElement, uint64_t>(key, idx));
+    //         s.insert(pair<AltBn128::FrElement, uint64_t>(key, idx));
     //     }
 
     //     multimap<uint64_t, AltBn128::FrElement> s_sorted;
     //     multimap<uint64_t, AltBn128::FrElement>::iterator it_sorted;
 
-    //     for(auto& x: s) {
-    //         std::cout << E.fr.toString(x.first) << ": " << x.second << std::endl;
-    //     }
-
+    //     cout << s.size() << endl;
     //     for (it = s.begin(); it != s.end(); it++)
     //     {
+    //         cout << E.fr.toString(it->first) << " " << it->second << endl;
     //         s_sorted.insert(make_pair(it->second, it->first));
     //     }
 
@@ -231,7 +170,6 @@ public:
     //         }
     //     }
     // };
-
 
     static void calculateZ(AltBn128::Engine &E, Polinomial &z, Polinomial &num, Polinomial &den)
     {

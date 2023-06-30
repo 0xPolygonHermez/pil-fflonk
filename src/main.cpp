@@ -89,15 +89,9 @@ int main(int argc, char **argv)
     cout << "> Opening zkey file" << endl;
     auto zkey = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
 
-    cout << "> Opening constant polynomials file" << endl;
-    auto cnstPols = BinFileUtils::openExisting(cnstFilename, "pols", 1);
-
-    cout << "> Opening committed polynomial file" << endl;
-    auto cmtdPols = BinFileUtils::openExisting(cmtdFilename, "pols", 1);
-
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
 
-    prover->prove(zkey.get(), cnstPols.get(), cmtdPols.get());
+    prover->prove(zkey.get(), cnstFilename, cmtdFilename);
 
     TimerStopAndLog(WHOLE_PROCESS);
 

@@ -3,10 +3,10 @@
 // #include <iomanip>
 // #include <filesystem>
 // #include <uuid/uuid.h>
-// #include <sys/mman.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
-// #include <fcntl.h>
-// #include <sys/types.h>
+#include <fcntl.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include "utils.hpp"
 // #include "scalar.hpp"
@@ -265,107 +265,107 @@ bool fileExists (const string &fileName)
 //     return result;
 // }
 
-// void *mapFileInternal(const string &fileName, uint64_t size, bool bOutput, bool bMapInputFile)
-// {
-//     // If input, check the file size is the same as the expected polsSize
-//     if (!bOutput)
-//     {
-//         struct stat sb;
-//         if (lstat(fileName.c_str(), &sb) == -1)
-//         {
-//             cerr << "Error: mapFile() failed calling lstat() of file " << fileName << endl;
-//             exitProcess();
-//         }
-//         if ((uint64_t)sb.st_size != size)
-//         {
-//             cerr << "Error: mapFile() found size of file " << fileName << " to be " << sb.st_size << " B instead of " << size << " B" << endl;
-//             exitProcess();
-//         }
-//     }
+void *mapFileInternal(const string &fileName, uint64_t size, bool bOutput, bool bMapInputFile)
+{
+    // If input, check the file size is the same as the expected polsSize
+    if (!bOutput)
+    {
+        struct stat sb;
+        if (lstat(fileName.c_str(), &sb) == -1)
+        {
+            cerr << "Error: mapFile() failed calling lstat() of file " << fileName << endl;
+            exitProcess();
+        }
+        if ((uint64_t)sb.st_size != size)
+        {
+            cerr << "Error: mapFile() found size of file " << fileName << " to be " << sb.st_size << " B instead of " << size << " B" << endl;
+            exitProcess();
+        }
+    }
 
-//     // Open the file withe the proper flags
-//     int oflags;
-//     if (bOutput)
-//         oflags = O_CREAT | O_RDWR | O_TRUNC;
-//     else
-//         oflags = O_RDONLY;
-//     int fd = open(fileName.c_str(), oflags, 0666);
-//     if (fd < 0)
-//     {
-//         cerr << "Error: mapFile() failed opening file: " << fileName << endl;
-//         exitProcess();
-//     }
+    // Open the file withe the proper flags
+    int oflags;
+    if (bOutput)
+        oflags = O_CREAT | O_RDWR | O_TRUNC;
+    else
+        oflags = O_RDONLY;
+    int fd = open(fileName.c_str(), oflags, 0666);
+    if (fd < 0)
+    {
+        cerr << "Error: mapFile() failed opening file: " << fileName << endl;
+        exitProcess();
+    }
 
-//     // If output, extend the file size to the required one
-//     if (bOutput)
-//     {
-//         // Seek the last byte of the file
-//         int result = lseek(fd, size - 1, SEEK_SET);
-//         if (result == -1)
-//         {
-//             cerr << "Error: mapFile() failed calling lseek() of file: " << fileName << endl;
-//             exitProcess();
-//         }
+    // If output, extend the file size to the required one
+    if (bOutput)
+    {
+        // Seek the last byte of the file
+        int result = lseek(fd, size - 1, SEEK_SET);
+        if (result == -1)
+        {
+            cerr << "Error: mapFile() failed calling lseek() of file: " << fileName << endl;
+            exitProcess();
+        }
 
-//         // Write a 0 at the last byte of the file, to set its size; content is all zeros
-//         result = write(fd, "", 1);
-//         if (result < 0)
-//         {
-//             cerr << "Error: mapFile() failed calling write() of file: " << fileName << endl;
-//             exitProcess();
-//         }
-//     }
+        // Write a 0 at the last byte of the file, to set its size; content is all zeros
+        result = write(fd, "", 1);
+        if (result < 0)
+        {
+            cerr << "Error: mapFile() failed calling write() of file: " << fileName << endl;
+            exitProcess();
+        }
+    }
 
-//     // Map the file into memory
-//     void *pAddress;
-//     pAddress = (uint8_t *)mmap(NULL, size, bOutput ? (PROT_READ | PROT_WRITE) : PROT_READ, MAP_SHARED, fd, 0);
-//     if (pAddress == MAP_FAILED)
-//     {
-//         cerr << "Error: mapFile() failed calling mmap() of file: " << fileName << endl;
-//         exitProcess();
-//     }
-//     close(fd);
+    // Map the file into memory
+    void *pAddress;
+    pAddress = (uint8_t *)mmap(NULL, size, bOutput ? (PROT_READ | PROT_WRITE) : PROT_READ, MAP_SHARED, fd, 0);
+    if (pAddress == MAP_FAILED)
+    {
+        cerr << "Error: mapFile() failed calling mmap() of file: " << fileName << endl;
+        exitProcess();
+    }
+    close(fd);
 
-//     // If mapped memory is wanted, then we are done
-//     if (bMapInputFile)
-//         return pAddress;
+    // If mapped memory is wanted, then we are done
+    if (bMapInputFile)
+        return pAddress;
 
-//     // Allocate memory
-//     void *pMemAddress = malloc(size);
-//     if (pMemAddress == NULL)
-//     {
-//         cerr << "Error: mapFile() failed calling malloc() of size: " << size << endl;
-//         exitProcess();
-//     }
+    // Allocate memory
+    void *pMemAddress = malloc(size);
+    if (pMemAddress == NULL)
+    {
+        cerr << "Error: mapFile() failed calling malloc() of size: " << size << endl;
+        exitProcess();
+    }
 
-//     // Copy file contents into memory
-//     memcpy(pMemAddress, pAddress, size);
+    // Copy file contents into memory
+    memcpy(pMemAddress, pAddress, size);
 
-//     // Unmap file content from memory
-//     unmapFile(pAddress, size);
+    // Unmap file content from memory
+    unmapFile(pAddress, size);
 
-//     return pMemAddress;
-// }
+    return pMemAddress;
+}
 
-// void *mapFile(const string &fileName, uint64_t size, bool bOutput)
-// {
-//     return mapFileInternal(fileName, size, bOutput, true);
-// }
+void *mapFile(const string &fileName, uint64_t size, bool bOutput)
+{
+    return mapFileInternal(fileName, size, bOutput, true);
+}
 
-// void *copyFile(const string &fileName, uint64_t size)
-// {
-//     return mapFileInternal(fileName, size, false, false);
-// }
+void *copyFile(const string &fileName, uint64_t size)
+{
+    return mapFileInternal(fileName, size, false, false);
+}
 
-// void unmapFile(void *pAddress, uint64_t size)
-// {
-//     int err = munmap(pAddress, size);
-//     if (err != 0)
-//     {
-//         cerr << "Error: unmapFile() failed calling munmap() of address=" << pAddress << " size=" << size << endl;
-//         exitProcess();
-//     }
-// }
+void unmapFile(void *pAddress, uint64_t size)
+{
+    int err = munmap(pAddress, size);
+    if (err != 0)
+    {
+        cerr << "Error: unmapFile() failed calling munmap() of address=" << pAddress << " size=" << size << endl;
+        exitProcess();
+    }
+}
 
 // string sha256(string str)
 // {

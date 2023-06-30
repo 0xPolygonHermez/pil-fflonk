@@ -58,12 +58,12 @@ bool fileExists (const std::string &fileName);
 // // Get number of open file descriptors
 // uint64_t getNumberOfFileDescriptors (void);
 
-// // Maps memory into a file
-// void * mapFile (const string &fileName, uint64_t size, bool bOutput);
-// void unmapFile (void * pAddress, uint64_t size);
+// Maps memory into a file
+void * mapFile (const string &fileName, uint64_t size, bool bOutput);
+void unmapFile (void * pAddress, uint64_t size);
 
-// // Copies file content into memory; use free after use
-// void * copyFile (const string &fileName, uint64_t size);
+// Copies file content into memory; use free after use
+void * copyFile (const string &fileName, uint64_t size);
 
 // // Compute the sha256 hash of a string
 // string sha256(string str);
