@@ -577,8 +577,8 @@ namespace PilFflonk
         }
 
         // Store coefs to context
-        Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, N * factorZK);
         for(u_int32_t i = 0; i < nPols; i++) {
+            Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, N * factorZK);
             for(u_int32_t j = 0; j < N * factorZK; j++) {
                 pol->coef[j] = buffCoefs[i + j * nPols];
             }
