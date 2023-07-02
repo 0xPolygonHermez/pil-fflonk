@@ -17,7 +17,7 @@
 #include "keccak_256_transcript.hpp"
 #include "commit_pols_fflonk.hpp"
 #include "constant_pols_fflonk.hpp"
-// #include "chelpers/pilfflonk_steps.hpp"
+#include "chelpers/pilfflonk_steps.hpp"
 #include "ntt_bn128.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
@@ -81,29 +81,8 @@ namespace PilFflonk {
 
         ShPlonk::ShPlonkProver* shPlonkProver;
 
-        // PilFflonkSteps pilFflonkSteps;
-        // PilFflonkSteps *steps = &pilFflonkSteps;
-
-        // // Polinomial x_n;
-        // // Polinomial x_2ns;
-
-        // uint64_t constPolsSize;
-        // uint64_t constPolsDegree;
-
-        // AltBn128::FrElement *mem;
-        // AltBn128::FrElement *p_cm1_2ns;
-        // AltBn128::FrElement *p_cm1_n;
-        // AltBn128::FrElement *p_cm2_2ns;
-        // AltBn128::FrElement *p_cm2_n;
-        // AltBn128::FrElement *p_cm3_2ns;
-        // AltBn128::FrElement *p_cm3_n;
-        // AltBn128::FrElement *p_q_2ns;
-        // AltBn128::FrElement *pBuffer;
-
-        // void *pAddress;
-
-        // FrElement *precomputedBigBuffer;
-        // G1PointAffine *PTau;
+        PilFflonkSteps pilFflonkSteps;
+        PilFflonkSteps *steps = &pilFflonkSteps;
 
         u_int64_t lengthBufferCommitted;
         u_int64_t lengthBuffer;

@@ -19,6 +19,11 @@ struct StepsParams
 class Steps
 {
 public:
+
+    virtual AltBn128::FrElement publics_first(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub) = 0;
+    virtual AltBn128::FrElement publics_i(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub) = 0;
+    virtual AltBn128::FrElement publics_last(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub) = 0;
+
     virtual void step2prev_first(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
     virtual void step2prev_i(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;
     virtual void step2prev_last(AltBn128::Engine &E, StepsParams &params, uint64_t i) = 0;

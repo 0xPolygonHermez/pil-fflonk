@@ -2,7 +2,7 @@
 
 # Directories
 BUILD_DIR := build
-SRC_DIRS  := src src/chelpers
+SRC_DIRS  := src
 DPNDS_DIR := depends/ffiasm/c
 TEST_DIRS := src test
 
