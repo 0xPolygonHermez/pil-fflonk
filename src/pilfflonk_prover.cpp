@@ -190,12 +190,15 @@ namespace PilFflonk
 
             u_int64_t constPolsSize = fflonkInfo->nConstants * sizeof(FrElement) * N;
 
-            pConstPolsAddress = copyFile(constPolsFilename, constPolsSize);
-            zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsSize) + " bytes from constant file " + constPolsFilename);
+            if(constPolsSize > 0) {
+                pConstPolsAddress = copyFile(constPolsFilename, constPolsSize);
+                zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsSize) + " bytes from constant file " + constPolsFilename);
 
-            for(u_int64_t i = 0; i < fflonkInfo->nConstants * N; i++) {
-                E.fr.fromRprBE(ptr["const_n"][i], reinterpret_cast<uint8_t*>(pConstPolsAddress) + i*32, 32);
+                for(u_int64_t i = 0; i < fflonkInfo->nConstants * N; i++) {
+                    E.fr.fromRprBE(ptr["const_n"][i], reinterpret_cast<uint8_t*>(pConstPolsAddress) + i*32, 32);
+                }
             }
+           
             
             pConstPols = new ConstantPolsFflonk(ptr["const_n"], N, fflonkInfo->nConstants);
 
@@ -305,7 +308,7 @@ namespace PilFflonk
                     ptr["publics"][i] = ptrCommitted["cm1_n"][offset];
                 } else if ("imP" == publicPol.polType) {
                     cout << "HOLA " << endl;
-                    ptr["publics"][i] = steps->publics_first(E, params, fflonkInfo->publics[i].polId, i);
+                    ptr["publics"][i] = pilFflonkSteps.publics_first(E, params, fflonkInfo->publics[i].polId, i);
                     cout << "HOLA " << endl;
                 } else {
                 throw std::runtime_error("Invalid public input type");
@@ -328,6 +331,7 @@ namespace PilFflonk
             cout << "> STAGE 4. Compute Trace Quotient Polynomials" << endl;
             stage4();
 
+            shPlonkProver->open(PTau, challenges[4]); 
             // const [cmts, evaluations, xiSeed] = await open(zkey, PTau, ctx, committedPols, curve, { logger, fflonkPreviousChallenge: ctx.challenges[4], nonCommittedPols: ["Q"] });
 
             // // Compute xiSeed 
@@ -400,6 +404,7 @@ namespace PilFflonk
             G1Point C;
             E.g1.copy(C, *((G1PointAffine *)commit));
             transcript->addPolCommitment(C);
+            shPlonkProver->polynomialCommitments[key] = C;
         }
 
         // Add all the publics to the transcript
@@ -429,7 +434,7 @@ namespace PilFflonk
             #pragma omp parallel for
             for (uint64_t i = 0; i < N * factorZK; i++)
             {
-                steps->step2prev_first(E, params, i);
+                pilFflonkSteps.step2prev_first(E, params, i);
             }
 
             auto nCm2 = fflonkInfo->mapSectionsN.section[cm1_n];
@@ -479,7 +484,7 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < N * factorZK; i++)
         {
-            steps->step3prev_first(E, params, i);
+            pilFflonkSteps.step3prev_first(E, params, i);
         }   
 
         auto nCm3 = fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->mapSectionsN.section[cm2_n];
@@ -515,10 +520,13 @@ namespace PilFflonk
         // #pragma omp parallel for
         for (uint64_t i = 0; i < N * factorZK; i++)
         {
-            steps->step3_first(E, params, i);
+            pilFflonkSteps.step3_first(E, params, i);
         }
 
         extend(3, fflonkInfo->mapSectionsN.section[cm3_n]);
+
+        shPlonkProver->commit(3, PTau, true);
+
     }
 
     void PilFflonkProver::stage4()
@@ -538,11 +546,16 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < NExt * factorZK; i++)
         {
-            steps->step42ns_first(E, params, i);
+            pilFflonkSteps.step42ns_first(E, params, i);
         }
- 
-        shPlonkProver->polynomialsShPlonk["Q"] = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
+
+        shPlonkProver->polynomialsShPlonk["Q"] = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK); 
         shPlonkProver->polynomialsShPlonk["Q"]->divZh(N, 1 << extendBitsTotal);
+
+        cout << "HOLA" << endl;
+        shPlonkProver->commit(4, PTau, true);
+        cout << "HI" << endl;
+
     }
 
     void PilFflonkProver::extend(u_int32_t stage, u_int32_t nPols) {

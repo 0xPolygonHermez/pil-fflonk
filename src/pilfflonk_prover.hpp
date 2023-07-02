@@ -82,7 +82,6 @@ namespace PilFflonk {
         ShPlonk::ShPlonkProver* shPlonkProver;
 
         PilFflonkSteps pilFflonkSteps;
-        PilFflonkSteps *steps = &pilFflonkSteps;
 
         u_int64_t lengthBufferCommitted;
         u_int64_t lengthBuffer;

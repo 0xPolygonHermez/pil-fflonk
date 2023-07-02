@@ -279,7 +279,7 @@ namespace ShPlonk {
     void ShPlonkProver::computeChallengeXiSeed(FrElement previousChallenge)
     {     
         transcript->reset();
-        // transcript->addScalar(previousChallenge); //TODO: Uncomment this line when the transcript is fixed
+        transcript->addScalar(previousChallenge); 
 
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             if(zkeyPilFflonk->f[i]->nStages > 1 || zkeyPilFflonk->f[i]->nStages != 0) {
@@ -632,7 +632,7 @@ namespace ShPlonk {
         // Compute challenge xi seed
         computeChallengeXiSeed(previousChallenge);
 
-        cout << E.fr.toString(challengeXiSeed) << endl;
+        cout << "> Challenge xi seed: " << E.fr.toString(challengeXiSeed) << endl;
 
         // Calculate roots
         calculateRoots();
@@ -642,23 +642,15 @@ namespace ShPlonk {
             challengeXi = E.fr.mul(challengeXi, challengeXiSeed);
         }
 
-        cout << "CHALLENGE XI " << E.fr.toString(challengeXi) << endl;
+        cout << "Challenge xi: " << E.fr.toString(challengeXi) << endl;
 
         calculateEvaluations();        
 
-        cout << "Evaluation Commitments A" << E.fr.toString(evaluationCommitments["Simple.a"]) << endl;
-        cout << "Evaluation Commitments B" << E.fr.toString(evaluationCommitments["Simple.b"]) << endl;
-        cout << "Evaluation Commitments Q" << E.fr.toString(evaluationCommitments["Q"]) << endl;
-
-
         computeChallengeAlpha();
 
-        cout << "ALPHA " << E.fr.toString(challengeAlpha) << endl;
+        cout << "Challenge alpha: " << E.fr.toString(challengeAlpha) << endl;
 
         computeR();
-
-        cout << "R0 " << E.fr.toString(polynomialsShPlonk["R0"]->fastEvaluate(challengeXiSeed)) << endl;
-        cout << "R1 " << E.fr.toString(polynomialsShPlonk["R1"]->fastEvaluate(challengeXiSeed)) << endl;
         
         computeW();
 
@@ -671,7 +663,7 @@ namespace ShPlonk {
 
         computeChallengeY(W);
 
-        cout << "CHALLENGE Y " << E.fr.toString(challengeY) << endl;
+        cout << "Challenge Y: " << E.fr.toString(challengeY) << endl;
 
         computeWp();
         u_int64_t* lengthsWp = new u_int64_t[1]{polynomialsShPlonk["Wp"]->getDegree() + 1};
