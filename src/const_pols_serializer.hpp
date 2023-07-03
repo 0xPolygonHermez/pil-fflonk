@@ -13,11 +13,11 @@ const int CONST_POLS_FILE_EVALS_EXT_SECTION = 2;
 
 class ConstPolsSerializer
 {
-    static void readConstPolsCoefsSection(BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
+    static void readConstPolsCoefsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
 
-    static void readConstPolsEvalsExtSection(BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
+    static void readConstPolsEvalsExtSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
 
-    static AltBn128::FrElement *readBuffer(BinFileUtils::BinFile *fd, int idSection);
+    static AltBn128::FrElement *readBuffer(AltBn128::Engine &E, BinFileUtils::BinFile *fd, int idSection);
 
 public:
     AltBn128::FrElement *coefs;
@@ -25,7 +25,7 @@ public:
 
     ~ConstPolsSerializer();
 
-    static ConstPolsSerializer *readConstPolsFile(BinFileUtils::BinFile *fd);
+    static ConstPolsSerializer *readConstPolsFile(AltBn128::Engine &E, BinFileUtils::BinFile *fd);
 };
 
 #endif
