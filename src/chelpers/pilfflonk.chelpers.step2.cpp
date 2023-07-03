@@ -1,4 +1,3 @@
-#include "../constant_pols_fflonk.hpp"
 #include "pilfflonk_steps.hpp"
 
 

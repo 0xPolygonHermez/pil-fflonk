@@ -289,10 +289,10 @@ namespace ShPlonk {
     void ShPlonkProver::computeChallengeXiSeed(FrElement previousChallenge)
     {     
         transcript->reset();
-        transcript->addScalar(previousChallenge); 
+        transcript->addScalar(previousChallenge);
 
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
-            if(zkeyPilFflonk->f[i]->nStages > 1 || zkeyPilFflonk->f[i]->nStages != 0) {
+            if(zkeyPilFflonk->f[i]->nStages > 1 || zkeyPilFflonk->f[i]->stages[0].stage != 0) {
                 G1Point commit = polynomialCommitments["f" + std::to_string(zkeyPilFflonk->f[i]->index)]; 
                 transcript->addPolCommitment(commit);
             }

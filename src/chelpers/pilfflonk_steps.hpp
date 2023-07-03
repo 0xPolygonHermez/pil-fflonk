@@ -2,19 +2,18 @@
 #define PILFFLONK_STEPS_HPP
 
 #include <alt_bn128.hpp>
-#include "../constant_pols_fflonk.hpp"
 
 struct StepsParams
 {
-    AltBn128::FrElement *cm1_n;
-    AltBn128::FrElement *cm2_n;
-    AltBn128::FrElement *cm3_n;
-    AltBn128::FrElement *tmpExp_n;
-    AltBn128::FrElement *cm1_2ns;
-    AltBn128::FrElement *cm2_2ns;
-    AltBn128::FrElement *cm3_2ns;
-    ConstantPolsFflonk *pConstPols;
-    ConstantPolsFflonk *pConstPols2ns;
+    AltBn128::FrElement* cm1_n;
+    AltBn128::FrElement* cm2_n;
+    AltBn128::FrElement* cm3_n;
+    AltBn128::FrElement* tmpExp_n;
+    AltBn128::FrElement* cm1_2ns;
+    AltBn128::FrElement* cm2_2ns;
+    AltBn128::FrElement* cm3_2ns;
+    AltBn128::FrElement* const_n;
+    AltBn128::FrElement* const_2ns;
     AltBn128::FrElement* challenges;
     AltBn128::FrElement* x_n;
     AltBn128::FrElement* x_2ns;

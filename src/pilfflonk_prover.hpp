@@ -13,8 +13,6 @@
 #include "zkey.hpp"
 #include "fflonk_info.hpp"
 #include "keccak_256_transcript.hpp"
-#include "commit_pols_fflonk.hpp"
-#include "constant_pols_fflonk.hpp"
 #include "chelpers/pilfflonk_steps.hpp"
 #include "ntt_bn128.hpp"
 #include <alt_bn128.hpp>
@@ -70,8 +68,6 @@ namespace PilFflonk {
 
         void *pConstPolsAddress;
         void *pConstPolsAddress2ns;
-        ConstantPolsFflonk* pConstPols;
-        ConstantPolsFflonk* pConstPols2ns;
         
         uint64_t constPolsSize;
 

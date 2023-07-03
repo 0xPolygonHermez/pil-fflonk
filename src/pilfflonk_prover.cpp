@@ -139,9 +139,9 @@ namespace PilFflonk
             ptr["cm2_coefs"] = ptr["cm1_coefs"]     + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
             ptr["cm3_coefs"] = ptr["cm2_coefs"]     + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
 
-            ptr["publics"]   = ptr["cm3_coefs"]     + fflonkInfo->nPublics;
+            ptr["publics"]   = ptr["cm3_coefs"]     + N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
             
-            PTau = (G1PointAffine *)(ptr["cm3_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n]);
+            PTau = (G1PointAffine *)(ptr["publics"] + fflonkInfo->nPublics);
 
             // //////////////////////////////////////////////////
             // BIG BUFFER
@@ -196,15 +196,6 @@ namespace PilFflonk
                     E.fr.fromRprBE(ptr["const_n"][i], reinterpret_cast<uint8_t*>(pConstPolsAddress) + i*32, 32);
                 }
             }
-           
-            
-            pConstPols = new ConstantPolsFflonk(ptr["const_n"], N, fflonkInfo->nConstants);
-
-            ptr["const_2ns"] = static_cast<RawFr::Element*>(calloc(fflonkInfo->nConstants * (1 << nBitsExtZK), sizeof(RawFr::Element)));
-
-            pConstPols2ns = new ConstantPolsFflonk(ptr["const_2ns"], NExt * factorZK, fflonkInfo->nConstants);
-
-
         }
 
         catch (const std::exception &e)
@@ -240,8 +231,8 @@ namespace PilFflonk
                 cm1_2ns: ptrCommitted["cm1_2ns"],
                 cm2_2ns: ptrCommitted["cm2_2ns"],
                 cm3_2ns: ptrCommitted["cm3_2ns"],
-                pConstPols :  pConstPols,
-                pConstPols2ns :  pConstPols2ns,
+                const_n :  ptr["const_n"],
+                const_2ns :  ptr["const_2ns"],
                 challenges : challenges,
                 x_n : ptr["x_n"],
                 x_2ns : ptr["x_2ns"],
@@ -278,6 +269,8 @@ namespace PilFflonk
             cout << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n]<< endl;
             cout << "-----------------------------" << endl;
 
+            delete transcript;
+            transcript = new Keccak256Transcript(E);
             transcript->reset();
 
             // TODO add to precomputed?????
@@ -315,6 +308,7 @@ namespace PilFflonk
                 } else {
                 throw std::runtime_error("Invalid public input type");
                 }
+                cout << i << "   " << E.fr.toString(ptr["publics"][i]) << endl;
                 publicSignals.push_back(E.fr.toString(ptr["publics"][i]).c_str());
             }
 
@@ -533,7 +527,6 @@ namespace PilFflonk
             ptrCommitted["q_2ns"][i] = pilFflonkSteps.step42ns_first(E, params, i);
             // pilFflonkSteps.step42ns_i(E, params, i);
         }
-
 
         Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
         polQ->divZh(N, 1 << extendBitsTotal);
