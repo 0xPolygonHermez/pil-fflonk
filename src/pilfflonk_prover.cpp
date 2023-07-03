@@ -58,15 +58,6 @@ namespace PilFflonk
 
             zkey = PilFflonkZkey::loadPilFflonkZkey(fdZkey);
 
-            cout << "> Reading zkey constant file" << endl;
-
-            // // TODO EXAMPLE
-            // ConstPolsSerializer* tmp = ConstPolsSerializer::readConstPolsFile(fdZkeyConst);
-
-            // for(int i=0; i<64; i++) {
-            //     std:cout << E.fr.toString(tmp->evalsExt[i]) << std::endl;
-            // }
-
             cout << "> Creating shPlonk prover" << endl;
 
             shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, zkey);
@@ -187,10 +178,20 @@ namespace PilFflonk
                 pConstPolsAddress = copyFile(constPolsFilename, constPolsSize);
                 zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsSize) + " bytes from constant file " + constPolsFilename);
 
+#pragma omp parallel for
                 for(u_int64_t i = 0; i < fflonkInfo->nConstants * N; i++) {
                     E.fr.fromRprBE(ptr["const_n"][i], reinterpret_cast<uint8_t*>(pConstPolsAddress) + i*32, 32);
                 }
             }
+
+            cout << "> Reading constant polynomials zkey file" << endl;
+
+            // ConstPolsSerializer* tmp = ConstPolsSerializer::readConstPolsFile(E,fdZkeyConst);
+            ConstPolsSerializer::readConstPolsFile(E, fdZkeyConst, ptr["const_coefs"], ptr["const_2ns"]);
+            // for (uint64_t i = 0; i < 32; i++)
+            // {
+            //     cout << E.fr.toString(ptr["const_coefs"][i]) << endl;
+            // }
         }
 
         catch (const std::exception &e)

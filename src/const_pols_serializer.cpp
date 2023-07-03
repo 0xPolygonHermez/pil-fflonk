@@ -13,10 +13,15 @@ ConstPolsSerializer *ConstPolsSerializer::readConstPolsFile(AltBn128::Engine &E,
     auto constPolsSerializer = new ConstPolsSerializer();
 
     readConstPolsCoefsSection(E, fd, constPolsSerializer);
-
     readConstPolsEvalsExtSection(E, fd, constPolsSerializer);
 
     return constPolsSerializer;
+}
+
+void ConstPolsSerializer::readConstPolsFile(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs, AltBn128::FrElement *evalsExt)
+{
+    readConstPolsCoefsSection(E, fd, coefs);
+    readConstPolsEvalsExtSection(E, fd, evalsExt);
 }
 
 void ConstPolsSerializer::readConstPolsCoefsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer)
@@ -24,9 +29,19 @@ void ConstPolsSerializer::readConstPolsCoefsSection(AltBn128::Engine &E, BinFile
     constPolsSerializer->coefs = readBuffer(E, fd, CONST_POLS_FILE_COEFS_SECTION);
 }
 
+void ConstPolsSerializer::readConstPolsCoefsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs)
+{
+    readBuffer(E, fd, CONST_POLS_FILE_COEFS_SECTION, coefs);
+}
+
 void ConstPolsSerializer::readConstPolsEvalsExtSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer)
 {
     constPolsSerializer->evalsExt = readBuffer(E, fd, CONST_POLS_FILE_EVALS_EXT_SECTION);
+}
+
+void ConstPolsSerializer::readConstPolsEvalsExtSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *evalsExt)
+{
+    readBuffer(E, fd, CONST_POLS_FILE_EVALS_EXT_SECTION, evalsExt);
 }
 
 AltBn128::FrElement *ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFileUtils::BinFile *fd, int idSection)
@@ -46,4 +61,21 @@ AltBn128::FrElement *ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFil
     }
 
     return &buffer[0];
+}
+
+void ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFileUtils::BinFile *fd, int idSection, AltBn128::FrElement *ptrDst)
+{
+    uint64_t size = fd->getSectionSize(idSection);
+    uint64_t nElements = size / sizeof(AltBn128::FrElement);
+    int nThreads = omp_get_num_threads() / 2;
+
+    AltBn128::FrElement *buffer = ptrDst;
+
+    ThreadUtils::parcpy(&buffer[0], fd->getSectionData(idSection), size, nThreads);
+
+#pragma omp parallel for
+    for (u_int64_t i = 0; i < nElements; i++)
+    {
+        E.fr.fromRprBE(buffer[i], (uint8_t *)&(buffer[i]), 32);
+    }
 }
