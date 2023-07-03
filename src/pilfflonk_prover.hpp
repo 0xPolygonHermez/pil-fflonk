@@ -11,8 +11,6 @@
 #include "polynomial/polynomial.hpp"
 #include "polinomial.hpp"
 #include "zkey.hpp"
-#include "steps.hpp"
-#include "snark_proof.hpp"
 #include "fflonk_info.hpp"
 #include "keccak_256_transcript.hpp"
 #include "commit_pols_fflonk.hpp"
@@ -124,7 +122,6 @@ namespace PilFflonk {
         // FrElement blindingFactors[BLINDINGFACTORSLENGTH];
 
         Keccak256Transcript *transcript;
-        SnarkProof *proof;
     public:
         PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile);
         PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, void* reservedMemoryPtr, uint64_t reservedMemorySize);

@@ -4,11 +4,22 @@
 
 namespace ShPlonk {
 
-    ShPlonkProver::ShPlonkProver(AltBn128::Engine &_E, BinFileUtils::BinFile *zkeyBinfile) : E(_E) {
+    ShPlonkProver::ShPlonkProver(AltBn128::Engine &_E, PilFflonkZkey::PilFflonkZkey *zkey) : E(_E) {
+        zkeyPilFflonk = zkey;
 
         transcript = new Keccak256Transcript(_E);
+    }
 
-        zkeyPilFflonk = PilFflonkZkey::loadPilFflonkZkey(zkeyBinfile);
+    ShPlonkProver::~ShPlonkProver() {
+        delete transcript;
+    }
+
+    void ShPlonkProver::addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> *pol) {
+        this->polynomialsShPlonk[key] = pol;
+    }
+
+    Polynomial<AltBn128::Engine> * ShPlonkProver::getPolynomialShPlonk(const std::string &key) {
+        return this->polynomialsShPlonk[key];
     }
 
     void ShPlonkProver::computeR() {
@@ -251,12 +262,8 @@ namespace ShPlonk {
         E.fr.inv(ZTS2Y, ZTS2Y);
         polynomialsShPlonk["Wp"]->mulScalar(ZTS2Y);
 
-        cout << "L2 " << E.fr.toString(polynomialsShPlonk["Wp"]->fastEvaluate(challengeAlpha)) << endl;
-
         LOG_TRACE("> Computing W' = L / ZTS2 polynomial");
         polynomialsShPlonk["Wp"]->divByZerofier(1, challengeY);
-
-        cout << "L3 " << E.fr.toString(polynomialsShPlonk["Wp"]->fastEvaluate(challengeAlpha)) << endl;
 
         u_int64_t maxDegree = 0; 
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
@@ -266,9 +273,6 @@ namespace ShPlonk {
         }
 
         maxDegree -= 1;
-
-        cout << "maxDegree " << maxDegree << endl;
-        cout << "L degree" << polynomialsShPlonk["Wp"]->getDegree() << endl;
 
         if (polynomialsShPlonk["Wp"]->getDegree() > maxDegree)
         {
@@ -294,25 +298,19 @@ namespace ShPlonk {
 
     void ShPlonkProver::computeChallengeAlpha()
     {    
-        u_int32_t nEvaluations = evaluationCommitments.size();
 
-        std::string* evaluationsNamesOrdered = new std::string[nEvaluations];
-
-        int index = 0;
-        for(auto const& x : evaluationCommitments) {
-            evaluationsNamesOrdered[index++] = x.first;
-        }
-
-        std::sort(evaluationsNamesOrdered, evaluationsNamesOrdered + nEvaluations);
+        std::sort(evaluationsNames, evaluationsNames + nEvaluations);
 
         transcript->reset();
         transcript->addScalar(challengeXiSeed);
-
+        
         for (u_int32_t i = 0; i < nEvaluations; ++i) {
-            transcript->addScalar(evaluationCommitments[evaluationsNamesOrdered[i]]);
+            if(evaluationsNames[i] != "Q") {
+                transcript->addScalar(evaluationCommitments[evaluationsNames[i]]);
+            }
         }
 
-        delete[] evaluationsNamesOrdered;
+        delete[] evaluationsNames;
 
         challengeAlpha = transcript->getChallenge();
     }
@@ -446,7 +444,6 @@ namespace ShPlonk {
         FrElement mulAccumulator = E.fr.one();
         for (u_int32_t i = 0; i < inverseElements.size(); i++)
         {            
-            cout << E.fr.toString(inverseElements[i]) << endl;
             mulAccumulator = E.fr.mul(mulAccumulator, inverseElements[i]);
         }
       
@@ -467,6 +464,17 @@ namespace ShPlonk {
             }
         }
 
+        
+        //Calculate evaluations size
+        nEvaluations = 0;
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
+            nEvaluations += zkeyPilFflonk->f[i]->nPols;
+        }
+
+        evaluationsNames = new std::string[nEvaluations];
+
+        u_int32_t index = 0;
+
         //Calculate evaluations
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             
@@ -477,10 +485,9 @@ namespace ShPlonk {
             if (it == zkeyPilFflonk->openingPoints.end()) throw std::runtime_error("Opening point not found");
             FrElement openValue = initialOpenValues[it->first];
 
-            cout << "OPEN VALUE INDEX " << " " <<  it->first << " " << E.fr.toString(openValue) <<  endl;
-
             for(u_int32_t k = 0; k < zkeyPilFflonk->f[i]->nPols; ++k) {
                 std::string polName = zkeyPilFflonk->f[i]->pols[k];
+                evaluationsNames[index++] = polName + wPower;
                 if(polynomialsShPlonk[polName] == nullptr) throw std::runtime_error("Polynomial not found");
                 evaluationCommitments[polName + wPower] = polynomialsShPlonk[polName]->fastEvaluate(openValue);
             }
@@ -625,7 +632,13 @@ namespace ShPlonk {
         }
     }
 
-    void ShPlonkProver::open(G1PointAffine *PTau, FrElement previousChallenge) {
+    json ShPlonkProver::open(G1PointAffine *PTau, FrElement previousChallenge) {
+
+        for(auto const&[key, commit] : zkeyPilFflonk->committedConstants) {
+            G1Point C;
+            E.g1.copy(C, *((G1PointAffine *)commit));
+            polynomialCommitments[key] = C;
+        }
 
         prepareCommits();
 
@@ -679,6 +692,8 @@ namespace ShPlonk {
 
         delete lengthsW;
         delete lengthsWp;
+
+        return toJson();
     }
 
     AltBn128::G1Point ShPlonkProver::multiExponentiation(G1PointAffine *PTau, Polynomial<AltBn128::Engine> *polynomial, u_int32_t nx, u_int64_t x[])
@@ -727,6 +742,40 @@ namespace ShPlonk {
         }
 
         return -1;
+    }
+
+    AltBn128::FrElement ShPlonkProver::getChallengeXi() {
+        return challengeXi;
+    }
+
+    json ShPlonkProver::toJson() {
+        json jsonProof;
+
+        jsonProof["polynomials"] = {};
+        jsonProof["evaluations"] = {};
+
+        for (auto &[key, point]: this->polynomialCommitments) {
+            G1PointAffine tmp;
+            E.g1.copy(tmp, point);
+
+            jsonProof["polynomials"][key] = {};
+
+            std::string x = E.f1.toString(tmp.x);
+            std::string y = E.f1.toString(tmp.y);
+
+            jsonProof["polynomials"][key].push_back(x);
+            jsonProof["polynomials"][key].push_back(y);
+            jsonProof["polynomials"][key].push_back("1");
+        }
+
+        for (auto &[key, element]: this->evaluationCommitments) {
+            jsonProof["evaluations"][key] = E.fr.toString(element);
+        }
+
+        jsonProof["protocol"] = "pilfflonk";
+        jsonProof["curve"] = "bn128";
+
+        return jsonProof;
     }
 
 }

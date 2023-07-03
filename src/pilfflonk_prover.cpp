@@ -31,7 +31,6 @@ namespace PilFflonk
         this->removePrecomputedData();
 
         delete transcript;
-        delete proof;
     }
 
     void PilFflonkProver::removePrecomputedData() {
@@ -57,19 +56,13 @@ namespace PilFflonk
     }
 
     void PilFflonkProver::setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename) {
-        // TODO check constant polynomials size match with definitions
-        // TODO check committed polynomials size match with definitions
 
         try
         {
             if(NULL != zkey) {
                 removePrecomputedData();
             }
-
-            cout << "> Creating shPlonk prover" << endl;
-
-            shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, fdZkey);
-
+    
             cout << "> Reading zkey file" << endl;
 
             if (Zkey::getProtocolIdFromZkey(fdZkey) != Zkey::PILFFLONK_PROTOCOL_ID)
@@ -78,6 +71,10 @@ namespace PilFflonk
             }
 
             zkey = PilFflonkZkey::loadPilFflonkZkey(fdZkey);
+
+            cout << "> Creating shPlonk prover" << endl;
+
+            shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, zkey);
 
             n8r = sizeof(FrElement);
             N = 1 << zkey->power;
@@ -184,7 +181,6 @@ namespace PilFflonk
 
 
             transcript = new Keccak256Transcript(E);
-            proof = new SnarkProof(E, "pilfflonk");
 
             cout << "> Reading constant polynomials file" << endl;
 
@@ -216,7 +212,7 @@ namespace PilFflonk
         }
     }
 
-    /*std::tuple <json, json>*/ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename) {
+    /*std::tuple <json, json> */ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename) {
         this->setZkey(fdZkey, constPolsFilename);
 
         return this->prove(committedPolsFilename);
@@ -227,8 +223,8 @@ namespace PilFflonk
         if(NULL == zkey) {
             throw std::runtime_error("Zkey data not set");
         }
-
-        try
+ 
+        try 
         {   
            
             cout << "PIL-FFLONK PROVER STARTED" << endl << endl;
@@ -275,7 +271,6 @@ namespace PilFflonk
             cout << "-----------------------------" << endl;
 
             transcript->reset();
-            proof->reset();
 
             // TODO add to precomputed?????
             for (u_int64_t i = 0; i < N; i++) {
@@ -299,6 +294,7 @@ namespace PilFflonk
 
             // STAGE 0. Calculate publics
             // STEP 0.1 - Prepare public inputs
+            // json publicSignals;
             for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
             {
                 Publics publicPol = fflonkInfo->publics[i];
@@ -331,39 +327,21 @@ namespace PilFflonk
             cout << "> STAGE 4. Compute Trace Quotient Polynomials" << endl;
             stage4();
 
-            shPlonkProver->open(PTau, challenges[4]); 
-            // const [cmts, evaluations, xiSeed] = await open(zkey, PTau, ctx, committedPols, curve, { logger, fflonkPreviousChallenge: ctx.challenges[4], nonCommittedPols: ["Q"] });
+            json pilFflonkProof = shPlonkProver->open(PTau, challenges[4]); 
+            
+            FrElement challengeXi = shPlonkProver->getChallengeXi();
 
-            // // Compute xiSeed 
-            // FrElement challengeXi = E.fr.exp(xiSeed, zkey.powerW);
+            FrElement xN = E.fr.one();
+            for(u_int64_t i = 0; i < N; i++) {
+                xN = E.fr.mul(xN, challengeXi);
+            }
 
-            // auto xN = E.fr.exp(challengeXi, N);
-            // auto Z = E.fr.sub(xN, E.fr.one());
+            FrElement Z = E.fr.sub(xN, E.fr.one());
 
-            // evaluations.invZh = curve.Fr.inv(Z);
+            E.fr.inv(Z, Z);
+            pilFflonkProof["evaluations"]["invZh"] = E.fr.toString(Z);
 
-            // await pool.terminate();
-
-            // let proof = { polynomials: {}, evaluations: {} };
-            // proof.protocol = "pilfflonk";
-            // proof.curve = curve.name;
-            // Object.keys(cmts).forEach(key => {
-            //     proof.polynomials[key] = ctx.curve.G1.toObject(cmts[key]);
-            // });
-
-            // Object.keys(evaluations).forEach(key => {
-            //     proof.evaluations[key] = ctx.curve.Fr.toObject(evaluations[key]);
-            // });
-
-            // proof = stringifyBigInts(proof);
-
-            // // Prepare public inputs
-            // let publicSignals = stringifyBigInts(ctx.publics.map(p => ctx.curve.Fr.toObject(p)));
-
-            // return {
-            //     proof,
-            //     publicSignals,
-            // };
+            // return {pilFflonkProof, publicSignals};
         }
         catch (const std::exception &e)
         {
@@ -404,7 +382,6 @@ namespace PilFflonk
             G1Point C;
             E.g1.copy(C, *((G1PointAffine *)commit));
             transcript->addPolCommitment(C);
-            shPlonkProver->polynomialCommitments[key] = C;
         }
 
         // Add all the publics to the transcript
@@ -549,12 +526,11 @@ namespace PilFflonk
             pilFflonkSteps.step42ns_first(E, params, i);
         }
 
-        shPlonkProver->polynomialsShPlonk["Q"] = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK); 
-        shPlonkProver->polynomialsShPlonk["Q"]->divZh(N, 1 << extendBitsTotal);
+        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
+        polQ->divZh(N, 1 << extendBitsTotal);
+        shPlonkProver->addPolynomialShPlonk("Q", polQ);
 
-        cout << "HOLA" << endl;
         shPlonkProver->commit(4, PTau, true);
-        cout << "HI" << endl;
 
     }
 
@@ -593,9 +569,9 @@ namespace PilFflonk
             for(u_int32_t j = 0; j < N * factorZK; j++) {
                 pol->coef[j] = buffCoefs[i + j * nPols];
             }
+            pol->fixDegree();
             std::string name = (*zkey->polsNamesStage[stage])[i];
-            shPlonkProver->polynomialsShPlonk[name] = pol;  
-            shPlonkProver->polynomialsShPlonk[name]->fixDegree();  
+            shPlonkProver->addPolynomialShPlonk(name, pol);
         }
 
         memcpy(buffDst, buffCoefs, N * nPols * factorZK * sizeof(AltBn128::FrElement));

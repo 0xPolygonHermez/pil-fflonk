@@ -38,18 +38,32 @@ namespace ShPlonk {
         FrElement challengeY;
 
         std::map<std::string, FrElement *> rootsMap;
-    public:
+
+        std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsShPlonk;
+
         std::map<std::string, AltBn128::FrElement> evaluationCommitments;
 
         std::map <std::string, AltBn128::G1Point> polynomialCommitments;
 
-        std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsShPlonk;
-
-        ShPlonkProver(AltBn128::Engine &_E, BinFileUtils::BinFile *zkeyBinfile);
+        u_int32_t nEvaluations;
         
+        std::string *evaluationsNames;
+    public:
+        void addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> * pol);
+
+        Polynomial<AltBn128::Engine> * getPolynomialShPlonk(const std::string &key);
+
+        ShPlonkProver(AltBn128::Engine &_E, PilFflonkZkey::PilFflonkZkey *zkey);
+
+        ~ShPlonkProver();
+
         void commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp);
 
-        void open(G1PointAffine *PTau, FrElement previousChallenge);
+        json open(G1PointAffine *PTau, FrElement previousChallenge);
+
+        json toJson();
+
+        FrElement getChallengeXi();
 
     protected:
         void computeR();
