@@ -15,7 +15,6 @@ FflonkInfo::FflonkInfo(AltBn128::Engine &_E, std::string file): E(_E)
 
 void FflonkInfo::load(json j)
 {
-    mapTotalN = j["mapTotalN"];
     nConstants = j["nConstants"];
     nPublics = j["nPublics"];
     nCm1 = j["nCm1"];
@@ -32,16 +31,6 @@ void FflonkInfo::load(json j)
     mapDeg.section[cm2_2ns] = j["mapDeg"]["cm2_2ns"];
     mapDeg.section[cm3_2ns] = j["mapDeg"]["cm3_2ns"];
     mapDeg.section[q_2ns] = j["mapDeg"]["q_2ns"];
-
-    mapOffsets.section[cm1_n] = j["mapOffsets"]["cm1_n"];
-    mapOffsets.section[cm2_n] = j["mapOffsets"]["cm2_n"];
-    mapOffsets.section[cm3_n] = j["mapOffsets"]["cm3_n"];
-    mapOffsets.section[eSection::tmpExp_n] = j["mapOffsets"]["tmpExp_n"];
-    mapOffsets.section[cm1_2ns] = j["mapOffsets"]["cm1_2ns"];
-    mapOffsets.section[cm2_2ns] = j["mapOffsets"]["cm2_2ns"];
-    mapOffsets.section[cm3_2ns] = j["mapOffsets"]["cm3_2ns"];
-    mapOffsets.section[q_2ns] = j["mapOffsets"]["q_2ns"];
-
 
     for (uint64_t i = 0; i < j["mapSections"]["cm1_n"].size(); i++)
         mapSections.section[cm1_n].push_back(j["mapSections"]["cm1_n"][i]);
@@ -381,8 +370,7 @@ void FflonkInfo::getPol(void *pAddress, uint64_t idPol, PolInfo &polInfo)
 {
     polInfo.map = varPolMap[idPol];
     polInfo.N = mapDeg.section[polInfo.map.section];
-    polInfo.offset = mapOffsets.section[polInfo.map.section];
-    polInfo.offset += polInfo.map.sectionPos;
+    polInfo.offset = polInfo.map.sectionPos;
     polInfo.size = mapSectionsN.section[polInfo.map.section];
     polInfo.pAddress = ((AltBn128::FrElement *)pAddress) + polInfo.offset;
 }
@@ -397,11 +385,9 @@ uint64_t FflonkInfo::getPolSize(uint64_t polId)
 Polinomial FflonkInfo::getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol)
 {
     VarPolMap polInfo = varPolMap[idPol];
-    uint64_t N = mapDeg.section[polInfo.section];
-    uint64_t offset = mapOffsets.section[polInfo.section];
-    offset += polInfo.sectionPos;
-    uint64_t next = mapSectionsN.section[polInfo.section];
-    return Polinomial(&pAddress[offset], N, next, std::to_string(idPol));
+    uint64_t deg = mapDeg.section[polInfo.section];
+    uint64_t offset = polInfo.sectionPos;
+    return Polinomial(&pAddress[offset], deg, std::to_string(idPol));
 }
 
 eSection string2section(const std::string s)

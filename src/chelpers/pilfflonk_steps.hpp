@@ -6,7 +6,13 @@
 
 struct StepsParams
 {
-    AltBn128::FrElement *pols;
+    AltBn128::FrElement *cm1_n;
+    AltBn128::FrElement *cm2_n;
+    AltBn128::FrElement *cm3_n;
+    AltBn128::FrElement *tmpExp_n;
+    AltBn128::FrElement *cm1_2ns;
+    AltBn128::FrElement *cm2_2ns;
+    AltBn128::FrElement *cm3_2ns;
     ConstantPolsFflonk *pConstPols;
     ConstantPolsFflonk *pConstPols2ns;
     AltBn128::FrElement* challenges;
@@ -36,7 +42,7 @@ class PilFflonkSteps {
         void step3_i(AltBn128::Engine &E, StepsParams &params, uint64_t i);
         void step3_last(AltBn128::Engine &E, StepsParams &params, uint64_t i);
 
-        void step42ns_first(AltBn128::Engine &E, StepsParams &params, uint64_t i);
+        AltBn128::FrElement step42ns_first(AltBn128::Engine &E, StepsParams &params, uint64_t i);
         void step42ns_i(AltBn128::Engine &E, StepsParams &params, uint64_t i);
         void step42ns_last(AltBn128::Engine &E, StepsParams &params, uint64_t i);
 };

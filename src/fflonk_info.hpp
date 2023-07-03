@@ -231,7 +231,6 @@ class FflonkInfo
 {
     AltBn128::Engine &E;
 public:
-    uint64_t mapTotalN;
     uint64_t nConstants;
     uint64_t nPublics;
     uint64_t nCm1;
@@ -241,7 +240,6 @@ public:
     uint64_t qDim;
 
     PolsSections mapDeg;
-    PolsSections mapOffsets;
     PolsSectionsVector mapSections;
     PolsSections mapSectionsN;
     std::vector<VarPolMap> varPolMap;

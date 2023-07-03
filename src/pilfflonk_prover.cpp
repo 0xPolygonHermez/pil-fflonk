@@ -153,10 +153,12 @@ namespace PilFflonk
             lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm3_n];               // cm3_n       >> Stage3, Z polynomial evaluations
             lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[tmpExp_n];            // tmpExp_n    >> Temporal expressions polynomials evaluations
 
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_n]; // cm1_2ns     >> Stage1, committed polynomials extended evaluations
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_n]; // cm2_2ns     >> Stage2, H1&H2 polynomials extended evaluations
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_n]; // cm3_2ns     >> Stage3, Z polynomial extended evaluations
+            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_2ns]; // cm1_2ns     >> Stage1, committed polynomials extended evaluations
+            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_2ns]; // cm2_2ns     >> Stage2, H1&H2 polynomials extended evaluations
+            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_2ns]; // cm3_2ns     >> Stage3, Z polynomial extended evaluations
             lengthBufferCommitted += NExt * factorZK * fflonkInfo->qDim;                        // q_2ns       >> Stage4, Q polynomial extended evaluations
+
+            cout << "lengthBufferCommitted: " << lengthBufferCommitted << endl;
 
             bBufferCommitted = new FrElement[lengthBufferCommitted];
 
@@ -212,13 +214,13 @@ namespace PilFflonk
         }
     }
 
-    /*std::tuple <json, json> */ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename) {
+    /* std::tuple<json, json> */ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename) {
         this->setZkey(fdZkey, constPolsFilename);
 
         return this->prove(committedPolsFilename);
     }
 
-    /*std::tuple<json, json>*/ void PilFflonkProver::prove(std::string committedPolsFilename)
+    /* std::tuple<json, json> */ void PilFflonkProver::prove(std::string committedPolsFilename)
     {
         if(NULL == zkey) {
             throw std::runtime_error("Zkey data not set");
@@ -231,7 +233,13 @@ namespace PilFflonk
 
             // Initialize vars
             params = {
-                pols : bBufferCommitted,
+                cm1_n: ptrCommitted["cm1_n"],
+                cm2_n: ptrCommitted["cm2_n"],
+                cm3_n: ptrCommitted["cm3_n"],
+                tmpExp_n: ptrCommitted["tmpExp_n"],
+                cm1_2ns: ptrCommitted["cm1_2ns"],
+                cm2_2ns: ptrCommitted["cm2_2ns"],
+                cm3_2ns: ptrCommitted["cm3_2ns"],
                 pConstPols :  pConstPols,
                 pConstPols2ns :  pConstPols2ns,
                 challenges : challenges,
@@ -294,21 +302,20 @@ namespace PilFflonk
 
             // STAGE 0. Calculate publics
             // STEP 0.1 - Prepare public inputs
-            // json publicSignals;
+
+            json publicSignals;
             for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
             {
                 Publics publicPol = fflonkInfo->publics[i];
-                cout << publicPol.polType << endl;
                 if ("cmP" == publicPol.polType) {
                     u_int64_t offset = (fflonkInfo->publics[i].idx * fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->publics[i].polId);
                     ptr["publics"][i] = ptrCommitted["cm1_n"][offset];
                 } else if ("imP" == publicPol.polType) {
-                    cout << "HOLA " << endl;
                     ptr["publics"][i] = pilFflonkSteps.publics_first(E, params, fflonkInfo->publics[i].polId, i);
-                    cout << "HOLA " << endl;
                 } else {
                 throw std::runtime_error("Invalid public input type");
                 }
+                publicSignals.push_back(E.fr.toString(ptr["publics"][i]).c_str());
             }
 
             // STAGE 1. Compute Trace Column Polynomials
@@ -387,7 +394,6 @@ namespace PilFflonk
         // Add all the publics to the transcript
         for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
         {
-            cout << i << " " << E.fr.toString(ptr["publics"][i]) << endl;
             transcript->addScalar(ptr["publics"][i]);
         }
 
@@ -409,7 +415,7 @@ namespace PilFflonk
 
             // STEP 2.2 - Compute stage 2 polynomials --> h1, h2
             #pragma omp parallel for
-            for (uint64_t i = 0; i < N * factorZK; i++)
+            for (uint64_t i = 0; i < N; i++)
             {
                 pilFflonkSteps.step2prev_first(E, params, i);
             }
@@ -459,7 +465,7 @@ namespace PilFflonk
         auto nConnections = fflonkInfo->ciCtx.size();
 
         #pragma omp parallel for
-        for (uint64_t i = 0; i < N * factorZK; i++)
+        for (uint64_t i = 0; i < N; i++)
         {
             pilFflonkSteps.step3prev_first(E, params, i);
         }   
@@ -494,8 +500,8 @@ namespace PilFflonk
             Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
-        // #pragma omp parallel for
-        for (uint64_t i = 0; i < N * factorZK; i++)
+        #pragma omp parallel for
+        for (uint64_t i = 0; i < N; i++)
         {
             pilFflonkSteps.step3_first(E, params, i);
         }
@@ -520,11 +526,14 @@ namespace PilFflonk
         cout << "··· challenges.a: " << E.fr.toString(challenges[4]) << endl;
 
         // STEP 4.2 - Compute stage 4 polynomial --> Q polynomial
+
         #pragma omp parallel for
         for (uint64_t i = 0; i < NExt * factorZK; i++)
         {
-            pilFflonkSteps.step42ns_first(E, params, i);
+            ptrCommitted["q_2ns"][i] = pilFflonkSteps.step42ns_first(E, params, i);
+            // pilFflonkSteps.step42ns_i(E, params, i);
         }
+
 
         Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
         polQ->divZh(N, 1 << extendBitsTotal);
@@ -536,18 +545,18 @@ namespace PilFflonk
 
     void PilFflonkProver::extend(u_int32_t stage, u_int32_t nPols) {
         
-        AltBn128::FrElement *buffSrc = stage == 0 ? ptr["const_n"] : ptrCommitted["cm" + std::to_string(stage) + "_n"];
-        AltBn128::FrElement *buffDst = stage == 0 ? ptr["const_2ns"] : ptrCommitted["cm" + std::to_string(stage) + "_2ns"];
-        AltBn128::FrElement *buffCoefs = stage == 0 ? ptr["const_coefs"] : ptr["cm" + std::to_string(stage) + "_coefs"];
+        AltBn128::FrElement *buffSrc = stage == 0 ? ptr["const_n"] : ptrCommitted["cm" + std::to_string(stage) + "_n"]; // N
+        AltBn128::FrElement *buffDst = stage == 0 ? ptr["const_2ns"] : ptrCommitted["cm" + std::to_string(stage) + "_2ns"]; // NEXT * FACTORZK
+        AltBn128::FrElement *buffCoefs = stage == 0 ? ptr["const_coefs"] : ptr["cm" + std::to_string(stage) + "_coefs"]; // N * FACTORZK
 
         // AltBn128::FrElement* buffer = stage == 0 ? bBuffer : bBufferCommitted;
 
-        memcpy(buffCoefs, buffSrc, N * nPols * sizeof(AltBn128::FrElement));
+        std::memset(buffCoefs, 0, N*factorZK*nPols*sizeof(AltBn128::FrElement));
 
-        std::memset(&buffCoefs[N * nPols], 0, ((factorZK - 1)*N*nPols) * sizeof(AltBn128::FrElement));
-
+        std::memcpy(buffCoefs, buffSrc, N*nPols*sizeof(AltBn128::FrElement));
+        
         NTT_AltBn128 ntt(E, N);
-        ntt.INTT(buffCoefs, buffCoefs, N, nPols/*, buffer*/);
+        ntt.INTT(buffCoefs, buffSrc, N, nPols/*, buffer*/);
 
         if(stage != 0) {
             for(u_int32_t i = 0; i < nPols; i++) {
@@ -574,9 +583,9 @@ namespace PilFflonk
             shPlonkProver->addPolynomialShPlonk(name, pol);
         }
 
-        memcpy(buffDst, buffCoefs, N * nPols * factorZK * sizeof(AltBn128::FrElement));
+        std::memset(buffDst, 0, NExt*factorZK*nPols*sizeof(AltBn128::FrElement));
 
-        std::memset(&buffDst[N * nPols * factorZK], 0, (nPols * ((1 << nBitsExtZK) - N * factorZK) * sizeof(AltBn128::FrElement)));
+        std::memcpy(buffDst, buffCoefs, N*factorZK*nPols*sizeof(AltBn128::FrElement));
 
         NTT_AltBn128 nttExtended(E, 1 << nBitsExtZK);
         nttExtended.NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols /*, buffer*/);

@@ -8,10 +8,18 @@ namespace ShPlonk {
         zkeyPilFflonk = zkey;
 
         transcript = new Keccak256Transcript(_E);
+        this->reset();
     }
 
     ShPlonkProver::~ShPlonkProver() {
-        delete transcript;
+        this->reset();
+    }  
+
+    void ShPlonkProver::reset() {
+        this->polynomialsShPlonk.clear();
+        this->rootsMap.clear();
+        this->evaluationCommitments.clear();
+        this->polynomialCommitments.clear();
     }
 
     void ShPlonkProver::addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> *pol) {
@@ -30,8 +38,7 @@ namespace ShPlonk {
         }
         
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
-            std::string log = "> Computing R" + std::to_string(i) + " polynomial"; 
-            LOG_TRACE(log);
+            cout << "> Computing R" + std::to_string(i) + " polynomial" << endl; 
 
             FrElement* evals = new FrElement[degrees[i]];
 
@@ -254,7 +261,6 @@ namespace ShPlonk {
         LOG_TRACE("> Computing L polynomial");
         computeL();
 
-        cout << "L " << E.fr.toString(polynomialsShPlonk["Wp"]->fastEvaluate(challengeAlpha)) << endl;
         LOG_TRACE("> Computing ZTS2 polynomial");
         computeZTS2();
 
@@ -298,9 +304,6 @@ namespace ShPlonk {
 
     void ShPlonkProver::computeChallengeAlpha()
     {    
-
-        std::sort(evaluationsNames, evaluationsNames + nEvaluations);
-
         transcript->reset();
         transcript->addScalar(challengeXiSeed);
         
@@ -534,6 +537,7 @@ namespace ShPlonk {
             }
             polynomial->coef[i] = coef;
         }
+        polynomial->fixDegree();
 
         return polynomial;
     }
@@ -575,6 +579,10 @@ namespace ShPlonk {
 
     void ShPlonkProver::commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp) {
         
+        if(NULL == zkeyPilFflonk) {
+            throw std::runtime_error("Zkey data not set");
+        }
+
         for (auto it = zkeyPilFflonk->f.begin(); it != zkeyPilFflonk->f.end(); ++it) {
             PilFflonkZkey::ShPlonkPol* pol = it->second;
 
@@ -620,7 +628,7 @@ namespace ShPlonk {
 
                 if(multiExp) {
                     G1Point Fi = multiExponentiation(PTau, cPol, pol->nPols, lengths);
-                    cout << E.g1.toString(Fi) << endl;
+                    cout << stage << " " << E.g1.toString(Fi) << endl;
                     polynomialCommitments[index] = Fi;
                 }
 
@@ -634,6 +642,9 @@ namespace ShPlonk {
 
     json ShPlonkProver::open(G1PointAffine *PTau, FrElement previousChallenge) {
 
+        if(NULL == zkeyPilFflonk) {
+            throw std::runtime_error("Zkey data not set");
+        }
         for(auto const&[key, commit] : zkeyPilFflonk->committedConstants) {
             G1Point C;
             E.g1.copy(C, *((G1PointAffine *)commit));

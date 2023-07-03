@@ -57,6 +57,8 @@ namespace ShPlonk {
 
         ~ShPlonkProver();
 
+        void reset();
+
         void commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp);
 
         json open(G1PointAffine *PTau, FrElement previousChallenge);

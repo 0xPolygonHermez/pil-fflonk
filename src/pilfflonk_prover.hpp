@@ -130,8 +130,8 @@ namespace PilFflonk {
 
         void setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename);
 
-        /*tuple <json, json>*/ void prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename);
-        /*tuple <json, json>*/ void prove(std::string committedPolsFilename);
+        /* std::tuple<json, json> */ void prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename);
+        /* std::tuple<json, json> */ void prove(std::string committedPolsFilename);
 
     protected:
         void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);
