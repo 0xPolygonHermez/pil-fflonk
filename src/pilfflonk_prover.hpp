@@ -65,7 +65,6 @@ namespace PilFflonk {
         BinFilePolsData* cnstPols;
         BinFilePolsData* cmtdPols;
 
-
         void *pConstPolsAddress;
         void *pConstPolsAddress2ns;
         
@@ -89,34 +88,6 @@ namespace PilFflonk {
 
         StepsParams params;
 
-        // u_int64_t lengthNonPrecomputedBigBuffer;
-        // FrElement *nonPrecomputedBigBuffer;
-
-        // u_int32_t *mapBuffersBigBuffer;
-
-        // FrElement *buffInternalWitness;
-        // FrElement *buffWitness;
-
-        // Zkey::Addition<Engine> *additionsBuff;
-
-        // u_int64_t lengthBatchInversesBuffer;
-
-        // FrElement *inverses;
-        // FrElement *products;
-
-        // // This is the length of the buffer that must be zeroed after each proof (starting from buffers["A"] pointer)
-        // u_int64_t buffersLength;
-
-        // std::map<std::string, u_int32_t *> mapBuffers;
-        // std::map<std::string, FrElement *> buffers;
-        // std::map<std::string, Polynomial<Engine> *> polynomials;
-        // std::map<std::string, Evaluations<Engine> *> evaluations;
-
-        // std::map <std::string, FrElement> toInverse;
-        // std::map <std::string, FrElement> challenges;      
-        // std::map<std::string, FrElement *> roots;
-        // FrElement blindingFactors[BLINDINGFACTORSLENGTH];
-
         Keccak256Transcript *transcript;
     public:
         PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile);
@@ -131,8 +102,6 @@ namespace PilFflonk {
 
     protected:
         void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);
-
-        void removePrecomputedData();
 
         void stage1();
 

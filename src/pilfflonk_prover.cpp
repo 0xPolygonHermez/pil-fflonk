@@ -28,41 +28,27 @@ namespace PilFflonk
     }
 
     PilFflonkProver::~PilFflonkProver() {
-        this->removePrecomputedData();
 
+        free(pConstPolsAddress);
+        free(pConstPolsAddress2ns);
+        free(pCommittedPolsAddress);
+
+        delete[] bBuffer;
+        ptr.clear();
+
+        delete[] bBufferCommitted;
+        ptrCommitted.clear();
+
+        delete fft;
         delete transcript;
-    }
-
-    void PilFflonkProver::removePrecomputedData() {
-        // DELETE RESERVED MEMORY (if necessary)
-        // delete[] precomputedBigBuffer;
-        // delete[] mapBuffersBigBuffer;
-        // delete[] buffInternalWitness;
-
-        // if(NULL == reservedMemoryPtr) {
-        //     delete[] inverses;
-        //     delete[] products;
-        //     delete[] nonPrecomputedBigBuffer;
-        // }
-
-        //delete fft;
-
-        // mapBuffers.clear();
-
-        // for (auto const &x : roots) delete[] x.second;
-        // roots.clear();
-
         delete shPlonkProver;
+        delete fflonkInfo;
     }
 
     void PilFflonkProver::setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename) {
 
         try
         {
-            if(NULL != zkey) {
-                removePrecomputedData();
-            }
-    
             cout << "> Reading zkey file" << endl;
 
             if (Zkey::getProtocolIdFromZkey(fdZkey) != Zkey::PILFFLONK_PROTOCOL_ID)

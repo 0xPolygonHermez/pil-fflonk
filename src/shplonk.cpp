@@ -13,6 +13,8 @@ namespace ShPlonk {
 
     ShPlonkProver::~ShPlonkProver() {
         this->reset();
+
+        delete transcript;
     }  
 
     void ShPlonkProver::reset() {
@@ -365,6 +367,8 @@ namespace ShPlonk {
             }
         }
 
+        for (auto const &x : omegasMap) delete[] x.second;
+
         delete degrees;
     }
 
@@ -496,6 +500,7 @@ namespace ShPlonk {
             }
         }
 
+        delete evaluationsNames;
         delete initialOpenValues;
     }
 
