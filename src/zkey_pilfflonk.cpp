@@ -8,6 +8,24 @@ namespace PilFflonkZkey
     {
         mpz_clear(qPrime);
         mpz_clear(rPrime);
+
+        f.clear();
+        openingPoints.clear();
+        committedConstants.clear();
+
+        for (auto& entry : polsMap) {
+            delete entry.second;
+        }
+        polsMap.clear();
+
+        polsOpenings.clear();
+
+        for (auto& entry : polsNamesStage) {
+            delete entry.second;
+        }
+        polsNamesStage.clear();
+
+        omegas.clear();
     }
 
     PilFflonkZkey *loadPilFflonkZkey(BinFileUtils::BinFile *fdZKey)
@@ -165,6 +183,8 @@ namespace PilFflonkZkey
         {
             std::string name = fdZKey->readString();
             u_int32_t open = fdZKey->readU32LE();
+            cout << "name: " << name << endl;
+            cout << "open: " << open << endl;
 
             pilFflonkZkey->polsOpenings[name] = open;
         }

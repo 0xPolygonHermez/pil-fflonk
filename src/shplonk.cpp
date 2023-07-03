@@ -500,8 +500,7 @@ namespace ShPlonk {
             }
         }
 
-        delete evaluationsNames;
-        delete initialOpenValues;
+        delete[] initialOpenValues;
     }
 
     AltBn128::G1Point ShPlonkProver::sumCommits(u_int32_t nCommits, G1Point *commits) {
@@ -637,11 +636,10 @@ namespace ShPlonk {
                     polynomialCommitments[index] = Fi;
                 }
 
-                delete lengths;
-                delete fi;
+                delete[] lengths;
             }
 
-            delete stages;
+            delete[] stages;
         }
     }
 

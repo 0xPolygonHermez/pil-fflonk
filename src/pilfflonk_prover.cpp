@@ -168,8 +168,6 @@ namespace PilFflonk
                                 lenPTau, nThreads);
 
 
-            transcript = new Keccak256Transcript(E);
-
             cout << "> Reading constant polynomials file" << endl;
 
             u_int64_t constPolsSize = fflonkInfo->nConstants * sizeof(FrElement) * N;
@@ -187,11 +185,13 @@ namespace PilFflonk
             cout << "> Reading constant polynomials zkey file" << endl;
 
             // ConstPolsSerializer* tmp = ConstPolsSerializer::readConstPolsFile(E,fdZkeyConst);
-            ConstPolsSerializer::readConstPolsFile(E, fdZkeyConst, ptr["const_coefs"], ptr["const_2ns"]);
+            // ConstPolsSerializer::readConstPolsFile(E, fdZkeyConst, ptr["const_coefs"], ptr["const_2ns"]);
             // for (uint64_t i = 0; i < 32; i++)
             // {
             //     cout << E.fr.toString(ptr["const_coefs"][i]) << endl;
             // }
+
+            transcript = new Keccak256Transcript(E);
         }
 
         catch (const std::exception &e)
@@ -219,7 +219,7 @@ namespace PilFflonk
             cout << "PIL-FFLONK PROVER STARTED" << endl << endl;
 
             // Initialize vars
-            params = {
+            StepsParams params = {
                 cm1_n: ptrCommitted["cm1_n"],
                 cm2_n: ptrCommitted["cm2_n"],
                 cm3_n: ptrCommitted["cm3_n"],
@@ -265,8 +265,8 @@ namespace PilFflonk
             cout << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n]<< endl;
             cout << "-----------------------------" << endl;
 
-            delete transcript;
-            transcript = new Keccak256Transcript(E);
+            // delete transcript;
+            // transcript = new Keccak256Transcript(E);
             transcript->reset();
 
             // TODO add to precomputed?????
@@ -310,19 +310,19 @@ namespace PilFflonk
 
             // STAGE 1. Compute Trace Column Polynomials
             cout << "> STAGE 1. Compute Trace Column Polynomials" << endl;
-            stage1();
+            stage1(params);
 
             // STAGE 2. Compute Inclusion Polynomials
             cout << "> STAGE 2. Compute Inclusion Polynomials" << endl;
-            stage2();
+            stage2(params);
 
             // STAGE 3. Compute Grand Product and Intermediate Polynomials
             cout << "> STAGE 3. Compute Grand Product and Intermediate Polynomials" << endl;
-            stage3();
+            stage3(params);
 
             // STAGE 4. Trace Quotient Polynomials
             cout << "> STAGE 4. Compute Trace Quotient Polynomials" << endl;
-            stage4();
+            stage4(params);
 
             json pilFflonkProof = shPlonkProver->open(PTau, challenges[4]); 
             
@@ -347,7 +347,7 @@ namespace PilFflonk
         }
     }
 
-    void PilFflonkProver::stage1()
+    void PilFflonkProver::stage1(StepsParams &params)
     {
         // STEP 1.1 - Compute random challenge
         // TODO Add preprocessed polynomials or public inputs to the transcript ????
@@ -370,7 +370,7 @@ namespace PilFflonk
         shPlonkProver->commit(1, PTau, true);
     }
 
-    void PilFflonkProver::stage2()
+    void PilFflonkProver::stage2(StepsParams &params)
     {
         // STEP 2.1 - Compute random challenges
         cout << "> Computing challenges alpha and beta" << endl;
@@ -427,7 +427,7 @@ namespace PilFflonk
             shPlonkProver->commit(2, PTau, true);
     }
 
-    void PilFflonkProver::stage3()
+    void PilFflonkProver::stage3(StepsParams &params)
     {
         // STEP 3.1 - Compute random challenges
         transcript->reset();
@@ -454,14 +454,13 @@ namespace PilFflonk
         auto nPermutations = fflonkInfo->peCtx.size();
         auto nConnections = fflonkInfo->ciCtx.size();
 
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (uint64_t i = 0; i < N; i++)
         {
             pilFflonkSteps.step3prev_first(E, params, i);
         }   
 
         auto nCm3 = fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->mapSectionsN.section[cm2_n];
-
 
         for (uint64_t i = 0; i < nPlookups; i++)
         {
@@ -487,7 +486,7 @@ namespace PilFflonk
             Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
             Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
             Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
-            Polinomial::calculateZ(E, z, pNum, pDen);
+            Polinomial::calculateZ(E, z, pNum, pDen); 
         }
 
         #pragma omp parallel for
@@ -502,7 +501,7 @@ namespace PilFflonk
 
     }
 
-    void PilFflonkProver::stage4()
+    void PilFflonkProver::stage4(StepsParams &params)
     {
         // STEP 4.1 - Compute random challenges
         transcript->reset();

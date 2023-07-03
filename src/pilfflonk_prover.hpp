@@ -86,8 +86,6 @@ namespace PilFflonk {
         std::map<std::string, AltBn128::FrElement *> ptrCommitted;
         std::map<std::string, AltBn128::FrElement *> ptr;
 
-        StepsParams params;
-
         Keccak256Transcript *transcript;
     public:
         PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile);
@@ -103,13 +101,13 @@ namespace PilFflonk {
     protected:
         void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);
 
-        void stage1();
+        void stage1(StepsParams &params);
 
-        void stage2();
+        void stage2(StepsParams &params);
 
-        void stage3();
+        void stage3(StepsParams &params);
 
-        void stage4();
+        void stage4(StepsParams &params);
 
         void extend(u_int32_t stage, u_int32_t nPols);
     };
