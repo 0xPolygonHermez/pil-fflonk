@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/pfProver",
-            "args": ["tmp/fibonacci.zkey","tmp/fibonacci.fflonkinfo.json","tmp/fibonacci.const","tmp/fibonacci.commit"],
+            "args": ["tmp/simple_connection.zkey","tmp/simple_connection.fflonkinfo.json","tmp/simple_connection.const","tmp/simple_connection.comt"],
             // "args": ["tmp/simple.zkey","tmp/simple.fflonkinfo.json","tmp/simple.const","tmp/simple.commit"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
