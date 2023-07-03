@@ -44,9 +44,9 @@ int main(int argc, char **argv)
         }
     }
 
-    if (argc != 5) {
+    if (argc != 6) {
         cerr << "Invalid number of parameters: " << argc << endl;
-        cerr << "Usage: " << argv[0] << " <pil.zkey> <fflonkInfo.json> <polynomials.cnst> <polynomials.cmtd>" << endl;
+        cerr << "Usage: " << argv[0] << " <pil.zkey> <fflonkInfo.json> <polynomials.cnst> <polynomials.zkey.cnst> <polynomials.cmtd>" << endl;
         return -1;
     }
 
@@ -54,7 +54,8 @@ int main(int argc, char **argv)
     string zkeyFilename = argv[1];
     string fflonkInfoFileName = argv[2];
     string cnstFilename = argv[3];
-    string cmtdFilename = argv[4];
+    string cnstZkeyFilename = argv[4];
+    string cmtdFilename = argv[5];
 
     TimerStart(WHOLE_PROCESS);
 
@@ -78,6 +79,12 @@ int main(int argc, char **argv)
         bError = true;
     }
 
+    if (!fileExists(cnstZkeyFilename))
+    {
+        cerr << "Error: constant 2 polynomials file '" << cnstZkeyFilename << "' does not exist" << endl;
+        bError = true;
+    }
+
     if (!fileExists(cmtdFilename))
     {
         cerr << "Error: committed polynomials file '" << cmtdFilename << "' does not exist" << endl;
@@ -89,9 +96,12 @@ int main(int argc, char **argv)
     cout << "> Opening zkey file" << endl;
     auto zkey = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
 
+    cout << "> Opening const zkey file" << endl;
+    auto const_zkey = BinFileUtils::openExisting(cnstZkeyFilename, "pols", 1);
+
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
 
-    prover->prove(zkey.get(), cnstFilename, cmtdFilename);
+    prover->prove(zkey.get(), cnstFilename, const_zkey.get(), cmtdFilename);
 
     TimerStopAndLog(WHOLE_PROCESS);
 

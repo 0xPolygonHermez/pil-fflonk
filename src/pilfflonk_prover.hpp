@@ -95,9 +95,9 @@ namespace PilFflonk {
 
         ~PilFflonkProver();
 
-        void setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename);
+        void setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst);
 
-        /* std::tuple<json, json> */ void prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename);
+        /* std::tuple<json, json> */ void prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst, std::string committedPolsFilename);
         /* std::tuple<json, json> */ void prove(std::string committedPolsFilename);
 
     protected:

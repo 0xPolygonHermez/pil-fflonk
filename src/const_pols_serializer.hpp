@@ -1,29 +1,31 @@
-// #ifndef ZKEY_CONST_POLS_SERIALIZER_H
-// #define ZKEY_CONST_POLS_SERIALIZER_H
+#ifndef ZKEY_CONST_POLS_SERIALIZER_H
+#define ZKEY_CONST_POLS_SERIALIZER_H
 
-// #include <string>
-// #include <map>
-// #include <gmp.h>
-// #include <binfile_utils.hpp>
-// #include <alt_bn128.hpp>
+#include <string>
+#include <map>
+#include <gmp.h>
+#include <binfile_utils.hpp>
+#include <alt_bn128.hpp>
 
-// const CONST_POLS_NSECTIONS = 3;
-// const CONST_POLS_FILE_COEFS_SECTION = 1;
-// const CONST_POLS_FILE_EVALS_EXT_SECTION = 2;
+const int CONST_POLS_NSECTIONS = 2;
+const int CONST_POLS_FILE_COEFS_SECTION = 1;
+const int CONST_POLS_FILE_EVALS_EXT_SECTION = 2;
 
-// class ConstPolsSerializer
-// {
-// public:
-//     AltBn128::FrElement *coefs;
-//     AltBn128::FrElement *evalsExt;
+class ConstPolsSerializer
+{
+    static void readConstPolsCoefsSection(BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
 
-//     ~ConstPolsSerializer();
-// };
+    static void readConstPolsEvalsExtSection(BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
 
-// PilFflonkZkey *readConstPolsFile(BinFileUtils::BinFile *fd);
+    static AltBn128::FrElement *readBuffer(BinFileUtils::BinFile *fd, int idSection);
 
-// void readConstPolsCoefsSection(BinFileUtils::BinFile *fd);
+public:
+    AltBn128::FrElement *coefs;
+    AltBn128::FrElement *evalsExt;
 
-// void readConstPolsEvalsExtSection(BinFileUtils::BinFile *fd);
+    ~ConstPolsSerializer();
 
-// #endif
+    static ConstPolsSerializer *readConstPolsFile(BinFileUtils::BinFile *fd);
+};
+
+#endif

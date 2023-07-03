@@ -1,53 +1,41 @@
-// #include <stdexcept>
-// #include "const_pols_serializer.hpp"
+#include <stdexcept>
+#include "const_pols_serializer.hpp"
 
-// using namespace std;
+ConstPolsSerializer::~ConstPolsSerializer()
+{
+    delete[] coefs;
+    delete[] evalsExt;
+}
 
-// PilFflonkZkey::~PilFflonkZkey()
-// {
-//     delete[] coefs;
-//     delete[] evalsExt;
-// }
+ConstPolsSerializer *ConstPolsSerializer::readConstPolsFile(BinFileUtils::BinFile *fd)
+{
+    auto constPolsSerializer = new ConstPolsSerializer();
 
-// PilFflonkZkey *loadPilFflonkZkey(BinFileUtils::BinFile *fd)
-// {
-//     auto constPolsSerializer = new ConstPolsSerializer();
+    readConstPolsCoefsSection(fd, constPolsSerializer);
 
-//     readConstPolsCoefsSection(fd, pilFflonkZkey);
+    readConstPolsEvalsExtSection(fd, constPolsSerializer);
 
-//     readConstPolsEvalsExtSection(fd, pilFflonkZkey);
+    return constPolsSerializer;
+}
 
-//     return pilFflonkZkey;
-// }
+void ConstPolsSerializer::readConstPolsCoefsSection(BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer)
+{
+    constPolsSerializer->coefs = readBuffer(fd, CONST_POLS_FILE_COEFS_SECTION);
+}
 
-// void readConstPolsCoefsSection(BinFileUtils::BinFile *fd, PilFflonkZkey *pilFflonkZkey)
-// {
-//     fd->startReadSection(ZKEY_PF_F_SECTION);
-//     //coefs = readBuffer(fd, sections[CONST_POLS_FILE_COEFS_SECTION]);
-//     fd->endReadSection();
-// }
+void ConstPolsSerializer::readConstPolsEvalsExtSection(BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer)
+{
+    constPolsSerializer->evalsExt = readBuffer(fd, CONST_POLS_FILE_EVALS_EXT_SECTION);
+}
 
-// void readConstPolsEvalsExtSection(BinFileUtils::BinFile *fd, PilFflonkZkey *pilFflonkZkey)
-// {
-//     fd->startReadSection(ZKEY_PF_OPENINGPOINTS_SECTION);
-//     //evalsExt = readBuffer(fd, sections[CONST_POLS_FILE_EVALS_EXT_SECTION]);
-//     fd->endReadSection();
-// }
+AltBn128::FrElement *ConstPolsSerializer::readBuffer(BinFileUtils::BinFile *fd, int idSection)
+{
+    uint64_t size = fd->getSectionSize(idSection);
+    uint64_t nElements = size / sizeof(AltBn128::FrElement);
 
-// // async function readBuffer(fd, section, Fr) {
-// //     const size = section[0].size;
-// //     const partialBuffer = new BigBuffer(size);
-// //     const nElements = size / Fr.n8;
+    AltBn128::FrElement *buffer = new AltBn128::FrElement[nElements];
 
-// //     partialBuffer.set(await fd.read(size), 0);
+    memcpy(&buffer[0], fd->getSectionData(idSection), size);
 
-// //     let p=0;
-// //     for (let i = 0; i < nElements; i++) {
-// //         const element = partialBuffer.slice(i * Fr.n8, (i + 1) * Fr.n8);
-        
-// //         partialBuffer.set(Fr.fromRprLE(element), i * Fr.n8);
-// //         p += Fr.n8;
-// //     }
-
-// //     return partialBuffer;
-// // }
+    return &buffer[0];
+}

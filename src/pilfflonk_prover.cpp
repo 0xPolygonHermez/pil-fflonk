@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "zkey.hpp"
 #include <math.h>
+#include "const_pols_serializer.hpp"
 
 
 namespace PilFflonk
@@ -45,8 +46,7 @@ namespace PilFflonk
         delete fflonkInfo;
     }
 
-    void PilFflonkProver::setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename) {
-
+    void PilFflonkProver::setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst) {
         try
         {
             cout << "> Reading zkey file" << endl;
@@ -57,6 +57,15 @@ namespace PilFflonk
             }
 
             zkey = PilFflonkZkey::loadPilFflonkZkey(fdZkey);
+
+            cout << "> Reading zkey constant file" << endl;
+
+            // // TODO EXAMPLE
+            // ConstPolsSerializer* tmp = ConstPolsSerializer::readConstPolsFile(fdZkeyConst);
+
+            // for(int i=0; i<64; i++) {
+            //     std:cout << E.fr.toString(tmp->evalsExt[i]) << std::endl;
+            // }
 
             cout << "> Creating shPlonk prover" << endl;
 
@@ -191,8 +200,8 @@ namespace PilFflonk
         }
     }
 
-    /* std::tuple<json, json> */ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, std::string committedPolsFilename) {
-        this->setZkey(fdZkey, constPolsFilename);
+    /* std::tuple<json, json> */ void PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst, std::string committedPolsFilename) {
+        this->setZkey(fdZkey, constPolsFilename, fdZkeyConst);
 
         return this->prove(committedPolsFilename);
     }
