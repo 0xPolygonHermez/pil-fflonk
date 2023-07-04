@@ -104,12 +104,8 @@ namespace PilFflonk
             lengthBuffer += N * fflonkInfo->nConstants;                             // const_n     >> Constant polynomials evaluations
             lengthBuffer += NExt * factorZK * fflonkInfo->nConstants;               // const_2ns   >> Constant polynomials extended evaluations
             lengthBuffer += N * factorZK * fflonkInfo->nConstants;                  // const_coefs >> Constant polynomials coefficients
-            lengthBuffer += N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n]; // cm1_coefs   >> Stage1 polynomials coefficients
-            lengthBuffer += N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n]; // cm2_coefs   >> Stage2 polynomials coefficients
-            lengthBuffer += N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n]; // cm3_coefs   >> Stage3 polynomials coefficients
             lengthBuffer += N;                                                      // x_n
             lengthBuffer += NExt * factorZK;                                        // x_2ns
-            lengthBuffer += fflonkInfo->nPublics;                                   // publics
 
             lengthBuffer += maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement); // PTau buf
 
@@ -123,14 +119,7 @@ namespace PilFflonk
 
             ptr["const_coefs"] = ptr["x_2ns"] + NExt * factorZK;
 
-            // TODO check why cm1_coefs, cm2_coefs & cm3_coefs are here?
-            ptr["cm1_coefs"] = ptr["const_coefs"] + N * factorZK * fflonkInfo->nConstants;
-            ptr["cm2_coefs"] = ptr["cm1_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
-            ptr["cm3_coefs"] = ptr["cm2_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
-
-            ptr["publics"] = ptr["cm3_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
-
-            PTau = (G1PointAffine *)(ptr["publics"] + fflonkInfo->nPublics);
+            PTau = (G1PointAffine *)(ptr["const_coefs"] + N * factorZK * fflonkInfo->nConstants);
 
             // //////////////////////////////////////////////////
             // BIG BUFFER
@@ -146,6 +135,10 @@ namespace PilFflonk
             lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_2ns]; // cm2_2ns     >> Stage2, H1&H2 polynomials extended evaluations
             lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_2ns]; // cm3_2ns     >> Stage3, Z polynomial extended evaluations
             lengthBufferCommitted += NExt * factorZK * fflonkInfo->qDim;                          // q_2ns       >> Stage4, Q polynomial extended evaluations
+            lengthBufferCommitted += fflonkInfo->nPublics;                                   // publics
+            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n]; // cm1_coefs   >> Stage1 polynomials coefficients
+            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n]; // cm2_coefs   >> Stage2 polynomials coefficients
+            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n]; // cm3_coefs   >> Stage3 polynomials coefficients
 
             zklog.info("lengthBufferCommitted: " + lengthBufferCommitted);
 
@@ -159,6 +152,13 @@ namespace PilFflonk
             ptrCommitted["cm2_2ns"] = ptrCommitted["cm1_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
             ptrCommitted["cm3_2ns"] = ptrCommitted["cm2_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
             ptrCommitted["q_2ns"] = ptrCommitted["cm3_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
+            
+            ptrCommitted["publics"] = ptrCommitted["q_2ns"] + NExt * factorZK * fflonkInfo->qDim;
+            ptrCommitted["cm1_coefs"] = ptrCommitted["publics"] + fflonkInfo->nPublics;
+            ptrCommitted["cm2_coefs"] = ptrCommitted["cm1_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
+            ptrCommitted["cm3_coefs"] = ptrCommitted["cm2_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
+
+
 
             int nThreads = omp_get_max_threads() / 2;
 
@@ -239,7 +239,7 @@ namespace PilFflonk
                 challenges : challenges,
                 x_n : ptr["x_n"],
                 x_2ns : ptr["x_2ns"],
-                publicInputs : ptr["publics"],
+                publicInputs : ptrCommitted["publics"],
                 q_2ns : ptrCommitted["q_2ns"]
             };
 
@@ -305,17 +305,17 @@ namespace PilFflonk
                 if ("cmP" == publicPol.polType)
                 {
                     u_int64_t offset = (fflonkInfo->publics[i].idx * fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->publics[i].polId);
-                    ptr["publics"][i] = ptrCommitted["cm1_n"][offset];
+                    ptrCommitted["publics"][i] = ptrCommitted["cm1_n"][offset];
                 }
                 else if ("imP" == publicPol.polType)
                 {
-                    ptr["publics"][i] = pilFflonkSteps.publics_first(E, params, fflonkInfo->publics[i].polId, i);
+                    ptrCommitted["publics"][i] = pilFflonkSteps.publics_first(E, params, fflonkInfo->publics[i].polId, i);
                 }
                 else
                 {
                     throw std::runtime_error("Invalid public input type");
                 }
-                publicSignals.push_back(E.fr.toString(ptr["publics"][i]).c_str());
+                publicSignals.push_back(E.fr.toString(ptrCommitted["publics"][i]).c_str());
             }
             
             TimerStopAndLog(PIL_FFLONK_CALCULATE_EXPS_PUBLICS);
@@ -409,7 +409,7 @@ namespace PilFflonk
         // Add all the publics to the transcript
         for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
         {
-            transcript->addScalar(ptr["publics"][i]);
+            transcript->addScalar(ptrCommitted["publics"][i]);
         }
 
         if (0 == transcript->nElements())
@@ -610,7 +610,7 @@ namespace PilFflonk
 
         AltBn128::FrElement *buffSrc = ptrCommitted["cm" + std::to_string(stage) + "_n"];   // N
         AltBn128::FrElement *buffDst = ptrCommitted["cm" + std::to_string(stage) + "_2ns"]; // NEXT * FACTORZK
-        AltBn128::FrElement *buffCoefs = ptr["cm" + std::to_string(stage) + "_coefs"];      // N * FACTORZK
+        AltBn128::FrElement *buffCoefs = ptrCommitted["cm" + std::to_string(stage) + "_coefs"];      // N * FACTORZK
 
         // AltBn128::FrElement* buffer = stage == 0 ? bBuffer : bBufferCommitted;
 
