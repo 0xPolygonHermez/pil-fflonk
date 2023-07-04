@@ -557,7 +557,7 @@ void Polynomial<Engine>::divZh(u_int64_t domainSize, int extension) {
     int nThreads = pow(2, floor(log2(omp_get_max_threads())));
     uint64_t nElementsThread = domainSize / nThreads;
 
-    if(domainSize < nThreads) {
+    if(domainSize < (uint64_t)nThreads) {
         nThreads = 1;
         nElementsThread = domainSize;
     }

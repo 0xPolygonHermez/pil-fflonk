@@ -10,6 +10,7 @@ namespace PilFflonk
     void PilFflonkProver::initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize)
     {
         zkey = NULL;
+        
         // this->reservedMemoryPtr = (FrElement *)reservedMemoryPtr;
         // this->reservedMemorySize = reservedMemorySize;
 
@@ -106,8 +107,8 @@ namespace PilFflonk
             lengthBuffer += N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];  // cm1_coefs   >> Stage1 polynomials coefficients
             lengthBuffer += N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];  // cm2_coefs   >> Stage2 polynomials coefficients
             lengthBuffer += N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];  // cm3_coefs   >> Stage3 polynomials coefficients
-            lengthBuffer += N;                                                       // x_n   
-            lengthBuffer += NExt * factorZK;                                         // x_2ns       
+            lengthBuffer += N;                                                       // x_n
+            lengthBuffer += NExt * factorZK;                                         // x_2ns
             lengthBuffer += fflonkInfo->nPublics;                                    // publics
 
             lengthBuffer += maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement); // PTau buf
@@ -121,6 +122,8 @@ namespace PilFflonk
             ptr["x_2ns"]     = ptr["x_n"]           + N;
             
             ptr["const_coefs"] = ptr["x_2ns"]       + NExt * factorZK;
+
+            // TODO check why cm1_coefs, cm2_coefs & cm3_coefs are here?
             ptr["cm1_coefs"] = ptr["const_coefs"]   + N * factorZK * fflonkInfo->nConstants;
             ptr["cm2_coefs"] = ptr["cm1_coefs"]     + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
             ptr["cm3_coefs"] = ptr["cm2_coefs"]     + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
@@ -184,8 +187,7 @@ namespace PilFflonk
 
             cout << "> Reading constant polynomials zkey file" << endl;
 
-            // ConstPolsSerializer* tmp = ConstPolsSerializer::readConstPolsFile(E,fdZkeyConst);
-            // ConstPolsSerializer::readConstPolsFile(E, fdZkeyConst, ptr["const_coefs"], ptr["const_2ns"]);
+            ConstPolsSerializer::readConstPolsFile(E, fdZkeyConst, ptr["const_coefs"], ptr["const_2ns"]);
             // for (uint64_t i = 0; i < 32; i++)
             // {
             //     cout << E.fr.toString(ptr["const_coefs"][i]) << endl;
@@ -220,22 +222,22 @@ namespace PilFflonk
 
             // Initialize vars
             StepsParams params = {
-                cm1_n: ptrCommitted["cm1_n"],
-                cm2_n: ptrCommitted["cm2_n"],
-                cm3_n: ptrCommitted["cm3_n"],
-                tmpExp_n: ptrCommitted["tmpExp_n"],
-                cm1_2ns: ptrCommitted["cm1_2ns"],
-                cm2_2ns: ptrCommitted["cm2_2ns"],
-                cm3_2ns: ptrCommitted["cm3_2ns"],
-                const_n :  ptr["const_n"],
-                const_2ns :  ptr["const_2ns"],
+                cm1_n : ptrCommitted["cm1_n"],
+                cm2_n : ptrCommitted["cm2_n"],
+                cm3_n : ptrCommitted["cm3_n"],
+                tmpExp_n : ptrCommitted["tmpExp_n"],
+                cm1_2ns : ptrCommitted["cm1_2ns"],
+                cm2_2ns : ptrCommitted["cm2_2ns"],
+                cm3_2ns : ptrCommitted["cm3_2ns"],
+                const_n : ptr["const_n"],
+                const_2ns : ptr["const_2ns"],
                 challenges : challenges,
                 x_n : ptr["x_n"],
                 x_2ns : ptr["x_2ns"],
                 publicInputs : ptr["publics"],
                 q_2ns : ptrCommitted["q_2ns"]
             };
-            
+
             // if(NULL != wtnsHeader) {
             //     if (mpz_cmp(zkey->rPrime, wtnsHeader->prime) != 0)
             //     {
@@ -262,7 +264,7 @@ namespace PilFflonk
             cout << "  Stage 1 pols:    " << fflonkInfo->mapSectionsN.section[cm1_n] << endl;
             cout << "  Stage 2 pols:    " << fflonkInfo->mapSectionsN.section[cm2_n] << endl;
             cout << "  Stage 3 pols:    " << fflonkInfo->mapSectionsN.section[cm3_n] << endl;
-            cout << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n]<< endl;
+            cout << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n] << endl;
             cout << "-----------------------------" << endl;
 
             // delete transcript;
@@ -355,7 +357,7 @@ namespace PilFflonk
         // STEP 1.2 - Compute constant polynomials (coefficients + evaluations) and commit them
         if (fflonkInfo->nConstants > 0)
         {
-            extend(0, fflonkInfo->nConstants);
+            addCoefsToContext(0, fflonkInfo->nConstants, ptr["const_coefs"]);
 
             shPlonkProver->commit(0, PTau, false);
         }
@@ -365,6 +367,11 @@ namespace PilFflonk
              return;
 
         extend(1, fflonkInfo->mapSectionsN.section[cm1_n]);
+
+        // for (uint64_t i = 0; i < 24; i++)
+        // {
+        //     cout << E.fr.toString(ptrCommitted["cm1_n"][i]) << endl;
+        // }
 
         // STEP 1.4 - Commit stage 1 polynomials
         shPlonkProver->commit(1, PTau, true);
@@ -533,16 +540,16 @@ namespace PilFflonk
 
     void PilFflonkProver::extend(u_int32_t stage, u_int32_t nPols) {
         
-        AltBn128::FrElement *buffSrc = stage == 0 ? ptr["const_n"] : ptrCommitted["cm" + std::to_string(stage) + "_n"]; // N
-        AltBn128::FrElement *buffDst = stage == 0 ? ptr["const_2ns"] : ptrCommitted["cm" + std::to_string(stage) + "_2ns"]; // NEXT * FACTORZK
-        AltBn128::FrElement *buffCoefs = stage == 0 ? ptr["const_coefs"] : ptr["cm" + std::to_string(stage) + "_coefs"]; // N * FACTORZK
+        AltBn128::FrElement *buffSrc = ptrCommitted["cm" + std::to_string(stage) + "_n"]; // N
+        AltBn128::FrElement *buffDst = ptrCommitted["cm" + std::to_string(stage) + "_2ns"]; // NEXT * FACTORZK
+        AltBn128::FrElement *buffCoefs = ptr["cm" + std::to_string(stage) + "_coefs"]; // N * FACTORZK
 
         // AltBn128::FrElement* buffer = stage == 0 ? bBuffer : bBufferCommitted;
 
-        std::memset(buffCoefs, 0, N*factorZK*nPols*sizeof(AltBn128::FrElement));
+        std::memset(buffCoefs, 0, N * factorZK * nPols * sizeof(AltBn128::FrElement));
 
-        std::memcpy(buffCoefs, buffSrc, N*nPols*sizeof(AltBn128::FrElement));
-        
+        std::memcpy(buffCoefs, buffSrc, N * nPols * sizeof(AltBn128::FrElement));
+
         NTT_AltBn128 ntt(E, N);
         ntt.INTT(buffCoefs, buffSrc, N, nPols/*, buffer*/);
 
@@ -560,6 +567,17 @@ namespace PilFflonk
             }
         }
 
+        addCoefsToContext(stage, nPols, buffCoefs);
+
+        std::memset(buffDst, 0, NExt*factorZK*nPols*sizeof(AltBn128::FrElement));
+
+        std::memcpy(buffDst, buffCoefs, N*factorZK*nPols*sizeof(AltBn128::FrElement));
+
+        NTT_AltBn128 nttExtended(E, 1 << nBitsExtZK);
+        nttExtended.NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols /*, buffer*/);
+    }
+
+    void PilFflonkProver::addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs) {
         // Store coefs to context
         for(u_int32_t i = 0; i < nPols; i++) {
             Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, N * factorZK);
@@ -570,12 +588,6 @@ namespace PilFflonk
             std::string name = (*zkey->polsNamesStage[stage])[i];
             shPlonkProver->addPolynomialShPlonk(name, pol);
         }
-
-        std::memset(buffDst, 0, NExt*factorZK*nPols*sizeof(AltBn128::FrElement));
-
-        std::memcpy(buffDst, buffCoefs, N*factorZK*nPols*sizeof(AltBn128::FrElement));
-
-        NTT_AltBn128 nttExtended(E, 1 << nBitsExtZK);
-        nttExtended.NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols /*, buffer*/);
     }
+
 }

@@ -110,6 +110,8 @@ namespace PilFflonk {
         void stage4(StepsParams &params);
 
         void extend(u_int32_t stage, u_int32_t nPols);
+        
+        void addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs);
     };
 }
 
