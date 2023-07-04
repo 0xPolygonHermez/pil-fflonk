@@ -4,7 +4,6 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 #include <string>
-#include "polinomial.hpp"
 #include "zkassert.hpp"
 #include "zklog.hpp"
 #include "exit_process.hpp"
@@ -271,9 +270,6 @@ public:
 
     /* Returns the size of a polynomial specified by its ID */
     uint64_t getPolSize(uint64_t polId);
-
-    /* Returns a polynomial specified by its ID */
-    Polinomial getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol);
 };
 
 #endif

@@ -382,13 +382,6 @@ uint64_t FflonkInfo::getPolSize(uint64_t polId)
     return N * p.dim * sizeof(AltBn128::FrElement);
 }
 
-Polinomial FflonkInfo::getPolinomial(AltBn128::FrElement *pAddress, uint64_t idPol)
-{
-    VarPolMap polInfo = varPolMap[idPol];
-    uint64_t deg = mapDeg.section[polInfo.section];
-    uint64_t offset = polInfo.sectionPos;
-    return Polinomial(&pAddress[offset], deg, std::to_string(idPol));
-}
 
 eSection string2section(const std::string s)
 {

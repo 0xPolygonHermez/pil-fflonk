@@ -9,7 +9,6 @@
 #include "zkey_pilfflonk.hpp"
 #include "shplonk.hpp"
 #include "polynomial/polynomial.hpp"
-#include "polinomial.hpp"
 #include "zkey.hpp"
 #include "fflonk_info.hpp"
 #include "keccak_256_transcript.hpp"
@@ -120,11 +119,13 @@ namespace PilFflonk
         uint64_t find(std::vector<uint64_t> arr, uint64_t x);
         std::tuple<std::string, uint64_t, uint64_t> find(uint64_t x);
 
-        AltBn128::FrElement* getPolynomial(AltBn128::FrElement* buffer, uint64_t nPols, uint64_t N, uint64_t id);
+        AltBn128::FrElement* getPolynomial(AltBn128::FrElement* buffer, uint64_t nPols, uint64_t id);
 
-        void calculateZ(AltBn128::FrElement* pNum, AltBn128::FrElement* pDen, uint64_t N, uint64_t id);
+        void calculateZ(AltBn128::FrElement* pNum, AltBn128::FrElement* pDen, uint64_t id);
 
         AltBn128::FrElement* batchInverse(AltBn128::FrElement* pol, uint64_t N);
+
+        void calculateH1H2(AltBn128::FrElement* fPol, AltBn128::FrElement* tPol, uint64_t h1Id, uint64_t h2Id);
     };
 }
 

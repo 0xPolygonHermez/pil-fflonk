@@ -438,11 +438,16 @@ namespace PilFflonk
 
         for (uint64_t i = 0; i < fflonkInfo->puCtx.size(); i++)
         {
-            Polinomial fPol = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].fExpId)]);
-            Polinomial tPol = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].tExpId)]);
-            Polinomial h1 = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm2 + 2 * i]);
-            Polinomial h2 = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm2 + 2 * i + 1]);
-            // Polinomial::calculateH1H2(h1, h2, fPol, tPol);
+            auto [fName, fIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].fExpId)]);
+            auto [tName, tIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].tExpId)]);
+
+            AltBn128::FrElement* fPol = getPolynomial(ptrCommitted[fName], nPols1, fIndex);
+            AltBn128::FrElement* tPol = getPolynomial(ptrCommitted[tName], nPols2, tIndex);
+
+            uint64_t h1Id = find(fflonkInfo->mapSections.section[cm2_n], fflonkInfo->cm_n[nCm2 + 2 * i]);
+            uint64_t h2Id = find(fflonkInfo->mapSections.section[cm2_n], fflonkInfo->cm_n[nCm2 + 2 * i + 1]);
+
+            // calculateH1H2(fPol, tPol, h1Id, h2Id);
         }
 
         extend(2, fflonkInfo->mapSectionsN.section[cm2_n]);
@@ -493,11 +498,11 @@ namespace PilFflonk
             auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
             auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
 
-            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, N, numIndex);
-            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, N, denIndex);
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, denIndex);
 
             uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + i]);
-            calculateZ(pNum, pDen, N, zIndex);
+            calculateZ(pNum, pDen, zIndex);
         }
 
         for (uint64_t i = 0; i < nPermutations; i++)
@@ -506,11 +511,11 @@ namespace PilFflonk
             auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
             auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
 
-            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, N, numIndex);
-            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, N, denIndex);
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, denIndex);
 
             uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + nPlookups + i]);
-            calculateZ(pNum, pDen, N, zIndex);
+            calculateZ(pNum, pDen, zIndex);
         }
 
         for (uint64_t i = 0; i < nConnections; i++)
@@ -519,11 +524,11 @@ namespace PilFflonk
             auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
             auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
 
-            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, N, numIndex);
-            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, N, denIndex);
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, denIndex);
 
             uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
-            calculateZ(pNum, pDen, N, zIndex);
+            calculateZ(pNum, pDen, zIndex);
         }
 
         #pragma omp parallel for
@@ -657,7 +662,7 @@ namespace PilFflonk
         throw new std::runtime_error("Index " + std::to_string(x) + " not found");
     }
 
-    AltBn128::FrElement* PilFflonkProver::getPolynomial(AltBn128::FrElement* buffer, uint64_t nPols, uint64_t N, uint64_t id) {
+    AltBn128::FrElement* PilFflonkProver::getPolynomial(AltBn128::FrElement* buffer, uint64_t nPols, uint64_t id) {
         AltBn128::FrElement* pol = new AltBn128::FrElement[N];
         for (uint64_t i = 0; i < N; i++) {
             pol[i] = buffer[i * nPols + id];
@@ -665,7 +670,7 @@ namespace PilFflonk
         return pol;
     }
 
-    void PilFflonkProver::calculateZ(AltBn128::FrElement* pNum, AltBn128::FrElement* pDen, uint64_t N, uint64_t id) {
+    void PilFflonkProver::calculateZ(AltBn128::FrElement* pNum, AltBn128::FrElement* pDen, uint64_t id) {
         AltBn128::FrElement* denI = batchInverse(pDen, N);
 
         ptrCommitted["cm3_n"][id] = E.fr.one();
@@ -701,6 +706,50 @@ namespace PilFflonk
         delete[] tmp;
 
         return denI;
+    }
+
+    void PilFflonkProver::calculateH1H2(AltBn128::FrElement* fPol, AltBn128::FrElement* tPol, uint64_t h1Id, uint64_t h2Id) {
+        // map<AltBn128::FrElement, uint64_t, CompareFe> idx_t;
+        // multimap<AltBn128::FrElement, uint64_t, CompareFe> s; 
+        // multimap<AltBn128::FrElement, uint64_t>::iterator it;
+
+        // std::vector<int> counter(N, 1);
+
+        // for (uint64_t i = 0; i < N; i++)
+        // {
+        //     AltBn128::FrElement = tPol[i];
+        //     idx_t[key] = i + 1;
+        // }
+
+        // for (uint64_t i = 0; i < N; i++)
+        // {
+        //     AltBn128::FrElement key = fPol[i];
+        //     uint64_t indx = idx_t[key];
+        //     if (indx == 0)
+        //     {
+        //         zklog.error("calculateH1H2() Number not included: " + E.fr.toString(fPol[i]));
+        //         exitProcess();
+        //     }
+        //     ++counter[indx - 1];
+        // }
+
+        // uint64_t id = 0;
+        // for (u_int64_t i = 0; i < N; ++i)
+        // {
+        //     if (counter[id] == 0)
+        //     {
+        //         ++id;
+        //     }
+        //     counter[id] -= 1;
+        //     
+        //     ptrCommitted["cm2_n"][h1Id + fflonkInfo->nCm2 * i] = tPol[id];
+        //     if (counter[id] == 0)
+        //     {
+        //         ++id;
+        //     }
+        //     counter[id] -= 1;
+        //     ptrCommitted["cm2_n"][h2Id + fflonkInfo->nCm2 * i] = tPol[id];
+        // }
     }
 
 }
