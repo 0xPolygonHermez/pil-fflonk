@@ -120,6 +120,7 @@ namespace PilFflonk
             ptr["const_n"] = &bBuffer[0];
             ptr["const_2ns"] = ptr["const_n"] + N * fflonkInfo->nConstants;
 
+            // TODO add computation x_n x_2ns to zkey
             ptr["x_n"] = ptr["const_2ns"] + NExt * factorZK * fflonkInfo->nConstants;
             ptr["x_2ns"] = ptr["x_n"] + N;
 
@@ -303,7 +304,7 @@ namespace PilFflonk
             // STAGE 0. Calculate publics
             // STEP 0.1 - Prepare public inputs
 
-            json publicSignals;
+            json publicSignals(nullptr);
             for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
             {
                 Publics publicPol = fflonkInfo->publics[i];
@@ -515,7 +516,7 @@ namespace PilFflonk
             Polinomial::calculateZ(E, z, pNum, pDen);
         }
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for (uint64_t i = 0; i < N; i++)
         {
             pilFflonkSteps.step3_first(E, params, i);
@@ -541,11 +542,10 @@ namespace PilFflonk
 
         // STEP 4.2 - Compute stage 4 polynomial --> Q polynomial
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for (uint64_t i = 0; i < NExt * factorZK; i++)
         {
-            ptrCommitted["q_2ns"][i] = pilFflonkSteps.step42ns_first(E, params, i);
-            // pilFflonkSteps.step42ns_i(E, params, i);
+            pilFflonkSteps.step42ns_first(E, params, i);
         }
 
         Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);

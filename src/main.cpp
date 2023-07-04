@@ -111,7 +111,11 @@ int main(int argc, char **argv)
     file.close();
 
     file.open(publicFilename);
-    file << publicSignalsJson;
+    if(publicSignalsJson.is_null()) {
+        file << string("[]");
+    } else {
+        file << publicSignalsJson;
+    }
     file.close();
 
     TimerStopAndLog(WHOLE_PROCESS);
