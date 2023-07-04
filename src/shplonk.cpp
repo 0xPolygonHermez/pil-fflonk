@@ -522,24 +522,25 @@ namespace ShPlonk {
 
         u_int64_t maxDegree = 0;
         for(u_int32_t i = 0; i < nPols; ++i) {
+            polynomials[i]->fixDegree();
             if(polynomials[i]->getDegree() > maxDegree) {
                 maxDegree = polynomials[i]->getDegree();
             }
         }
 
-        u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
+        u_int64_t lengthBuffer = std::pow(2, (u_int64_t)log2(maxDegree) + 1);
 
         Polynomial<AltBn128::Engine> *polynomial = new Polynomial<AltBn128::Engine>(E, lengthBuffer);
         
         #pragma omp parallel for
-        for (u_int64_t i = 0; i < maxDegree + 1; i++) {
-            FrElement coef = E.fr.zero();
+        for (u_int64_t i = 0; i <= maxDegree; i++) {
+             FrElement coef = E.fr.zero();
             for (u_int32_t j = 0; j < nPols; ++j) {
                 if(polynomials[j] != nullptr && polynomials[j]->getDegree() > 0 && i <= polynomials[j]->getDegree()) {
                     coef = E.fr.add(coef, polynomials[j]->coef[i]);
                 }
             }
-            polynomial->coef[i] = coef;
+             polynomial->coef[i] = coef;
         }
         polynomial->fixDegree();
 
