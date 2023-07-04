@@ -5,9 +5,8 @@
 #include "zkey_pilfflonk.hpp"
 #include "utils.hpp"
 #include "timer.hpp"
+#include <sys/time.h>
 #include "pilfflonk_prover.hpp"
-
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>

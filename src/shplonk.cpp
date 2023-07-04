@@ -1,5 +1,6 @@
 #include <sstream>
-
+#include "timer.hpp"
+#include "zklog.hpp"
 #include "shplonk.hpp"
 
 namespace ShPlonk {
@@ -33,6 +34,7 @@ namespace ShPlonk {
     }
 
     void ShPlonkProver::computeR() {
+        TimerStart(SHPLONK_COMPUTE_R_POLYNOMIALS);
         u_int32_t* degrees = new u_int32_t[zkeyPilFflonk->f.size()]; 
 
         for(auto const& x : zkeyPilFflonk->f) {
@@ -40,8 +42,6 @@ namespace ShPlonk {
         }
         
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
-            cout << "> Computing R" + std::to_string(i) + " polynomial" << endl; 
-
             FrElement* evals = new FrElement[degrees[i]];
 
             for(u_int32_t j = 0; j < degrees[i]; ++j) {
@@ -60,6 +60,7 @@ namespace ShPlonk {
         }
 
         delete degrees;
+        TimerStopAndLog(SHPLONK_COMPUTE_R_POLYNOMIALS);
     }
 
     void ShPlonkProver::computeZT()
@@ -93,7 +94,7 @@ namespace ShPlonk {
 
     void ShPlonkProver::computeL()
     {
-        LOG_TRACE("··· Computing L polynomial");
+        TimerStart(SHPLONK_COMPUTE_L_POLYNOMIAL);
 
         FrElement* mulL = new FrElement[zkeyPilFflonk->f.size()];
         FrElement* preL = new FrElement[zkeyPilFflonk->f.size()];
@@ -149,7 +150,6 @@ namespace ShPlonk {
 
         }
        
-        LOG_TRACE("> Computing ZT polynomial");
         computeZT();
 
         FrElement evalZTY = polynomialsShPlonk["ZT"]->fastEvaluate(challengeY);
@@ -164,7 +164,9 @@ namespace ShPlonk {
         delete mulL;
         delete preL;
         delete evalRiY;
-        delete degrees;        
+        delete degrees;  
+
+        TimerStopAndLog(SHPLONK_COMPUTE_L_POLYNOMIAL);      
     }
 
     void ShPlonkProver::computeZTS2()
@@ -200,7 +202,7 @@ namespace ShPlonk {
     void ShPlonkProver::computeW()
     {
 
-        LOG_TRACE("··· Computing W polynomial");
+        TimerStart(SHPLONK_COMPUTE_W_POLYNOMIAL);
 
         FrElement alpha = E.fr.one();
 
@@ -256,21 +258,19 @@ namespace ShPlonk {
         delete initialOpenValues;
 
         polynomialsShPlonk["W"] = polynomialW;
+        TimerStopAndLog(SHPLONK_COMPUTE_W_POLYNOMIAL);
         
     }
 
     void ShPlonkProver::computeWp() {
-        LOG_TRACE("> Computing L polynomial");
-        computeL();
+        TimerStart(SHPLONK_COMPUTE_WP_POLYNOMIAL);
 
-        LOG_TRACE("> Computing ZTS2 polynomial");
+        computeL();
         computeZTS2();
 
         FrElement ZTS2Y = polynomialsShPlonk["ZTS2"]->fastEvaluate(challengeY);
         E.fr.inv(ZTS2Y, ZTS2Y);
         polynomialsShPlonk["Wp"]->mulScalar(ZTS2Y);
-
-        LOG_TRACE("> Computing W' = L / ZTS2 polynomial");
         polynomialsShPlonk["Wp"]->divByZerofier(1, challengeY);
 
         u_int64_t maxDegree = 0; 
@@ -286,6 +286,8 @@ namespace ShPlonk {
         {
             throw std::runtime_error("Degree of L(X)/(ZTS2(y)(X-y)) is not correct");
         }
+
+        TimerStopAndLog(SHPLONK_COMPUTE_WP_POLYNOMIAL);
     }
 
     void ShPlonkProver::computeChallengeXiSeed(FrElement previousChallenge)
@@ -329,6 +331,7 @@ namespace ShPlonk {
     }
 
     void ShPlonkProver::calculateRoots() {
+        TimerStart(SHPLONK_CALCULATE_ROOTS);
         u_int32_t* degrees = new u_int32_t[zkeyPilFflonk->f.size()]; 
 
         for(auto const& x : zkeyPilFflonk->f) {
@@ -370,10 +373,12 @@ namespace ShPlonk {
         for (auto const &x : omegasMap) delete[] x.second;
 
         delete degrees;
+        TimerStopAndLog(SHPLONK_CALCULATE_ROOTS);
     }
 
     void ShPlonkProver::getMontgomeryBatchedInverse()
-    {
+    {   
+        TimerStart(SHPLONK_CALCULATE_MONTGOMERY_BATCHED_INVERSE);
         std::vector<FrElement> inverseElements;
      
         u_int32_t* degrees = new u_int32_t[zkeyPilFflonk->f.size()]; 
@@ -459,10 +464,12 @@ namespace ShPlonk {
         delete degrees;
 
         evaluationCommitments["inv"] = mulAccumulator;
+
+        TimerStopAndLog(SHPLONK_CALCULATE_MONTGOMERY_BATCHED_INVERSE);
     }    
 
     void ShPlonkProver::calculateEvaluations() {
-        
+        TimerStart(SHPLONK_CALCULATE_EVALUATIONS);
         FrElement* initialOpenValues = new FrElement[zkeyPilFflonk->openingPoints.size()];
         for(u_int32_t i = 0; i < zkeyPilFflonk->openingPoints.size(); ++i) {
             initialOpenValues[i] = challengeXi;
@@ -501,6 +508,8 @@ namespace ShPlonk {
         }
 
         delete[] initialOpenValues;
+
+        TimerStopAndLog(SHPLONK_CALCULATE_EVALUATIONS);
     }
 
     AltBn128::G1Point ShPlonkProver::sumCommits(u_int32_t nCommits, G1Point *commits) {
@@ -633,7 +642,7 @@ namespace ShPlonk {
 
                 if(multiExp) {
                     G1Point Fi = multiExponentiation(PTau, cPol, pol->nPols, lengths);
-                    cout << stage << " " << E.g1.toString(Fi) << endl;
+                    zklog.info("Commit " + index + ": " + E.g1.toString(Fi));
                     polynomialCommitments[index] = Fi;
                 }
 
@@ -645,7 +654,7 @@ namespace ShPlonk {
     }
 
     json ShPlonkProver::open(G1PointAffine *PTau, FrElement previousChallenge) {
-
+        TimerStart(SHPLONK_OPEN);
         if(NULL == zkeyPilFflonk) {
             throw std::runtime_error("Zkey data not set");
         }
@@ -660,8 +669,8 @@ namespace ShPlonk {
         // Compute challenge xi seed
         computeChallengeXiSeed(previousChallenge);
 
-        cout << "> Challenge xi seed: " << E.fr.toString(challengeXiSeed) << endl;
-
+        zklog.info("Challenge xi seed: " + E.fr.toString(challengeXiSeed));
+ 
         // Calculate roots
         calculateRoots();
 
@@ -670,28 +679,27 @@ namespace ShPlonk {
             challengeXi = E.fr.mul(challengeXi, challengeXiSeed);
         }
 
-        cout << "Challenge xi: " << E.fr.toString(challengeXi) << endl;
+        zklog.info("Challenge xi: " + E.fr.toString(challengeXi));
 
         calculateEvaluations();        
 
         computeChallengeAlpha();
 
-        cout << "Challenge alpha: " << E.fr.toString(challengeAlpha) << endl;
+        zklog.info("Challenge alpha: " + E.fr.toString(challengeAlpha));
 
         computeR();
         
         computeW();
 
-        LOG_TRACE("> Computing W multi exponentiation");
         u_int64_t* lengthsW = new u_int64_t[1]{polynomialsShPlonk["W"]->getDegree() + 1};
         G1Point W = multiExponentiation(PTau, polynomialsShPlonk["W"], 1, lengthsW);
         polynomialCommitments["W"] = W;
 
-        cout << "W " << E.g1.toString(polynomialCommitments["W"] ) << endl;
+        zklog.info("Commit W: " + E.g1.toString(polynomialCommitments["W"]));
 
         computeChallengeY(W);
 
-        cout << "Challenge Y: " << E.fr.toString(challengeY) << endl;
+        zklog.info("Challenge Y: " + E.fr.toString(challengeY));
 
         computeWp();
         u_int64_t* lengthsWp = new u_int64_t[1]{polynomialsShPlonk["Wp"]->getDegree() + 1};
@@ -699,25 +707,27 @@ namespace ShPlonk {
 
         polynomialCommitments["Wp"] = Wp;
 
-        cout << "Wp " << E.g1.toString(polynomialCommitments["Wp"] ) << endl;
+        zklog.info("Commit Wp: " + E.g1.toString(polynomialCommitments["Wp"]));
 
         getMontgomeryBatchedInverse();
 
-        cout << "inv " << E.fr.toString(evaluationCommitments["inv"]) << endl;
+        zklog.info("Batched Inverse shplonk: " + E.fr.toString(evaluationCommitments["inv"]));
 
         delete lengthsW;
         delete lengthsWp;
 
+        TimerStopAndLog(SHPLONK_OPEN);
         return toJson();
     }
 
     AltBn128::G1Point ShPlonkProver::multiExponentiation(G1PointAffine *PTau, Polynomial<AltBn128::Engine> *polynomial, u_int32_t nx, u_int64_t x[])
     {
-       
+        TimerStart(SHPLONK_CALCULATE_MSM);
         G1Point value;
         FrElement *pol = this->polynomialFromMontgomery(polynomial);
         E.g1.multiMulByScalar(value, PTau, (uint8_t *)pol, sizeof(pol[0]), polynomial->getDegree() + 1, nx, x);
 
+        TimerStopAndLog(SHPLONK_CALCULATE_MSM);
         return value;
     }
 
