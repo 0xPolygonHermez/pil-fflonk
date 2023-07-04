@@ -546,9 +546,11 @@ namespace PilFflonk
 
         // AltBn128::FrElement* buffer = stage == 0 ? bBuffer : bBufferCommitted;
 
-        std::memset(buffCoefs, 0, N * factorZK * nPols * sizeof(AltBn128::FrElement));
+        int nThreads = omp_get_max_threads() / 2;
 
-        std::memcpy(buffCoefs, buffSrc, N * nPols * sizeof(AltBn128::FrElement));
+        ThreadUtils::parset(buffCoefs, 0, N * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
+
+        ThreadUtils::parcpy(buffCoefs, buffSrc, N * nPols * sizeof(AltBn128::FrElement), nThreads);
 
         NTT_AltBn128 ntt(E, N);
         ntt.INTT(buffCoefs, buffSrc, N, nPols/*, buffer*/);
@@ -569,9 +571,9 @@ namespace PilFflonk
 
         addCoefsToContext(stage, nPols, buffCoefs);
 
-        std::memset(buffDst, 0, NExt*factorZK*nPols*sizeof(AltBn128::FrElement));
+        ThreadUtils::parset(buffDst, 0, NExt*factorZK*nPols*sizeof(AltBn128::FrElement), nThreads);
 
-        std::memcpy(buffDst, buffCoefs, N*factorZK*nPols*sizeof(AltBn128::FrElement));
+        ThreadUtils::parcpy(buffDst, buffCoefs, N*factorZK*nPols*sizeof(AltBn128::FrElement), nThreads);
 
         NTT_AltBn128 nttExtended(E, 1 << nBitsExtZK);
         nttExtended.NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols /*, buffer*/);
