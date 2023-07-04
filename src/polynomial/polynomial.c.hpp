@@ -242,7 +242,7 @@ void Polynomial<Engine>::add(Polynomial<Engine> &polynomial) {
 //TODO when the polynomial subtracted is bigger than the current one
 template<typename Engine>
 void Polynomial<Engine>::sub(Polynomial<Engine> &polynomial) {
-    u_int64_t length = std::max(this->length, polynomial.length);
+    u_int64_t length = std::max(this->degree, polynomial.degree);
 
     #pragma omp parallel for
     for (u_int64_t i = 0; i < length; i++) {
@@ -753,15 +753,16 @@ template<typename Engine>
 void Polynomial<Engine>::print() {
     std::ostringstream res;
 
-    for (u_int64_t i = this->degree; i >= 0; i--) {
-        FrElement coef = coef[i];
-        if (E.fr.neq(E.fr.zero, coef)) {
-            if (E.fr.isNegative(coef)) {
-                res << " - ";
-            } else if (i != this->degree) {
-                res << " + ";
-            }
-            res << E.fr.toString(coef);
+    for (u_int64_t i = this->degree; i > 0; i--) {
+        FrElement c = coef[i];
+        if (!E.fr.eq(E.fr.zero(), c)) {
+            res << " ";
+            // if (E.fr.neg(c)) {
+            //     res << " - ";
+            // } else if (i != this->degree) {
+            //     res << " + ";
+            // }
+            res << E.fr.toString(c);
             if (i > 0) {
                 if (i > 1) {
                     res << "x^" << i;
@@ -771,5 +772,6 @@ void Polynomial<Engine>::print() {
             }
         }
     }
-    LOG_TRACE(res);
+    std::cout << res.str() << std::endl;
+    //LOG_TRACE(res);
 }
