@@ -6,6 +6,8 @@ ConstPolsSerializer::~ConstPolsSerializer()
 {
     delete[] coefs;
     delete[] evalsExt;
+    delete[] x_n;
+    delete[] x_2ns;
 }
 
 ConstPolsSerializer *ConstPolsSerializer::readConstPolsFile(AltBn128::Engine &E, BinFileUtils::BinFile *fd)
@@ -14,14 +16,19 @@ ConstPolsSerializer *ConstPolsSerializer::readConstPolsFile(AltBn128::Engine &E,
 
     readConstPolsCoefsSection(E, fd, constPolsSerializer);
     readConstPolsEvalsExtSection(E, fd, constPolsSerializer);
+    readXnSection(E, fd, constPolsSerializer);
+    readX2nsSection(E, fd, constPolsSerializer);
 
     return constPolsSerializer;
 }
 
-void ConstPolsSerializer::readConstPolsFile(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs, AltBn128::FrElement *evalsExt)
+void ConstPolsSerializer::readConstPolsFile(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs, AltBn128::FrElement *evalsExt, AltBn128::FrElement *x_n, AltBn128::FrElement *x_2ns)
 {
     readConstPolsCoefsSection(E, fd, coefs);
     readConstPolsEvalsExtSection(E, fd, evalsExt);
+    readXnSection(E, fd, x_n);
+    readX2nsSection(E, fd, x_2ns);
+
 }
 
 void ConstPolsSerializer::readConstPolsCoefsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer)
@@ -43,6 +50,28 @@ void ConstPolsSerializer::readConstPolsEvalsExtSection(AltBn128::Engine &E, BinF
 {
     readBuffer(E, fd, CONST_POLS_FILE_EVALS_EXT_SECTION, evalsExt);
 }
+
+void ConstPolsSerializer::readXnSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer)
+{
+    constPolsSerializer->x_n = readBuffer(E, fd, X_N_SECTION);
+}
+
+void ConstPolsSerializer::readXnSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *x_n)
+{
+    readBuffer(E, fd, X_N_SECTION, x_n);
+}
+
+
+void ConstPolsSerializer::readX2nsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer)
+{
+    constPolsSerializer->x_2ns = readBuffer(E, fd, X_2NS_SECTION);
+}
+
+void ConstPolsSerializer::readX2nsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *x_2ns)
+{
+    readBuffer(E, fd, X_2NS_SECTION, x_2ns);
+}
+
 
 AltBn128::FrElement *ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFileUtils::BinFile *fd, int idSection)
 {

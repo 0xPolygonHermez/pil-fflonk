@@ -42,7 +42,6 @@ namespace PilFflonk
         ptrCommitted.clear();
 
         delete fft;
-        delete fft2;
         delete transcript;
         delete shPlonkProver;
         delete fflonkInfo;
@@ -82,8 +81,7 @@ namespace PilFflonk
 
             cout << "> Starting fft" << endl;
 
-            fft = new FFT<AltBn128::Engine::Fr>(N);
-            fft2 = new FFT<AltBn128::Engine::Fr>(NExt * factorZK);
+            fft = new FFT<AltBn128::Engine::Fr>(NExt * factorZK);
 
 
             mpz_t altBbn128r;
@@ -185,7 +183,7 @@ namespace PilFflonk
                 pConstPolsAddress = copyFile(constPolsFilename, constPolsSize);
                 zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsSize) + " bytes from constant file " + constPolsFilename);
 
-#pragma omp parallel for
+                #pragma omp parallel for
                 for (u_int64_t i = 0; i < fflonkInfo->nConstants * N; i++)
                 {
                     E.fr.fromRprBE(ptr["const_n"][i], reinterpret_cast<uint8_t *>(pConstPolsAddress) + i * 32, 32);
@@ -194,11 +192,7 @@ namespace PilFflonk
 
             cout << "> Reading constant polynomials zkey file" << endl;
 
-            ConstPolsSerializer::readConstPolsFile(E, fdZkeyConst, ptr["const_coefs"], ptr["const_2ns"]);
-            // for (uint64_t i = 0; i < 32; i++)
-            // {
-            //     cout << E.fr.toString(ptr["const_coefs"][i]) << endl;
-            // }
+            ConstPolsSerializer::readConstPolsFile(E, fdZkeyConst, ptr["const_coefs"], ptr["const_2ns"], ptr["x_n"], ptr["x_2ns"]);
 
             transcript = new Keccak256Transcript(E);
         }
@@ -277,20 +271,7 @@ namespace PilFflonk
             cout << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n] << endl;
             cout << "-----------------------------" << endl;
 
-            // delete transcript;
-            // transcript = new Keccak256Transcript(E);
             transcript->reset();
-
-            // TODO add to precomputed?????
-            for (u_int64_t i = 0; i < N; i++)
-            {
-                ptr["x_n"][i] = fft->root(nBits, i);
-            }
-
-            for (u_int64_t i = 0; i < NExt * factorZK; i++)
-            {
-                ptr["x_2ns"][i] = fft2->root(nBitsExtZK, i);
-            }
 
             cout << "> Reading committed polynomials file" << endl;
 
@@ -563,7 +544,7 @@ namespace PilFflonk
             pilFflonkSteps.step42ns_first(E, params, i);
         }
 
-        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft2, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
+        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
         polQ->divZh(N, 1 << extendBitsTotal);
         shPlonkProver->addPolynomialShPlonk("Q", polQ);
 

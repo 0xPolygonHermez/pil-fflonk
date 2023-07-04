@@ -120,13 +120,10 @@ namespace PilFflonkZkey
     {
         fdZKey->startReadSection(ZKEY_PF_OPENINGPOINTS_SECTION);
         u_int32_t len = fdZKey->readU32LE();
-        std::cout << "readOpeningPointsSection" << endl;
-        std::cout << "len: " << len << endl;
 
         for (u_int32_t i = 0; i < len; i++)
         {
             pilFflonkZkey->openingPoints[i] = fdZKey->readU32LE();
-            std::cout << "pilFflonkZkey->openingPoints[i]: " << len << endl;
         }
 
         fdZKey->endReadSection();
@@ -136,15 +133,11 @@ namespace PilFflonkZkey
     {
         fdZKey->startReadSection(ZKEY_PF_F_COMMITMENTS_SECTION);
         u_int32_t len = fdZKey->readU32LE();
-        std::cout << "readFCommitmentsSection" << endl;
-        std::cout << "len: " << len << endl;
 
         for (u_int32_t i = 0; i < len; i++)
         {
             std::string name = fdZKey->readString();
             pilFflonkZkey->committedConstants[name] = fdZKey->read(pilFflonkZkey->n8q * 2);
-            std::cout << "name: " << name << endl;
-            std::cout << "pilFflonkZkey->committedConstants[name]: " << len << endl;
         }
 
         fdZKey->endReadSection();
@@ -183,8 +176,6 @@ namespace PilFflonkZkey
         {
             std::string name = fdZKey->readString();
             u_int32_t open = fdZKey->readU32LE();
-            cout << "name: " << name << endl;
-            cout << "open: " << open << endl;
 
             pilFflonkZkey->polsOpenings[name] = open;
         }

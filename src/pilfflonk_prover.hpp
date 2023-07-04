@@ -42,7 +42,6 @@ namespace PilFflonk
         std::string curveName;
 
         FFT<AltBn128::Engine::Fr> *fft = NULL;
-        FFT<AltBn128::Engine::Fr> *fft2 = NULL;
 
         PilFflonkZkey::PilFflonkZkey *zkey;
 

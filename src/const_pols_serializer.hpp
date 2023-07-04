@@ -7,12 +7,21 @@
 #include <binfile_utils.hpp>
 #include <alt_bn128.hpp>
 
-const int CONST_POLS_NSECTIONS = 2;
+const int CONST_POLS_NSECTIONS = 4;
 const int CONST_POLS_FILE_COEFS_SECTION = 1;
 const int CONST_POLS_FILE_EVALS_EXT_SECTION = 2;
+const int X_N_SECTION = 3;
+const int X_2NS_SECTION = 4;
+
 
 class ConstPolsSerializer
-{
+{   
+    static void readXnSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
+    static void readXnSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs);
+
+    static void readX2nsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
+    static void readX2nsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs);
+
     static void readConstPolsCoefsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, ConstPolsSerializer *constPolsSerializer);
     static void readConstPolsCoefsSection(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs);
 
@@ -25,11 +34,13 @@ class ConstPolsSerializer
 public:
     AltBn128::FrElement *coefs;
     AltBn128::FrElement *evalsExt;
+    AltBn128::FrElement *x_n;
+    AltBn128::FrElement *x_2ns;
 
     ~ConstPolsSerializer();
 
     static ConstPolsSerializer *readConstPolsFile(AltBn128::Engine &E, BinFileUtils::BinFile *fd);
-    static void readConstPolsFile(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs, AltBn128::FrElement *evalsExt);
+    static void readConstPolsFile(AltBn128::Engine &E, BinFileUtils::BinFile *fd, AltBn128::FrElement *coefs, AltBn128::FrElement *evalsExt, AltBn128::FrElement *x_n, AltBn128::FrElement *x_2ns);
 };
 
 #endif
