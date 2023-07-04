@@ -41,7 +41,7 @@ class PilFflonkSteps {
         void step3_i(AltBn128::Engine &E, StepsParams &params, uint64_t i);
         void step3_last(AltBn128::Engine &E, StepsParams &params, uint64_t i);
 
-        void step42ns_first(AltBn128::Engine &E, StepsParams &params, uint64_t i);
+        AltBn128::FrElement step42ns_first(AltBn128::Engine &E, StepsParams &params, uint64_t i);
         void step42ns_i(AltBn128::Engine &E, StepsParams &params, uint64_t i);
         void step42ns_last(AltBn128::Engine &E, StepsParams &params, uint64_t i);
 };

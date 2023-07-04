@@ -43,6 +43,7 @@ namespace PilFflonk
         std::string curveName;
 
         FFT<AltBn128::Engine::Fr> *fft = NULL;
+        FFT<AltBn128::Engine::Fr> *fft2 = NULL;
 
         PilFflonkZkey::PilFflonkZkey *zkey;
 
@@ -115,6 +116,14 @@ namespace PilFflonk
         void extend(u_int32_t stage, u_int32_t nPols);
 
         void addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs);
+
+        uint64_t find(std::vector<uint64_t> arr, uint64_t x);
+
+        AltBn128::FrElement* getPolynomial(AltBn128::FrElement* buffer, uint64_t nPols, uint64_t N, uint64_t id);
+
+        void calculateZ(AltBn128::FrElement* pNum, AltBn128::FrElement* pDen, uint64_t N, uint64_t id);
+
+        AltBn128::FrElement* batchInverse(AltBn128::FrElement* pol, uint64_t N);
     };
 }
 

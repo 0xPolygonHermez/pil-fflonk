@@ -42,6 +42,7 @@ namespace PilFflonk
         ptrCommitted.clear();
 
         delete fft;
+        delete fft2;
         delete transcript;
         delete shPlonkProver;
         delete fflonkInfo;
@@ -81,7 +82,9 @@ namespace PilFflonk
 
             cout << "> Starting fft" << endl;
 
-            fft = new FFT<AltBn128::Engine::Fr>(N * 4);
+            fft = new FFT<AltBn128::Engine::Fr>(N);
+            fft2 = new FFT<AltBn128::Engine::Fr>(NExt * factorZK);
+
 
             mpz_t altBbn128r;
             mpz_init(altBbn128r);
@@ -286,7 +289,7 @@ namespace PilFflonk
 
             for (u_int64_t i = 0; i < NExt * factorZK; i++)
             {
-                ptr["x_2ns"][i] = fft->root(nBitsExtZK, i);
+                ptr["x_2ns"][i] = fft2->root(nBitsExtZK, i);
             }
 
             cout << "> Reading committed polynomials file" << endl;
@@ -481,7 +484,7 @@ namespace PilFflonk
         auto nPermutations = fflonkInfo->peCtx.size();
         auto nConnections = fflonkInfo->ciCtx.size();
 
-        // #pragma omp parallel for
+        #pragma omp parallel for
         for (uint64_t i = 0; i < N; i++)
         {
             pilFflonkSteps.step3prev_first(E, params, i);
@@ -492,28 +495,37 @@ namespace PilFflonk
         for (uint64_t i = 0; i < nPlookups; i++)
         {
             cout << "··· Calculating z for plookup check " << i << endl;
-            Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
-            Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
-            Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + i]);
-            Polinomial::calculateZ(E, z, pNum, pDen);
+            uint64_t numIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
+            uint64_t denIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, denIndex);
+
+            uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + i]);
+            calculateZ(pNum, pDen, N, zIndex);
         }
 
         for (uint64_t i = 0; i < nPermutations; i++)
         {
             cout << "··· Calculating z for permutation check " << i << endl;
-            Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
-            Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
-            Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + nPlookups + i]);
-            Polinomial::calculateZ(E, z, pNum, pDen);
+            uint64_t numIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
+            uint64_t denIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, denIndex);
+
+            uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + nPlookups + i]);
+            calculateZ(pNum, pDen, N, zIndex);
         }
 
         for (uint64_t i = 0; i < nConnections; i++)
-        {
+        {  
             cout << "··· Calculating z for connection check " << i << endl;
-            Polinomial pNum = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
-            Polinomial pDen = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
-            Polinomial z = fflonkInfo->getPolinomial(bBufferCommitted, fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
-            Polinomial::calculateZ(E, z, pNum, pDen);
+            uint64_t numIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
+            uint64_t denIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, denIndex);
+
+            uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
+            calculateZ(pNum, pDen, N, zIndex);
         }
 
         #pragma omp parallel for
@@ -545,10 +557,10 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < NExt * factorZK; i++)
         {
-            pilFflonkSteps.step42ns_first(E, params, i);
+            ptrCommitted["q_2ns"][i] = pilFflonkSteps.step42ns_first(E, params, i);
         }
 
-        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
+        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft2, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
         polQ->divZh(N, 1 << extendBitsTotal);
         shPlonkProver->addPolynomialShPlonk("Q", polQ);
 
@@ -573,20 +585,18 @@ namespace PilFflonk
         NTT_AltBn128 ntt(E, N);
         ntt.INTT(buffCoefs, buffSrc, N, nPols /*, buffer*/);
 
-        if (stage != 0)
+  
+        for (u_int32_t i = 0; i < nPols; i++)
         {
-            for (u_int32_t i = 0; i < nPols; i++)
+            std::string name = (*zkey->polsNamesStage[stage])[i];
+            for (u_int32_t j = 0; j < zkey->polsOpenings[name]; ++j)
             {
-                std::string name = (*zkey->polsNamesStage[stage])[i];
-                for (u_int32_t j = 0; j < zkey->polsOpenings[name]; ++j)
-                {
-                    AltBn128::FrElement b;
-                    // randombytes_buf((void *)&(b), sizeof(FrElement)-1);
-                    b = E.fr.one();
+                AltBn128::FrElement b;
+                // randombytes_buf((void *)&(b), sizeof(FrElement)-1);
+                b = E.fr.one();
 
-                    buffCoefs[j * nPols + i] = E.fr.add(buffCoefs[j * nPols + i], E.fr.neg(b));
-                    buffCoefs[(j + N) * nPols + i] = E.fr.add(buffCoefs[(j + N) * nPols + i], b);
-                }
+                buffCoefs[j * nPols + i] = E.fr.add(buffCoefs[j * nPols + i], E.fr.neg(b));
+                buffCoefs[(j + N) * nPols + i] = E.fr.add(buffCoefs[(j + N) * nPols + i], b);
             }
         }
 
@@ -615,4 +625,60 @@ namespace PilFflonk
             shPlonkProver->addPolynomialShPlonk(name, pol);
         }
     }
+
+    uint64_t PilFflonkProver::find(std::vector<uint64_t> arr, uint64_t x) {
+        for (uint64_t i = 0; i < arr.size(); i++) {
+            if (arr[i] == x) {
+                return i;
+            }
+        }
+        throw new std::runtime_error("Index " + std::to_string(x) + " not found");
+    }
+
+    AltBn128::FrElement* PilFflonkProver::getPolynomial(AltBn128::FrElement* buffer, uint64_t nPols, uint64_t N, uint64_t id) {
+        AltBn128::FrElement* pol = new AltBn128::FrElement[N];
+        for (uint64_t i = 0; i < N; i++) {
+            pol[i] = buffer[i * nPols + id];
+        }
+        return pol;
+    }
+
+    void PilFflonkProver::calculateZ(AltBn128::FrElement* pNum, AltBn128::FrElement* pDen, uint64_t N, uint64_t id) {
+        AltBn128::FrElement* denI = batchInverse(pDen, N);
+
+        ptrCommitted["cm3_n"][id] = E.fr.one();
+
+        for(uint64_t i = 1; i < N; i++) {
+            ptrCommitted["cm3_n"][id + fflonkInfo->nCm3 * i] = E.fr.mul(ptrCommitted["cm3_n"][id + fflonkInfo->nCm3 * (i - 1)], E.fr.mul(pNum[i - 1], denI[i - 1]));
+        }
+
+        zkassert(E.fr.eq(E.fr.one(), E.fr.mul(ptrCommitted["cm3_n"][id + fflonkInfo->nCm3 * (N - 1)],E.fr.mul(pNum[N - 1], denI[N - 1]))));
+    }
+
+    AltBn128::FrElement* PilFflonkProver::batchInverse(AltBn128::FrElement* pol, uint64_t N) {
+        AltBn128::FrElement* tmp = new FrElement[N];
+        tmp[0] = pol[0];
+
+        for (uint64_t i = 1; i < N; i++) {
+            tmp[i] = E.fr.mul(tmp[i - 1], pol[i]);
+        }
+
+        AltBn128::FrElement z0;
+        AltBn128::FrElement z1;
+        E.fr.inv(z0, tmp[N - 1]);
+
+        AltBn128::FrElement* denI = new FrElement[N];
+        for (uint64_t i = N - 1; i > 0; i--) {
+           z1 = E.fr.mul(z0, pol[i]);
+           denI[i] = E.fr.mul(z0, tmp[i - 1]);
+           z0 = z1;
+        }
+
+        denI[0] = z0;
+
+        delete[] tmp;
+
+        return denI;
+    }
+
 }
