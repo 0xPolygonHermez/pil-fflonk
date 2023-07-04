@@ -44,9 +44,9 @@ int main(int argc, char **argv)
         }
     }
 
-    if (argc != 6) {
+    if (argc != 8) {
         cerr << "Invalid number of parameters: " << argc << endl;
-        cerr << "Usage: " << argv[0] << " <pil.zkey> <fflonkInfo.json> <polynomials.cnst> <polynomials.zkey.cnst> <polynomials.cmtd>" << endl;
+        cerr << "Usage: " << argv[0] << " <pil.zkey> <fflonkInfo.json> <polynomials.cnst> <polynomials.zkey.cnst> <polynomials.cmtd> <proof.json> <public.json>" << endl;
         return -1;
     }
 
@@ -56,6 +56,8 @@ int main(int argc, char **argv)
     string cnstFilename = argv[3];
     string cnstZkeyFilename = argv[4];
     string cmtdFilename = argv[5];
+    string proofFilename = argv[6];
+    string publicFilename = argv[7];
 
     TimerStart(WHOLE_PROCESS);
 
@@ -101,7 +103,16 @@ int main(int argc, char **argv)
 
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
 
-    prover->prove(zkey.get(), cnstFilename, const_zkey.get(), cmtdFilename);
+    auto [proofJson, publicSignalsJson] = prover->prove(zkey.get(), cnstFilename, const_zkey.get(), cmtdFilename);
+
+    std::ofstream file;
+    file.open(proofFilename);
+    file << proofJson;
+    file.close();
+
+    file.open(publicFilename);
+    file << publicSignalsJson;
+    file.close();
 
     TimerStopAndLog(WHOLE_PROCESS);
 

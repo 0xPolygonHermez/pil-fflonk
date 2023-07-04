@@ -23,22 +23,24 @@ using json = nlohmann::json;
 
 using namespace std;
 
-namespace PilFflonk {
-    struct BinFilePolsData{
-        u_int64_t  n;
-        u_int32_t  nPols;
-        string*    names;
-        AltBn128::FrElement* buffer;
+namespace PilFflonk
+{
+    struct BinFilePolsData
+    {
+        u_int64_t n;
+        u_int32_t nPols;
+        string *names;
+        AltBn128::FrElement *buffer;
     };
 
-    class PilFflonkProver {
+    class PilFflonkProver
+    {
         using FrElement = typename AltBn128::Engine::FrElement;
         using G1Point = typename AltBn128::Engine::G1Point;
         using G1PointAffine = typename AltBn128::Engine::G1PointAffine;
 
         AltBn128::Engine &E;
         std::string curveName;
-
 
         FFT<AltBn128::Engine::Fr> *fft = NULL;
 
@@ -60,19 +62,19 @@ namespace PilFflonk {
 
         FrElement challenges[5];
 
-        FflonkInfo* fflonkInfo;
+        FflonkInfo *fflonkInfo;
 
-        BinFilePolsData* cnstPols;
-        BinFilePolsData* cmtdPols;
+        BinFilePolsData *cnstPols;
+        BinFilePolsData *cmtdPols;
 
         void *pConstPolsAddress;
         void *pConstPolsAddress2ns;
-        
+
         uint64_t constPolsSize;
 
         void *pCommittedPolsAddress;
 
-        ShPlonk::ShPlonkProver* shPlonkProver;
+        ShPlonk::ShPlonkProver *shPlonkProver;
 
         PilFflonkSteps pilFflonkSteps;
 
@@ -87,19 +89,20 @@ namespace PilFflonk {
         std::map<std::string, AltBn128::FrElement *> ptr;
 
         Keccak256Transcript *transcript;
+
     public:
         PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile);
-        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, void* reservedMemoryPtr, uint64_t reservedMemorySize);
+        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, void *reservedMemoryPtr, uint64_t reservedMemorySize);
 
         ~PilFflonkProver();
 
         void setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst);
 
-        /* std::tuple<json, json> */ void prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst, std::string committedPolsFilename);
-        /* std::tuple<json, json> */ void prove(std::string committedPolsFilename);
+        std::tuple<json, json> prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst, std::string committedPolsFilename);
+        std::tuple<json, json> prove(std::string committedPolsFilename);
 
     protected:
-        void initialize(void* reservedMemoryPtr, uint64_t reservedMemorySize = 0);
+        void initialize(void *reservedMemoryPtr, uint64_t reservedMemorySize = 0);
 
         void stage1(StepsParams &params);
 
@@ -110,7 +113,7 @@ namespace PilFflonk {
         void stage4(StepsParams &params);
 
         void extend(u_int32_t stage, u_int32_t nPols);
-        
+
         void addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs);
     };
 }
