@@ -490,10 +490,11 @@ namespace PilFflonk
         for (uint64_t i = 0; i < nPlookups; i++)
         {
             cout << "··· Calculating z for plookup check " << i << endl;
-            uint64_t numIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
-            uint64_t denIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
-            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, numIndex);
-            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, denIndex);
+            auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
+            auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
+
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, N, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, N, denIndex);
 
             uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + i]);
             calculateZ(pNum, pDen, N, zIndex);
@@ -502,10 +503,11 @@ namespace PilFflonk
         for (uint64_t i = 0; i < nPermutations; i++)
         {
             cout << "··· Calculating z for permutation check " << i << endl;
-            uint64_t numIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
-            uint64_t denIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
-            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, numIndex);
-            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, denIndex);
+            auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
+            auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
+
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, N, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, N, denIndex);
 
             uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + nPlookups + i]);
             calculateZ(pNum, pDen, N, zIndex);
@@ -513,11 +515,12 @@ namespace PilFflonk
 
         for (uint64_t i = 0; i < nConnections; i++)
         {  
-            cout << "··· Calculating z for connection check " << i << endl;
-            uint64_t numIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
-            uint64_t denIndex = find(fflonkInfo->tmpExp_n, fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
-            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, numIndex);
-            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted["tmpExp_n"], fflonkInfo->tmpExp_n.size(), N, denIndex);
+            cout << "··· Calculating z for connection check " << i << endl;            
+            auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
+            auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
+
+            AltBn128::FrElement* pNum = getPolynomial(ptrCommitted[numName], nPols1, N, numIndex);
+            AltBn128::FrElement* pDen = getPolynomial(ptrCommitted[denName], nPols2, N, denIndex);
 
             uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
             calculateZ(pNum, pDen, N, zIndex);
@@ -627,6 +630,30 @@ namespace PilFflonk
                 return i;
             }
         }
+        throw new std::runtime_error("Index " + std::to_string(x) + " not found");
+    }
+
+    std::tuple<std::string, uint64_t, uint64_t> PilFflonkProver::find(uint64_t x) {
+        if(x < fflonkInfo->nCm1*2 + fflonkInfo->nCm2*2) {
+            for (uint64_t i = 0; i < fflonkInfo->mapSections.section[cm2_n].size(); i++) {
+                if (fflonkInfo->mapSections.section[cm2_n][i] == x) {
+                    return std::make_tuple("cm2_n", i, fflonkInfo->mapSections.section[cm2_n].size());
+                }
+            }
+        } else if(x < fflonkInfo->nCm1*2 + fflonkInfo->nCm2*2 + fflonkInfo->nCm3*2) {
+            for (uint64_t i = 0; i < fflonkInfo->mapSections.section[cm3_n].size(); i++) {
+                if (fflonkInfo->mapSections.section[cm3_n][i] == x) {
+                    return std::make_tuple("cm3_n", i, fflonkInfo->mapSections.section[cm3_n].size());
+                }
+            }
+        } else {
+            for (uint64_t i = 0; i < fflonkInfo->tmpExp_n.size(); i++) {
+                if (fflonkInfo->tmpExp_n[i] == x) {
+                   return std::make_tuple("tmpExp_n", i, fflonkInfo->tmpExp_n.size());
+                }
+            }
+        }
+
         throw new std::runtime_error("Index " + std::to_string(x) + " not found");
     }
 
