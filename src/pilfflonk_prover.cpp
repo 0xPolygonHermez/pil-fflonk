@@ -387,11 +387,6 @@ namespace PilFflonk
 
         extend(1, fflonkInfo->mapSectionsN.section[cm1_n]);
 
-        // for (uint64_t i = 0; i < 24; i++)
-        // {
-        //     cout << E.fr.toString(ptrCommitted["cm1_n"][i]) << endl;
-        // }
-
         // STEP 1.4 - Commit stage 1 polynomials
         shPlonkProver->commit(1, PTau, true);
     }
@@ -557,7 +552,7 @@ namespace PilFflonk
         #pragma omp parallel for
         for (uint64_t i = 0; i < NExt * factorZK; i++)
         {
-            ptrCommitted["q_2ns"][i] = pilFflonkSteps.step42ns_first(E, params, i);
+            pilFflonkSteps.step42ns_first(E, params, i);
         }
 
         Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft2, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
