@@ -86,7 +86,7 @@ AltBn128::FrElement *ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFil
 #pragma omp parallel for
     for (u_int64_t i = 0; i < nElements; i++)
     {
-        E.fr.fromRprBE(buffer[i], (uint8_t *)&(buffer[i]), 32);
+        E.fr.fromRprLE(buffer[i], (uint8_t *)&(buffer[i]), 32);
     }
 
     return &buffer[0];
@@ -105,6 +105,6 @@ void ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFileUtils::BinFile 
 #pragma omp parallel for
     for (u_int64_t i = 0; i < nElements; i++)
     {
-        E.fr.fromRprBE(buffer[i], (uint8_t *)&(buffer[i]), 32);
+        E.fr.fromRprLE(buffer[i], (uint8_t *)&(buffer[i]), 32);
     }
 }

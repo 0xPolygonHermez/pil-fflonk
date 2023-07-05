@@ -189,7 +189,7 @@ namespace PilFflonk
 #pragma omp parallel for
                 for (u_int64_t i = 0; i < fflonkInfo->nConstants * N; i++)
                 {
-                    E.fr.fromRprBE(ptrConstant["const_n"][i], reinterpret_cast<uint8_t *>(pConstPolsAddress) + i * 32, 32);
+                    E.fr.fromRprLE(ptrConstant["const_n"][i], reinterpret_cast<uint8_t *>(pConstPolsAddress) + i * 32, 32);
                 }
             }
 
@@ -304,7 +304,7 @@ namespace PilFflonk
 #pragma omp parallel for
             for (u_int64_t i = 0; i < fflonkInfo->mapSectionsN.section[cm1_n] * N; i++)
             {
-                E.fr.fromRprBE(ptrCommitted["cm1_n"][i], reinterpret_cast<uint8_t *>(pCommittedPolsAddress) + i * 32, 32);
+                E.fr.fromRprLE(ptrCommitted["cm1_n"][i], reinterpret_cast<uint8_t *>(pCommittedPolsAddress) + i * 32, 32);
             }
 
             TimerStopAndLog(CONVERT_COMMITTED_POLS_TO_FR);
@@ -420,6 +420,7 @@ namespace PilFflonk
         {
             G1Point C;
             E.g1.copy(C, *((G1PointAffine *)commit));
+            cout << "Commitment " << key << ": " << E.g1.toString(C) << endl;
             transcript->addPolCommitment(C);
         }
 
@@ -644,8 +645,9 @@ namespace PilFflonk
 
         for (u_int32_t i = 0; i < nPols; i++)
         {
-            std::string name = (*zkey->polsNamesStage[stage])[i];
-            for (u_int32_t j = 0; j < zkey->polsOpenings[name]; ++j)
+            std::string name = (*zkey->polsNamesStage[stage])[i].name;
+            u_int32_t openings = (*zkey->polsNamesStage[stage])[i].openings;
+            for (u_int32_t j = 0; j < openings; ++j)
             {
                 AltBn128::FrElement b;
                 // randombytes_buf((void *)&(b), sizeof(FrElement)-1);
@@ -678,7 +680,7 @@ namespace PilFflonk
                 pol->coef[j] = buffCoefs[i + j * nPols];
             }
             pol->fixDegree();
-            std::string name = (*zkey->polsNamesStage[stage])[i];
+            std::string name = (*zkey->polsNamesStage[stage])[i].name;
             shPlonkProver->addPolynomialShPlonk(name, pol);
         }
     }

@@ -10,17 +10,14 @@
 
 namespace PilFflonkZkey
 {
-    const int ZKEY_PF_NSECTIONS = 9;
+    const int ZKEY_PF_NSECTIONS = 7;
 
     const int ZKEY_PF_HEADER_SECTION = 2;
     const int ZKEY_PF_F_SECTION = 3;
-    const int ZKEY_PF_OPENINGPOINTS_SECTION = 4; 
-    const int ZKEY_PF_F_COMMITMENTS_SECTION = 5;
-    const int ZKEY_PF_POLSMAP_SECTION = 6;
-    const int ZKEY_PF_POLSOPENINGS_SECTION = 7;
-    const int ZKEY_PF_POLSNAMESSTAGE_SECTION = 8;
-    const int ZKEY_PF_OMEGAS_SECTION = 9;
-    const int ZKEY_PF_PTAU_SECTION = 10;
+    const int ZKEY_PF_F_COMMITMENTS_SECTION = 4;
+    const int ZKEY_PF_POLSNAMESSTAGE_SECTION = 5;
+    const int ZKEY_PF_OMEGAS_SECTION = 6;
+    const int ZKEY_PF_PTAU_SECTION = 7;
 
     struct ShPlonkStagePol
     {
@@ -47,6 +44,12 @@ namespace PilFflonkZkey
         ShPlonkStage *stages;
     };
 
+    struct PolsNames 
+    {
+        std::string name;
+        uint32_t openings;
+    };
+
     class PilFflonkZkey
     {
     public:
@@ -64,15 +67,9 @@ namespace PilFflonkZkey
 
         std::map<u_int32_t, ShPlonkPol *> f;
 
-        std::map<u_int32_t, u_int32_t> openingPoints;
-
         std::map<std::string, void *> committedConstants;
 
-        std::map<std::string, std::map<u_int32_t, std::string>*> polsMap;
-
-        std::map<std::string, u_int32_t> polsOpenings;
-
-        std::map<u_int32_t, std::map<u_int32_t, std::string>*> polsNamesStage;
+        std::map<u_int32_t, std::map<u_int32_t, PolsNames>*> polsNamesStage;
 
         std::map<std::string, AltBn128::FrElement> omegas;
 
@@ -83,13 +80,7 @@ namespace PilFflonkZkey
 
     void readFSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 
-    void readOpeningPoints(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
-
     void readFCommitmentsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
-
-    void readPolsMapSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
-
-    void readPolsOpeningsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 
     void readPolsNamesStageSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 

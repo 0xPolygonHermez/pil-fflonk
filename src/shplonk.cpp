@@ -23,6 +23,7 @@ namespace ShPlonk {
         this->rootsMap.clear();
         this->evaluationCommitments.clear();
         this->polynomialCommitments.clear();
+        this->openingPoints.clear();
     }
 
     void ShPlonkProver::addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> *pol) {
@@ -223,10 +224,10 @@ namespace ShPlonk {
 
         Polynomial<AltBn128::Engine> * polynomialW = new Polynomial<AltBn128::Engine>(E, lengthBuffer);
               
-        FrElement* initialOpenValues = new FrElement[zkeyPilFflonk->openingPoints.size()];
-        for(u_int32_t i = 0; i < zkeyPilFflonk->openingPoints.size(); ++i) {
+        FrElement* initialOpenValues = new FrElement[openingPoints.size()];
+        for(u_int32_t i = 0; i < openingPoints.size(); ++i) {
             initialOpenValues[i] = challengeXi;
-            for(u_int32_t j = 0; j < zkeyPilFflonk->openingPoints[i]; ++j) {
+            for(u_int32_t j = 0; j < openingPoints[i]; ++j) {
                 initialOpenValues[i] = E.fr.mul(initialOpenValues[i], zkeyPilFflonk->omegas["w1_1d1"]);
             }
         }
@@ -238,9 +239,9 @@ namespace ShPlonk {
             fTmp->sub(*polynomialsShPlonk["R" + std::to_string(i)]);
             fTmp->mulScalar(alpha);
 
-            auto it = zkeyPilFflonk->openingPoints.find(openingPoint);
-            if (it == zkeyPilFflonk->openingPoints.end()) throw std::runtime_error("Opening point not found");
-            FrElement openValue = initialOpenValues[it->first];
+            auto found = std::find(openingPoints.begin(), openingPoints.end(), openingPoint);
+            if (found == openingPoints.end()) throw std::runtime_error("Opening point not found");
+            FrElement openValue = initialOpenValues[std::distance(openingPoints.begin(), found)];
 
             fTmp->divByZerofier(zkeyPilFflonk->f[i]->nPols, openValue);
            
@@ -328,6 +329,18 @@ namespace ShPlonk {
         transcript->addScalar(challengeAlpha);
         transcript->addPolCommitment(W);
         challengeY = transcript->getChallenge();
+    }
+
+    void ShPlonkProver::calculateOpeningPoints() {
+     
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
+            for(u_int32_t j = 0; j < zkeyPilFflonk->f[i]->nOpeningPoints; ++j) {
+                auto it = std::find(openingPoints.begin(), openingPoints.end(), zkeyPilFflonk->f[i]->openingPoints[j]);
+                if(it == openingPoints.end()) {
+                    openingPoints.push_back(zkeyPilFflonk->f[i]->openingPoints[j]);
+                }
+            }
+        }        
     }
 
     void ShPlonkProver::calculateRoots() {
@@ -470,10 +483,10 @@ namespace ShPlonk {
 
     void ShPlonkProver::calculateEvaluations() {
         TimerStart(SHPLONK_CALCULATE_EVALUATIONS);
-        FrElement* initialOpenValues = new FrElement[zkeyPilFflonk->openingPoints.size()];
-        for(u_int32_t i = 0; i < zkeyPilFflonk->openingPoints.size(); ++i) {
+        FrElement* initialOpenValues = new FrElement[openingPoints.size()];
+        for(u_int32_t i = 0; i < openingPoints.size(); ++i) {
             initialOpenValues[i] = challengeXi;
-            for(u_int32_t j = 0; j < zkeyPilFflonk->openingPoints[i]; ++j) {
+            for(u_int32_t j = 0; j < openingPoints[i]; ++j) {
                 initialOpenValues[i] = E.fr.mul(initialOpenValues[i], zkeyPilFflonk->omegas["w1_1d1"]);
             }
         }
@@ -495,9 +508,9 @@ namespace ShPlonk {
             u_int32_t openingPoint = zkeyPilFflonk->f[i]->openingPoints[0];
             std::string wPower = openingPoint == 0 ? "" : (openingPoint == 1 ? "w" : "w" + std::to_string(openingPoint));
 
-            auto it = zkeyPilFflonk->openingPoints.find(openingPoint);
-            if (it == zkeyPilFflonk->openingPoints.end()) throw std::runtime_error("Opening point not found");
-            FrElement openValue = initialOpenValues[it->first];
+            auto found = std::find(openingPoints.begin(), openingPoints.end(), openingPoint);
+            if (found == openingPoints.end()) throw std::runtime_error("Opening point not found");
+            FrElement openValue = initialOpenValues[std::distance(openingPoints.begin(), found)];
 
             for(u_int32_t k = 0; k < zkeyPilFflonk->f[i]->nPols; ++k) {
                 std::string polName = zkeyPilFflonk->f[i]->pols[k];
@@ -670,7 +683,10 @@ namespace ShPlonk {
         computeChallengeXiSeed(previousChallenge);
 
         zklog.info("Challenge xi seed: " + E.fr.toString(challengeXiSeed));
- 
+
+        // Calculate opening points
+        calculateOpeningPoints();
+
         // Calculate roots
         calculateRoots();
 

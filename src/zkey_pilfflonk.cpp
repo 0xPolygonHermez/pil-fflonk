@@ -10,15 +10,7 @@ namespace PilFflonkZkey
         mpz_clear(rPrime);
 
         f.clear();
-        openingPoints.clear();
         committedConstants.clear();
-
-        for (auto& entry : polsMap) {
-            delete entry.second;
-        }
-        polsMap.clear();
-
-        polsOpenings.clear();
 
         for (auto& entry : polsNamesStage) {
             delete entry.second;
@@ -53,13 +45,7 @@ namespace PilFflonkZkey
 
         readFSection(fdZKey, pilFflonkZkey);
 
-        readOpeningPoints(fdZKey, pilFflonkZkey);
-
         readFCommitmentsSection(fdZKey, pilFflonkZkey);
-
-        readPolsMapSection(fdZKey, pilFflonkZkey);
-
-        readPolsOpeningsSection(fdZKey, pilFflonkZkey);
 
         readPolsNamesStageSection(fdZKey, pilFflonkZkey);
 
@@ -116,19 +102,6 @@ namespace PilFflonkZkey
         fdZKey->endReadSection();
     }
 
-    void readOpeningPoints(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
-    {
-        fdZKey->startReadSection(ZKEY_PF_OPENINGPOINTS_SECTION);
-        u_int32_t len = fdZKey->readU32LE();
-
-        for (u_int32_t i = 0; i < len; i++)
-        {
-            pilFflonkZkey->openingPoints[i] = fdZKey->readU32LE();
-        }
-
-        fdZKey->endReadSection();
-    }
-
     void readFCommitmentsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
     {
         fdZKey->startReadSection(ZKEY_PF_F_COMMITMENTS_SECTION);
@@ -138,46 +111,6 @@ namespace PilFflonkZkey
         {
             std::string name = fdZKey->readString();
             pilFflonkZkey->committedConstants[name] = fdZKey->read(pilFflonkZkey->n8q * 2);
-        }
-
-        fdZKey->endReadSection();
-    }
-
-    void readPolsMapSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
-    {
-        fdZKey->startReadSection(ZKEY_PF_POLSMAP_SECTION);
-
-        u_int32_t len = fdZKey->readU32LE();
-
-        for (u_int32_t i = 0; i < len; ++i)
-        {
-            std::string name = fdZKey->readString();
-            pilFflonkZkey->polsMap[name] = new std::map<u_int32_t, std::string>();
-
-            u_int32_t lenSubkeys = fdZKey->readU32LE();
-
-            for (u_int32_t j = 0; j < lenSubkeys; ++j)
-            {
-                u_int32_t index = fdZKey->readU32LE();
-                (*(pilFflonkZkey->polsMap[name]))[index] = fdZKey->readString();
-            }
-        }
-
-        fdZKey->endReadSection();
-    }
-
-    void readPolsOpeningsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
-    {
-        fdZKey->startReadSection(ZKEY_PF_POLSOPENINGS_SECTION);
-
-        u_int32_t len = fdZKey->readU32LE();
-
-        for (u_int32_t i = 0; i < len; ++i)
-        {
-            std::string name = fdZKey->readString();
-            u_int32_t open = fdZKey->readU32LE();
-
-            pilFflonkZkey->polsOpenings[name] = open;
         }
 
         fdZKey->endReadSection();
@@ -193,13 +126,14 @@ namespace PilFflonkZkey
         {
             u_int32_t stage = fdZKey->readU32LE();
 
-            pilFflonkZkey->polsNamesStage[stage] = new std::map<u_int32_t, std::string>();
+            pilFflonkZkey->polsNamesStage[stage] = new std::map<u_int32_t, PolsNames>();
 
             u_int32_t lenPolsStage = fdZKey->readU32LE();
 
             for (u_int32_t j = 0; j < lenPolsStage; ++j)
             {
-                (*(pilFflonkZkey->polsNamesStage[stage]))[j] = fdZKey->readString();
+                (*(pilFflonkZkey->polsNamesStage[stage]))[j].name = fdZKey->readString();
+                (*(pilFflonkZkey->polsNamesStage[stage]))[j].openings = fdZKey->readU32LE();
             }
         }
 

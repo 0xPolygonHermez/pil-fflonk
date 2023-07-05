@@ -1,5 +1,5 @@
+#include <alt_bn128.hpp>
 #include "pilfflonk_steps.hpp"
-
 
 void PilFflonkSteps::step2prev_first(AltBn128::Engine &E, StepsParams &params, uint64_t i) {
 }

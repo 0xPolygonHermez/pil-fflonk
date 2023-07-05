@@ -48,6 +48,9 @@ namespace ShPlonk {
         u_int32_t nEvaluations;
         
         std::string *evaluationsNames;
+
+        std::vector<u_int32_t> openingPoints;
+
     public:
         void addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> * pol);
 
@@ -85,6 +88,8 @@ namespace ShPlonk {
         void computeChallengeAlpha();
         
         void computeChallengeY(G1Point W);
+
+        void calculateOpeningPoints();
 
         void calculateRoots();
 
