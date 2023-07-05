@@ -220,6 +220,8 @@ namespace PilFflonk
 
         try
         {
+            zklog.info("");
+            zklog.info("PIL-FFLONK PROVER STARTED");
 
             TimerStart(PIL_FFLONK_PROVE);
 
@@ -256,19 +258,37 @@ namespace PilFflonk
             //     }
             // }
 
-            cout << "-----------------------------" << endl;
-            cout << "  PIL-FFLONK PROVE SETTINGS" << endl;
-            cout << "  Curve:           " << curveName << endl;
-            cout << "  Circuit power:   " << nBits << endl;
-            cout << "  Domain size:     " << N << endl;
-            cout << "  Extended Bits:   " << extendBits << endl;
-            cout << "  Domain size ext: " << NExt << "(2^" << nBits + extendBits << ")" << endl;
-            cout << "  Const  pols:     " << fflonkInfo->nConstants << endl;
-            cout << "  Stage 1 pols:    " << fflonkInfo->mapSectionsN.section[cm1_n] << endl;
-            cout << "  Stage 2 pols:    " << fflonkInfo->mapSectionsN.section[cm2_n] << endl;
-            cout << "  Stage 3 pols:    " << fflonkInfo->mapSectionsN.section[cm3_n] << endl;
-            cout << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n] << endl;
-            cout << "-----------------------------" << endl;
+            std::ostringstream ss;
+            zklog.info("-----------------------------");
+            zklog.info("  PIL-FFLONK PROVE SETTINGS");
+            zklog.info("  Curve:           " + curveName);
+            ss << "  Circuit power:   " << nBits;
+            zklog.info(ss.str());
+            
+            ss.str("");
+            ss << "  Domain size:     " << N;
+            zklog.info(ss.str());
+            ss.str("");
+            ss << "  Extended Bits:   " << extendBits;
+            zklog.info(ss.str());
+            ss.str("");
+            ss << "  Domain size ext: " << NExt << "(2^" << nBits + extendBits << ")";
+            zklog.info(ss.str());
+            ss.str("");
+            ss << "  Const  pols:     " << fflonkInfo->nConstants;
+            zklog.info(ss.str());
+            ss.str("");
+            ss << "  Stage 1 pols:    " << fflonkInfo->mapSectionsN.section[cm1_n];
+            zklog.info(ss.str());
+            ss.str("");
+            ss << "  Stage 2 pols:    " << fflonkInfo->mapSectionsN.section[cm2_n];
+            zklog.info(ss.str());
+            ss.str("");
+            ss << "  Stage 3 pols:    " << fflonkInfo->mapSectionsN.section[cm3_n];
+            zklog.info(ss.str());
+            ss.str("");
+            ss << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n];
+            zklog.info("-----------------------------");
 
             transcript->reset();
 

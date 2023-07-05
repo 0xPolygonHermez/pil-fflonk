@@ -121,6 +121,4 @@ int main(int argc, char **argv)
     file.close();
 
     TimerStopAndLog(WHOLE_PROCESS);
-
-    cout << "PIL-FFLONK PROVER FINISHED" << endl;
 }

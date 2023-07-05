@@ -1,11 +1,12 @@
 #include "fflonk_info.hpp"
 #include "utils.hpp"
 #include "timer.hpp"
+#include "zklog.hpp"
 
 FflonkInfo::FflonkInfo(AltBn128::Engine &_E, std::string file): E(_E)
 {   
     // Load contents from json file
-    std::cout << "> Reading Fflonk Info" << std::endl;
+    zklog.info("> Reading Fflonk Info");
     TimerStart(FFLONK_INFO_LOAD);
     json fflonkInfoJson;
     file2json(file, fflonkInfoJson);
