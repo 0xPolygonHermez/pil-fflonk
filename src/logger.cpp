@@ -29,6 +29,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
+#include <iomanip>
 
 // Code Specific Header Files(s)
 #include "logger.hpp"
@@ -125,15 +127,29 @@ void Logger::logOnConsole(std::string& data)
 
 string Logger::getCurrentTime()
 {
-   string currTime;
-   //Current date/time based on current time
-   time_t now = time(0); 
-   // Convert current time to string
-   currTime.assign(ctime(&now));
+   // string currTime;
+   // //Current date/time based on current time
 
-   // Last charactor of currentTime is "\n", so remove it
-   string currentTime = currTime.substr(0, currTime.size()-1);
-   return currentTime;
+   // time_t now = time(0); 
+   // // Convert current time to string
+   // currTime.assign(ctime(&now));
+
+   // // Last charactor of currentTime is "\n", so remove it
+   // string currentTime = currTime.substr(0, currTime.size()-1);
+   // return currentTime;
+
+   auto now = std::chrono::system_clock::now();
+    std::time_t time = std::chrono::system_clock::to_time_t(now);
+
+    std::tm localTime = *std::localtime(&time);
+    std::ostringstream oss;
+
+    oss << std::put_time(&localTime, "%H:%M:%S:");
+
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+    oss << std::setw(3) << std::setfill('0') << ms.count();
+
+    return oss.str();
 }
 
 // Interface for Error Log

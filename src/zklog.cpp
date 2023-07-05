@@ -3,9 +3,13 @@
 
 zkLog zklog;
 
-zkLog::zkLog ()
+#include "logger.hpp"
+using namespace CPlusPlusLogging;
+
+zkLog::zkLog()
 {
-    pthread_mutex_init(&mutex, NULL);
+    Logger::getInstance()->enableConsoleLogging();
+    Logger::getInstance()->updateLogLevel(LOG_LEVEL_DEBUG);
 }
 
 void zkLog::setPrefix ( const string &_prefix)
@@ -15,21 +19,21 @@ void zkLog::setPrefix ( const string &_prefix)
 
 void zkLog::info (const string &message)
 {
-    lock();
-    cout << getTimestamp() << " " << prefix << message << endl;
-    unlock();
+    //cout << getTimestamp() << " " << prefix << message << endl;
+    string tmp = prefix + " " + message;
+    LOG_INFO(tmp);
 }
 
 void zkLog::warning (const string &message)
 {
-    lock();
-    cout << getTimestamp() << " " << prefix << "zkWarning: " << message << endl;
-    unlock();
+    // cout << getTimestamp() << " " << prefix << "zkWarning: " << message << endl;
+    string tmp = prefix + " " + message;
+    LOG_ALARM(tmp);
 }
 
 void zkLog::error (const string &message)
 {
-    lock();
-    cerr << getTimestamp() << " " << prefix << "zkError: " << message << endl << flush;
-    unlock();
+    // cerr << getTimestamp() << " " << prefix << "zkError: " << message << endl << flush;
+    string tmp = prefix + " " + message;
+    LOG_ERROR(tmp);
 }

@@ -42,11 +42,11 @@ namespace PilFflonk
         {
             TimerStart(LOAD_ZKEY_TO_MEMORY);
 
-            cout << "> Opening zkey data file" << endl;
+            zklog.info("> Opening zkey data file");
             auto zkeyBinFile = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
             auto fdZkey = zkeyBinFile.get();
 
-            cout << "> Opening precomputed data file" << endl;
+            zklog.info("> Opening precomputed data file");
             auto precomputedBinFile = BinFileUtils::openExisting(precomputedFilename, "pols", 1);
             auto fdPrecomputed = precomputedBinFile.get();
 
@@ -98,13 +98,13 @@ namespace PilFflonk
             maxFiDegree += 1;
 
             // Polynomial evaluations
-            lengthBuffer += N * fflonkInfo->nConstants;               // const_n     >> Constant polynomials evaluations
-            lengthBuffer += NExt * factorZK * fflonkInfo->nConstants; // const_2ns   >> Constant polynomials extended evaluations
-            lengthBuffer += N * factorZK * fflonkInfo->nConstants;    // const_coefs >> Constant polynomials coefficients
-            lengthBuffer += N;                                        // x_n
-            lengthBuffer += NExt * factorZK;                          // x_2ns
+            lengthBuffer += N * fflonkInfo->nConstants;                              // const_n     >> Constant polynomials evaluations
+            lengthBuffer += NExt * factorZK * fflonkInfo->nConstants;                // const_2ns   >> Constant polynomials extended evaluations
+            lengthBuffer += N * factorZK * fflonkInfo->nConstants;                   // const_coefs >> Constant polynomials coefficients
+            lengthBuffer += N;                                                       // x_n
+            lengthBuffer += NExt * factorZK;                                         // x_2ns
 
-            lengthBuffer += maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement); // PTau buf
+            lengthBuffer += maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement); // PTau buffer
 
             bBufferConstant = new FrElement[lengthBuffer];
 
@@ -147,6 +147,7 @@ namespace PilFflonk
                     uint64_t additionalBytes = requiredMemorySize - reservedMemorySize;
                     string errorMsg = "Insufficient reserved memory size. Additional " + std::to_string(additionalBytes) + " bytes required. Total required " + std::to_string(requiredMemorySize) + " bytes.";
                     zklog.error(errorMsg);
+
                     throw std::runtime_error(errorMsg);
                 }
                 bBufferCommitted = reservedMemoryPtr;
