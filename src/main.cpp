@@ -100,9 +100,9 @@ int main(int argc, char **argv)
     cout << "> Opening const zkey file" << endl;
     auto const_zkey = BinFileUtils::openExisting(cnstZkeyFilename, "pols", 1);
 
-    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine, fflonkInfoFileName);
+    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine);
 
-    auto [proofJson, publicSignalsJson] = prover->prove(zkey.get(), cnstFilename, const_zkey.get(), cmtdFilename);
+    auto [proofJson, publicSignalsJson] = prover->prove(zkey.get(), fflonkInfoFileName, cnstFilename, const_zkey.get(), cmtdFilename);
 
     std::ofstream file;
     file.open(proofFilename);

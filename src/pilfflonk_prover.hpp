@@ -90,14 +90,18 @@ namespace PilFflonk
         Keccak256Transcript *transcript;
 
     public:
-        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile);
-        PilFflonkProver(AltBn128::Engine &E, std::string fflonkInfoFile, void *reservedMemoryPtr, uint64_t reservedMemorySize);
+        PilFflonkProver(AltBn128::Engine &E);
+        PilFflonkProver(AltBn128::Engine &E, void *reservedMemoryPtr, uint64_t reservedMemorySize);
 
         ~PilFflonkProver();
 
-        void setZkey(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst);
+        // Set the configuration data that is required once per prover
+        void setConstantData(BinFileUtils::BinFile *fdZkey, std::string fflonkInfoFile,
+                             std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst);
 
-        std::tuple<json, json> prove(BinFileUtils::BinFile *fdZkey, std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst, std::string committedPolsFilename);
+        std::tuple<json, json> prove(BinFileUtils::BinFile *fdZkey, std::string fflonkInfoFile,
+                                     std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst,
+                                     std::string committedPolsFilename);
         std::tuple<json, json> prove(std::string committedPolsFilename);
 
     protected:
@@ -118,13 +122,13 @@ namespace PilFflonk
         uint64_t find(std::vector<uint64_t> arr, uint64_t x);
         std::tuple<std::string, uint64_t, uint64_t> find(uint64_t x);
 
-        AltBn128::FrElement* getPolynomial(AltBn128::FrElement* buffer, uint64_t nPols, uint64_t id);
+        AltBn128::FrElement *getPolynomial(AltBn128::FrElement *buffer, uint64_t nPols, uint64_t id);
 
-        void calculateZ(AltBn128::FrElement* pNum, AltBn128::FrElement* pDen, uint64_t id);
+        void calculateZ(AltBn128::FrElement *pNum, AltBn128::FrElement *pDen, uint64_t id);
 
-        AltBn128::FrElement* batchInverse(AltBn128::FrElement* pol, uint64_t N);
+        AltBn128::FrElement *batchInverse(AltBn128::FrElement *pol, uint64_t N);
 
-        void calculateH1H2(AltBn128::FrElement* fPol, AltBn128::FrElement* tPol, uint64_t h1Id, uint64_t h2Id);
+        void calculateH1H2(AltBn128::FrElement *fPol, AltBn128::FrElement *tPol, uint64_t h1Id, uint64_t h2Id);
     };
 }
 
