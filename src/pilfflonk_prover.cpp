@@ -29,13 +29,17 @@ namespace PilFflonk
 
     PilFflonkProver::~PilFflonkProver()
     {
-        delete[] bBuffer;
-        ptr.clear();
+        if (NULL == reservedMemoryPtr)
+        {
+            delete[] bBufferConstant;
+        }
+        ptrConstant.clear();
 
         delete[] bBufferCommitted;
         ptrCommitted.clear();
 
         delete fft;
+        delete zkey;
         delete transcript;
         delete shPlonkProver;
         delete fflonkInfo;
@@ -112,17 +116,17 @@ namespace PilFflonk
 
             lengthBuffer += maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement); // PTau buf
 
-            bBuffer = new FrElement[lengthBuffer];
+            bBufferConstant = new FrElement[lengthBuffer];
 
-            ptr["const_n"] = &bBuffer[0];
-            ptr["const_2ns"] = ptr["const_n"] + N * fflonkInfo->nConstants;
+            ptrConstant["const_n"] = &bBufferConstant[0];
+            ptrConstant["const_2ns"] = ptrConstant["const_n"] + N * fflonkInfo->nConstants;
 
-            ptr["x_n"] = ptr["const_2ns"] + NExt * factorZK * fflonkInfo->nConstants;
-            ptr["x_2ns"] = ptr["x_n"] + N;
+            ptrConstant["x_n"] = ptrConstant["const_2ns"] + NExt * factorZK * fflonkInfo->nConstants;
+            ptrConstant["x_2ns"] = ptrConstant["x_n"] + N;
 
-            ptr["const_coefs"] = ptr["x_2ns"] + NExt * factorZK;
+            ptrConstant["const_coefs"] = ptrConstant["x_2ns"] + NExt * factorZK;
 
-            PTau = (G1PointAffine *)(ptr["const_coefs"] + N * factorZK * fflonkInfo->nConstants);
+            PTau = (G1PointAffine *)(ptrConstant["const_coefs"] + N * factorZK * fflonkInfo->nConstants);
 
             // //////////////////////////////////////////////////
             // BIG BUFFER
@@ -180,10 +184,10 @@ namespace PilFflonk
                 auto pConstPolsAddress = copyFile(constPolsFilename, constPolsSize);
                 zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsSize) + " bytes from constant file " + constPolsFilename);
 
-                #pragma omp parallel for
+#pragma omp parallel for
                 for (u_int64_t i = 0; i < fflonkInfo->nConstants * N; i++)
                 {
-                    E.fr.fromRprBE(ptr["const_n"][i], reinterpret_cast<uint8_t *>(pConstPolsAddress) + i * 32, 32);
+                    E.fr.fromRprBE(ptrConstant["const_n"][i], reinterpret_cast<uint8_t *>(pConstPolsAddress) + i * 32, 32);
                 }
             }
 
@@ -191,7 +195,7 @@ namespace PilFflonk
 
             TimerStart(LOAD_CONST_POLS_ZKEY_TO_MEMORY);
 
-            ConstPolsSerializer::readConstPolsFile(E, fdPrecomputed, ptr["const_coefs"], ptr["const_2ns"], ptr["x_n"], ptr["x_2ns"]);
+            ConstPolsSerializer::readConstPolsFile(E, fdPrecomputed, ptrConstant["const_coefs"], ptrConstant["const_2ns"], ptrConstant["x_n"], ptrConstant["x_2ns"]);
 
             TimerStopAndLog(LOAD_CONST_POLS_ZKEY_TO_MEMORY);
 
@@ -234,11 +238,11 @@ namespace PilFflonk
                 cm1_2ns : ptrCommitted["cm1_2ns"],
                 cm2_2ns : ptrCommitted["cm2_2ns"],
                 cm3_2ns : ptrCommitted["cm3_2ns"],
-                const_n : ptr["const_n"],
-                const_2ns : ptr["const_2ns"],
+                const_n : ptrConstant["const_n"],
+                const_2ns : ptrConstant["const_2ns"],
                 challenges : challenges,
-                x_n : ptr["x_n"],
-                x_2ns : ptr["x_2ns"],
+                x_n : ptrConstant["x_n"],
+                x_2ns : ptrConstant["x_2ns"],
                 publicInputs : ptrCommitted["publics"],
                 q_2ns : ptrCommitted["q_2ns"]
             };
@@ -283,7 +287,7 @@ namespace PilFflonk
 
             TimerStart(CONVERT_COMMITTED_POLS_TO_FR);
 
-            #pragma omp parallel for
+#pragma omp parallel for
             for (u_int64_t i = 0; i < fflonkInfo->mapSectionsN.section[cm1_n] * N; i++)
             {
                 E.fr.fromRprBE(ptrCommitted["cm1_n"][i], reinterpret_cast<uint8_t *>(pCommittedPolsAddress) + i * 32, 32);
@@ -369,7 +373,7 @@ namespace PilFflonk
         // STEP 1.2 - Compute constant polynomials (coefficients + evaluations) and commit them
         if (fflonkInfo->nConstants > 0)
         {
-            addCoefsToContext(0, fflonkInfo->nConstants, ptr["const_coefs"]);
+            addCoefsToContext(0, fflonkInfo->nConstants, ptrConstant["const_coefs"]);
 
             shPlonkProver->commit(0, PTau, false);
         }

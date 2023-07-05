@@ -76,11 +76,11 @@ namespace PilFflonk
         u_int64_t lengthBuffer;
 
         FrElement *bBufferCommitted;
-        FrElement *bBuffer;
+        FrElement *bBufferConstant;
         G1PointAffine *PTau;
 
         std::map<std::string, AltBn128::FrElement *> ptrCommitted;
-        std::map<std::string, AltBn128::FrElement *> ptr;
+        std::map<std::string, AltBn128::FrElement *> ptrConstant;
 
         Keccak256Transcript *transcript;
 
@@ -101,6 +101,8 @@ namespace PilFflonk
 
     protected:
         void initialize(void *reservedMemoryPtr, uint64_t reservedMemorySize = 0);
+
+        void removePrecomputedData();
 
         void stage1(StepsParams &params);
 
