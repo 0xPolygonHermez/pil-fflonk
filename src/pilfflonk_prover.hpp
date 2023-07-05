@@ -5,6 +5,7 @@
 #include <string.h>
 #include <binfile_utils.hpp>
 #include <nlohmann/json.hpp>
+#include "compare_fe.hpp"
 #include <sodium.h>
 #include "zkey_pilfflonk.hpp"
 #include "shplonk.hpp"

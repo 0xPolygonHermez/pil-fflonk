@@ -788,47 +788,47 @@ namespace PilFflonk
 
     void PilFflonkProver::calculateH1H2(AltBn128::FrElement *fPol, AltBn128::FrElement *tPol, uint64_t h1Id, uint64_t h2Id)
     {
-        // map<AltBn128::FrElement, uint64_t, CompareFe> idx_t;
-        // multimap<AltBn128::FrElement, uint64_t, CompareFe> s;
-        // multimap<AltBn128::FrElement, uint64_t>::iterator it;
+        map<AltBn128::FrElement, uint64_t, CompareFe> idx_t(E);
+        multimap<AltBn128::FrElement, uint64_t, CompareFe> s(E);
+        multimap<AltBn128::FrElement, uint64_t>::iterator it;
 
-        // std::vector<int> counter(N, 1);
+        std::vector<int> counter(N, 1);
 
-        // for (uint64_t i = 0; i < N; i++)
-        // {
-        //     AltBn128::FrElement = tPol[i];
-        //     idx_t[key] = i + 1;
-        // }
+        for (uint64_t i = 0; i < N; i++)
+        {
+            AltBn128::FrElement key = tPol[i];
+            idx_t[key] = i + 1;
+        }
 
-        // for (uint64_t i = 0; i < N; i++)
-        // {
-        //     AltBn128::FrElement key = fPol[i];
-        //     uint64_t indx = idx_t[key];
-        //     if (indx == 0)
-        //     {
-        //         zklog.error("calculateH1H2() Number not included: " + E.fr.toString(fPol[i]));
-        //         exitProcess();
-        //     }
-        //     ++counter[indx - 1];
-        // }
+        for (uint64_t i = 0; i < N; i++)
+        {
+            AltBn128::FrElement key = fPol[i];
+            uint64_t indx = idx_t[key];
+            if (indx == 0)
+            {
+                zklog.error("calculateH1H2() Number not included: " + E.fr.toString(fPol[i]));
+                exitProcess();
+            }
+            ++counter[indx - 1];
+        }
 
-        // uint64_t id = 0;
-        // for (u_int64_t i = 0; i < N; ++i)
-        // {
-        //     if (counter[id] == 0)
-        //     {
-        //         ++id;
-        //     }
-        //     counter[id] -= 1;
-        //
-        //     ptrCommitted["cm2_n"][h1Id + fflonkInfo->nCm2 * i] = tPol[id];
-        //     if (counter[id] == 0)
-        //     {
-        //         ++id;
-        //     }
-        //     counter[id] -= 1;
-        //     ptrCommitted["cm2_n"][h2Id + fflonkInfo->nCm2 * i] = tPol[id];
-        // }
+        uint64_t id = 0;
+        for (u_int64_t i = 0; i < N; ++i)
+        {
+            if (counter[id] == 0)
+            {
+                ++id;
+            }
+            counter[id] -= 1;
+        
+            ptrCommitted["cm2_n"][h1Id + fflonkInfo->nCm2 * i] = tPol[id];
+            if (counter[id] == 0)
+            {
+                ++id;
+            }
+            counter[id] -= 1;
+            ptrCommitted["cm2_n"][h2Id + fflonkInfo->nCm2 * i] = tPol[id];
+        }
     }
 
 }
