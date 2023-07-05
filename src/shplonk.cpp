@@ -57,12 +57,8 @@ namespace ShPlonk {
         this->openingPoints.clear();
     }
 
-    void ShPlonkProver::addPolynomialShPlonk(const std::string &key, AltBn128::FrElement *buffer, uint64_t length) {
-        this->polynomialsShPlonk[key] = new Polynomial<AltBn128::Engine>(E, buffer, length);
-    }
-
     void ShPlonkProver::addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> *pol) {
-        this->polynomialsShPlonk[key] = pol;
+        polynomialsShPlonk[key] = pol;
     }
 
     Polynomial<AltBn128::Engine> * ShPlonkProver::getPolynomialShPlonk(const std::string &key) {
@@ -619,7 +615,7 @@ namespace ShPlonk {
         }
     }
 
-    void ShPlonkProver::commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp) {
+    void ShPlonkProver::commit(u_int32_t stage, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp) {
         
         if(NULL == zkeyPilFflonk) {
             throw std::runtime_error("Zkey data not set");
@@ -658,18 +654,17 @@ namespace ShPlonk {
 
                 std::string index = "f" + std::to_string(pol->index) + "_" + std::to_string(stage);
 
-                Polynomial<AltBn128::Engine>* cPol = fi->getPolynomial();
+                // polynomialsShPlonk[index] = fi->getPolynomial(ptrShPlonk[index]);
+                polynomialsShPlonk[index] = fi->getPolynomial();
 
                 // Check degree
-                if (cPol->getDegree() > pol->degree) 
+                if (polynomialsShPlonk[index]->getDegree() > pol->degree) 
                 {
                     throw std::runtime_error("CPolynomial is not well calculated");
                 }
 
-                polynomialsShPlonk[index] = cPol;
-
                 if(multiExp) {
-                    G1Point Fi = multiExponentiation(PTau, cPol, pol->nPols, lengths);
+                    G1Point Fi = multiExponentiation(PTau, polynomialsShPlonk[index], pol->nPols, lengths);
                     zklog.info("Commit " + index + ": " + E.g1.toString(Fi));
                     polynomialCommitments[index] = Fi;
                 }

@@ -54,8 +54,6 @@ namespace ShPlonk {
     public:
         void addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine>* pol);
         
-        void addPolynomialShPlonk(const std::string &key, AltBn128::FrElement *buffer, uint64_t length);
-
         Polynomial<AltBn128::Engine> * getPolynomialShPlonk(const std::string &key);
 
         ShPlonkProver(AltBn128::Engine &_E, PilFflonkZkey::PilFflonkZkey *zkey);
@@ -64,7 +62,7 @@ namespace ShPlonk {
 
         void reset();
 
-        void commit(u_int32_t stage, G1PointAffine *PTau, bool multiExp);
+        void commit(u_int32_t stage, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp);
 
         json open(G1PointAffine *PTau, FrElement previousChallenge);
 

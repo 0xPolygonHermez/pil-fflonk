@@ -64,14 +64,11 @@ namespace PilFflonk
 
             shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, zkey);
 
-            n8r = sizeof(FrElement);
             N = 1 << zkey->power;
             nBits = zkey->power;
             extendBits = ceil(log2(fflonkInfo->qDeg + 1));
             nBitsExt = nBits + extendBits;
             NExt = 1 << nBitsExt;
-            sDomain = N * n8r;
-            sDomainExt = NExt * n8r;
 
             // ZK data
             extendBitsZK = zkey->powerZK - zkey->power;
@@ -126,22 +123,42 @@ namespace PilFflonk
             // //////////////////////////////////////////////////
             // SHPLONK BIG BUFFER
             // //////////////////////////////////////////////////
-
-            u_int32_t nEvals = shPlonkProver->getEvaluations();
+            
+            std::vector<std::string> evals;
+            std::vector<std::tuple<std::string, u_int32_t>> stages;
 
             lengthBufferShPlonk = 0;
-            lengthBufferShPlonk += nEvals * N * factorZK;
+
+            for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
+                for(u_int32_t k = 0; k < zkey->f[i]->nPols; ++k) {
+                    evals.push_back(zkey->f[i]->pols[k]);
+                    lengthBufferShPlonk += N * factorZK;
+                }
+                for(u_int32_t k = 0; k < zkey->f[i]->nStages; ++k) {
+                    std::string stage = "f" + std::to_string(zkey->f[i]->index) + "_" + std::to_string(zkey->f[i]->stages[k].stage);
+                    stages.push_back(std::make_tuple(stage, zkey->f[i]->degree));
+                    lengthBufferShPlonk += zkey->f[i]->degree;
+                }
+            }
 
             bBufferShPlonk = new FrElement[lengthBufferShPlonk];
 
-            std::string* evals = shPlonkProver->getEvaluationsNames();
-            for(auto i = 0; i < nEvals; ++i) {
-                cout << evals[i] << endl;
-                // if(i == 0) {
-                //     ptrShPlonk[evals[i]] = &bBufferShPlonk[0];
-                // } else {
-                //     ptrShPlonk[evals[i]] = ptrShPlonk[evals[i-1]] + N * factorZK;
-                // }
+            for(auto i = 0; i < evals.size(); ++i) {
+                if(i == 0) {
+                    ptrShPlonk[evals[i]] = &bBufferShPlonk[0];
+                } else {
+                    ptrShPlonk[evals[i]] = ptrShPlonk[evals[i-1]] + N * factorZK;
+                }
+            }
+
+            for(auto i = 0; i < stages.size(); ++i) {
+                auto [stage, degree] = stages[i];
+                 if(i == 0) {
+                    ptrShPlonk[stage] = ptrShPlonk[evals[evals.size()-1]] + N * factorZK;
+                } else {
+                    auto [previousStage, previousDegree] = stages[i - 1];
+                    ptrShPlonk[stage] = ptrShPlonk[previousStage] + previousDegree;
+                }
             }
 
             // //////////////////////////////////////////////////
@@ -413,7 +430,7 @@ namespace PilFflonk
         {
             addCoefsToContext(0, fflonkInfo->nConstants, ptrConstant["const_coefs"]);
 
-            shPlonkProver->commit(0, PTau, false);
+            shPlonkProver->commit(0, PTau, ptrShPlonk, false);
         }
         TimerStopAndLog(PIL_FFLONK_STAGE_1_ADD_CONSTANT_POLS);
 
@@ -426,7 +443,7 @@ namespace PilFflonk
 
             // STEP 1.4 - Commit stage 1 polynomials
             TimerStart(PIL_FFLONK_STAGE_1_COMMIT);
-            shPlonkProver->commit(1, PTau, true);
+            shPlonkProver->commit(1, PTau, ptrShPlonk, true);
             TimerStopAndLog(PIL_FFLONK_STAGE_1_COMMIT);
         }
 
@@ -504,7 +521,7 @@ namespace PilFflonk
 
             // STEP 2.3 - Commit stage 2 polynomials
             TimerStart(PIL_FFLONK_STAGE_2_COMMIT);
-            shPlonkProver->commit(2, PTau, true);
+            shPlonkProver->commit(2, PTau, ptrShPlonk, true);
             TimerStopAndLog(PIL_FFLONK_STAGE_2_COMMIT);
         }
 
@@ -604,7 +621,7 @@ namespace PilFflonk
             TimerStopAndLog(PIL_FFLONK_STAGE_3_EXTEND);
 
             TimerStart(PIL_FFLONK_STAGE_3_COMMIT);
-            shPlonkProver->commit(3, PTau, true);
+            shPlonkProver->commit(3, PTau, ptrShPlonk, true);
             TimerStopAndLog(PIL_FFLONK_STAGE_3_COMMIT);
         }
         TimerStopAndLog(PIL_FFLONK_STAGE_3);
@@ -642,7 +659,7 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_4_CALCULATE_Q);
 
         TimerStart(PIL_FFLONK_STAGE_4_COMMIT);
-        shPlonkProver->commit(4, PTau, true);
+        shPlonkProver->commit(4, PTau, ptrShPlonk, true);
         TimerStopAndLog(PIL_FFLONK_STAGE_4_COMMIT);
 
         TimerStopAndLog(PIL_FFLONK_STAGE_4);
@@ -687,7 +704,7 @@ namespace PilFflonk
         ThreadUtils::parset(buffDst, 0, NExt * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
         ThreadUtils::parcpy(buffDst, buffCoefs, N * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
 
-        TimerStart(EXTEND_NTT);
+    TimerStart(EXTEND_NTT);
         NTT_AltBn128 nttExtended(E, 1 << nBitsExtZK);
         nttExtended.NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols /*, buffer*/);
         TimerStopAndLog(EXTEND_NTT);
@@ -698,13 +715,19 @@ namespace PilFflonk
         // Store coefs to context
         for (u_int32_t i = 0; i < nPols; i++)
         {
-            AltBn128::FrElement *coefs = new AltBn128::FrElement[N * factorZK];
+            std::string name = (*zkey->polsNamesStage[stage])[i].name;
             for (u_int32_t j = 0; j < N * factorZK; j++)
             {
-                coefs[j] = buffCoefs[i + j * nPols];
+                ptrShPlonk[name][j] = buffCoefs[i + j * nPols];
             }
-            std::string name = (*zkey->polsNamesStage[stage])[i].name;
-            shPlonkProver->addPolynomialShPlonk(name, coefs, N * factorZK);
+            cout << "BEFORE " << E.fr.toString(ptrShPlonk[name][32]) << endl;
+            Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], N * factorZK);
+            pol->fixDegree();
+
+            cout << "AFTER " << E.fr.toString(ptrShPlonk[name][32]) << endl;
+            cout << E.fr.toString(pol->getCoef(32)) << endl;
+
+            shPlonkProver->addPolynomialShPlonk(name, pol);
         }
     }
 
