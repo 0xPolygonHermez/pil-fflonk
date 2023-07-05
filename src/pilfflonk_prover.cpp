@@ -15,9 +15,9 @@ namespace PilFflonk
         this->reservedMemoryPtr = (FrElement *)reservedMemoryPtr;
         this->reservedMemorySize = reservedMemorySize;
 
-        setConstantData(zkeyFilename, fflonkInfoFilename, constPolsFilename, precomputedFilename);
-
         curveName = "bn128";
+
+        setConstantData(zkeyFilename, fflonkInfoFilename, constPolsFilename, precomputedFilename);
     }
 
     PilFflonkProver::~PilFflonkProver()
@@ -27,6 +27,9 @@ namespace PilFflonk
 
         if (NULL == reservedMemoryPtr) delete[] bBufferCommitted;
         ptrCommitted.clear();
+
+        delete[] bBufferShPlonk;
+        ptrShPlonk.clear();
 
         delete fft;
         delete zkey;
@@ -77,6 +80,8 @@ namespace PilFflonk
             nBitsExtZK = nBits + extendBitsTotal;
 
             fft = new FFT<AltBn128::Engine::Fr>(NExt * factorZK);
+            
+            transcript = new Keccak256Transcript(E);
 
             mpz_t altBbn128r;
             mpz_init(altBbn128r);
@@ -117,6 +122,27 @@ namespace PilFflonk
             ptrConstant["const_coefs"] = ptrConstant["x_2ns"] + NExt * factorZK;
 
             PTau = (G1PointAffine *)(ptrConstant["const_coefs"] + N * factorZK * fflonkInfo->nConstants);
+
+            // //////////////////////////////////////////////////
+            // SHPLONK BIG BUFFER
+            // //////////////////////////////////////////////////
+
+            u_int32_t nEvals = shPlonkProver->getEvaluations();
+
+            lengthBufferShPlonk = 0;
+            lengthBufferShPlonk += nEvals * N * factorZK;
+
+            bBufferShPlonk = new FrElement[lengthBufferShPlonk];
+
+            std::string* evals = shPlonkProver->getEvaluationsNames();
+            for(auto i = 0; i < nEvals; ++i) {
+                cout << evals[i] << endl;
+                // if(i == 0) {
+                //     ptrShPlonk[evals[i]] = &bBufferShPlonk[0];
+                // } else {
+                //     ptrShPlonk[evals[i]] = ptrShPlonk[evals[i-1]] + N * factorZK;
+                // }
+            }
 
             // //////////////////////////////////////////////////
             // BIG BUFFER
@@ -200,8 +226,6 @@ namespace PilFflonk
             ConstPolsSerializer::readConstPolsFile(E, fdPrecomputed, ptrConstant["const_coefs"], ptrConstant["const_2ns"], ptrConstant["x_n"], ptrConstant["x_2ns"]);
 
             TimerStopAndLog(LOAD_CONST_POLS_ZKEY_TO_MEMORY);
-
-            transcript = new Keccak256Transcript(E);
 
             TimerStopAndLog(LOAD_ZKEY_TO_MEMORY);
         }
@@ -674,14 +698,13 @@ namespace PilFflonk
         // Store coefs to context
         for (u_int32_t i = 0; i < nPols; i++)
         {
-            Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, N * factorZK);
+            AltBn128::FrElement *coefs = new AltBn128::FrElement[N * factorZK];
             for (u_int32_t j = 0; j < N * factorZK; j++)
             {
-                pol->coef[j] = buffCoefs[i + j * nPols];
+                coefs[j] = buffCoefs[i + j * nPols];
             }
-            pol->fixDegree();
             std::string name = (*zkey->polsNamesStage[stage])[i].name;
-            shPlonkProver->addPolynomialShPlonk(name, pol);
+            shPlonkProver->addPolynomialShPlonk(name, coefs, N * factorZK);
         }
     }
 

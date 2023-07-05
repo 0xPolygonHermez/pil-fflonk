@@ -9,6 +9,28 @@ namespace ShPlonk {
         zkeyPilFflonk = zkey;
 
         transcript = new Keccak256Transcript(_E);
+
+        //Calculate evaluations size
+        nEvaluations = 0;
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
+            nEvaluations += zkeyPilFflonk->f[i]->nPols;
+        }
+
+        evaluationsNames = new std::string[nEvaluations];
+
+        //Calculate evaluations names
+        int index = 0;
+        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
+            
+            u_int32_t openingPoint = zkeyPilFflonk->f[i]->openingPoints[0];
+            std::string wPower = openingPoint == 0 ? "" : (openingPoint == 1 ? "w" : "w" + std::to_string(openingPoint));
+
+            for(u_int32_t k = 0; k < zkeyPilFflonk->f[i]->nPols; ++k) {
+                std::string polName = zkeyPilFflonk->f[i]->pols[k];
+                evaluationsNames[index++] = polName + wPower;
+            }
+        }
+
         this->reset();
     }
 
@@ -16,7 +38,16 @@ namespace ShPlonk {
         this->reset();
 
         delete transcript;
+        delete zkeyPilFflonk;
     }  
+
+    u_int32_t ShPlonkProver::getEvaluations() {
+        return this->nEvaluations;
+    }
+
+    std::string *ShPlonkProver::getEvaluationsNames() {
+        return this->evaluationsNames;
+    }
 
     void ShPlonkProver::reset() {
         this->polynomialsShPlonk.clear();
@@ -24,6 +55,10 @@ namespace ShPlonk {
         this->evaluationCommitments.clear();
         this->polynomialCommitments.clear();
         this->openingPoints.clear();
+    }
+
+    void ShPlonkProver::addPolynomialShPlonk(const std::string &key, AltBn128::FrElement *buffer, uint64_t length) {
+        this->polynomialsShPlonk[key] = new Polynomial<AltBn128::Engine>(E, buffer, length);
     }
 
     void ShPlonkProver::addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> *pol) {
@@ -57,10 +92,10 @@ namespace ShPlonk {
                 throw std::runtime_error("Polynomial is not well calculated");
             }
 
-            delete evals;
+            delete[] evals;
         }
 
-        delete degrees;
+        delete[] degrees;
         TimerStopAndLog(SHPLONK_COMPUTE_R_POLYNOMIALS);
     }
 
@@ -89,8 +124,8 @@ namespace ShPlonk {
 
         polynomialsShPlonk["ZT"] = Polynomial<AltBn128::Engine>::zerofierPolynomial(arr, nRoots);
 
-        delete arr;
-        delete degrees;
+        delete[] arr;
+        delete[] degrees;
     }
 
     void ShPlonkProver::computeL()
@@ -162,10 +197,10 @@ namespace ShPlonk {
             throw std::runtime_error("L Polynomial is not well calculated");
         }
 
-        delete mulL;
-        delete preL;
-        delete evalRiY;
-        delete degrees;  
+        delete[] mulL;
+        delete[] preL;
+        delete[] evalRiY;
+        delete[] degrees;  
 
         TimerStopAndLog(SHPLONK_COMPUTE_L_POLYNOMIAL);      
     }
@@ -196,8 +231,8 @@ namespace ShPlonk {
 
         polynomialsShPlonk["ZTS2"] = Polynomial<AltBn128::Engine>::zerofierPolynomial(arr, nRoots);
 
-        delete degrees;
-        delete arr;
+        delete[] degrees;
+        delete[] arr;
     }
 
     void ShPlonkProver::computeW()
@@ -383,9 +418,11 @@ namespace ShPlonk {
             }
         }
 
-        for (auto const &x : omegasMap) delete[] x.second;
+        for (auto const &x : omegasMap) {
+            delete[] x.second;
+        }
 
-        delete degrees;
+        delete[] degrees;
         TimerStopAndLog(SHPLONK_CALCULATE_ROOTS);
     }
 
@@ -474,7 +511,7 @@ namespace ShPlonk {
       
         E.fr.inv(mulAccumulator, mulAccumulator);
 
-        delete degrees;
+        delete[] degrees;
 
         evaluationCommitments["inv"] = mulAccumulator;
 
@@ -491,17 +528,6 @@ namespace ShPlonk {
             }
         }
 
-        
-        //Calculate evaluations size
-        nEvaluations = 0;
-        for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
-            nEvaluations += zkeyPilFflonk->f[i]->nPols;
-        }
-
-        evaluationsNames = new std::string[nEvaluations];
-
-        u_int32_t index = 0;
-
         //Calculate evaluations
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             
@@ -514,7 +540,6 @@ namespace ShPlonk {
 
             for(u_int32_t k = 0; k < zkeyPilFflonk->f[i]->nPols; ++k) {
                 std::string polName = zkeyPilFflonk->f[i]->pols[k];
-                evaluationsNames[index++] = polName + wPower;
                 if(polynomialsShPlonk[polName] == nullptr) throw std::runtime_error("Polynomial not found");
                 evaluationCommitments[polName + wPower] = polynomialsShPlonk[polName]->fastEvaluate(openValue);
             }
@@ -525,82 +550,72 @@ namespace ShPlonk {
         TimerStopAndLog(SHPLONK_CALCULATE_EVALUATIONS);
     }
 
-    AltBn128::G1Point ShPlonkProver::sumCommits(u_int32_t nCommits, G1Point *commits) {
+    void ShPlonkProver::sumCommits(u_int32_t nCommits, std::string* polynomialsNames, std::string dstName) {
         // Initialize commit to zero in G1 curve 
         G1Point commit = E.g1.zero();
 
         // Add all the commits
         for(u_int32_t i = 0; i < nCommits; ++i) {
-            E.g1.add(commit, commits[i], commit);  
+            E.g1.add(commit, polynomialCommitments[polynomialsNames[i]], commit);  
         }
 
-        return commit;
+        polynomialCommitments[dstName] = commit;
     }
 
-    Polynomial<AltBn128::Engine> * ShPlonkProver::sumPolynomials(u_int32_t nPols, Polynomial<AltBn128::Engine> ** polynomials) {
+    void ShPlonkProver::sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::string dstName) {
         if(nPols == 1) {
-            return polynomials[0];
+            polynomialsShPlonk[dstName] = polynomialsShPlonk[polynomialsNames[0]];
         }
-
+    
         u_int64_t maxDegree = 0;
         for(u_int32_t i = 0; i < nPols; ++i) {
-            polynomials[i]->fixDegree();
-            if(polynomials[i]->getDegree() > maxDegree) {
-                maxDegree = polynomials[i]->getDegree();
+            polynomialsShPlonk[polynomialsNames[i]]->fixDegree();
+            if(polynomialsShPlonk[polynomialsNames[i]]->getDegree() > maxDegree) {
+                maxDegree = polynomialsShPlonk[polynomialsNames[i]]->getDegree();
             }
         }
 
         u_int64_t lengthBuffer = std::pow(2, (u_int64_t)log2(maxDegree) + 1);
-
-        Polynomial<AltBn128::Engine> *polynomial = new Polynomial<AltBn128::Engine>(E, lengthBuffer);
         
+        AltBn128::FrElement *buffer = new AltBn128::FrElement[lengthBuffer];
+
         #pragma omp parallel for
         for (u_int64_t i = 0; i <= maxDegree; i++) {
-             FrElement coef = E.fr.zero();
+            FrElement coef = E.fr.zero();
             for (u_int32_t j = 0; j < nPols; ++j) {
-                if(polynomials[j] != nullptr && polynomials[j]->getDegree() > 0 && i <= polynomials[j]->getDegree()) {
-                    coef = E.fr.add(coef, polynomials[j]->coef[i]);
+                if(polynomialsShPlonk[polynomialsNames[j]] != nullptr && polynomialsShPlonk[polynomialsNames[j]]->getDegree() > 0 && i <= polynomialsShPlonk[polynomialsNames[j]]->getDegree()) {
+                    coef = E.fr.add(coef, polynomialsShPlonk[polynomialsNames[j]]->coef[i]);
                 }
             }
-             polynomial->coef[i] = coef;
+            buffer[i] = coef;
         }
-        polynomial->fixDegree();
 
-        return polynomial;
+        polynomialsShPlonk[dstName] = new Polynomial<AltBn128::Engine>(E, buffer, lengthBuffer);
     }
 
     void ShPlonkProver::prepareCommits() {
         u_int32_t nPols = zkeyPilFflonk->f.size();
         for(u_int64_t i = 0; i < nPols; ++i) {
 
-            Polynomial<AltBn128::Engine>** polynomialsStage = new Polynomial<AltBn128::Engine>*[zkeyPilFflonk->f[i]->nStages];
-            for (size_t j = 0; j < zkeyPilFflonk->f[i]->nStages; ++j) {
-                u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(zkeyPilFflonk->f[i]->degree - 1)) + 1);
-                polynomialsStage[j] = new Polynomial<AltBn128::Engine>(E, lengthBuffer);
-            }
-            G1Point* commitsStage = new G1Point[zkeyPilFflonk->f[i]->nStages];
+            std::string* polynomialsNames = new std::string[zkeyPilFflonk->f[i]->nStages];
 
             for(u_int64_t j = 0; j < zkeyPilFflonk->f[i]->nStages; ++j) {
         
                 std::string index = "f" + std::to_string(zkeyPilFflonk->f[i]->index) + "_" + std::to_string(zkeyPilFflonk->f[i]->stages[j].stage);
+                polynomialsNames[j] = index;
+
                 if(polynomialsShPlonk.find(index) == polynomialsShPlonk.end()) throw std::runtime_error("Polynomial " + index + " is not provided");
                 if(polynomialCommitments.find(index) == polynomialCommitments.end()) throw std::runtime_error("Commit " + index + " is not provided");
-
-                polynomialsStage[j] = polynomialsShPlonk[index];
-                commitsStage[j] = polynomialCommitments[index];
             }
+            
+            sumCommits(zkeyPilFflonk->f[i]->nStages, polynomialsNames, "f" + std::to_string(zkeyPilFflonk->f[i]->index));
+            sumPolynomials(zkeyPilFflonk->f[i]->nStages, polynomialsNames, "f" + std::to_string(zkeyPilFflonk->f[i]->index));
 
-            std::string ind = std::to_string(zkeyPilFflonk->f[i]->index);
-            polynomialCommitments["f" + ind] = sumCommits(zkeyPilFflonk->f[i]->nStages, commitsStage);
-
-            polynomialsShPlonk["f" + ind] = sumPolynomials(zkeyPilFflonk->f[i]->nStages, polynomialsStage);
-
-            if(polynomialsShPlonk["f" + ind]->getDegree() > zkeyPilFflonk->f[i]->degree) {
+            if(polynomialsShPlonk["f" + std::to_string(zkeyPilFflonk->f[i]->index)]->getDegree() > zkeyPilFflonk->f[i]->degree) {
                 throw std::runtime_error("Polynomial f" + std::to_string(i) + " degree is greater than expected");
             }   
             
-            delete polynomialsStage;
-            delete commitsStage;
+            delete[] polynomialsNames;
         }
     }
 

@@ -150,7 +150,7 @@ void NTT_AltBn128::NTT_iters(AltBn128::FrElement *dst, AltBn128::FrElement *src,
 }
 
 void NTT_AltBn128::NTT(AltBn128::FrElement *dst, AltBn128::FrElement *src, u_int64_t size, u_int64_t ncols, AltBn128::FrElement *buffer, u_int64_t nphase, u_int64_t nblock, bool inverse)
-{
+{ 
     if (ncols == 0 || size == 0)
     {
         return;

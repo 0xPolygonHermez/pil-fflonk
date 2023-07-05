@@ -52,7 +52,9 @@ namespace ShPlonk {
         std::vector<u_int32_t> openingPoints;
 
     public:
-        void addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> * pol);
+        void addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine>* pol);
+        
+        void addPolynomialShPlonk(const std::string &key, AltBn128::FrElement *buffer, uint64_t length);
 
         Polynomial<AltBn128::Engine> * getPolynomialShPlonk(const std::string &key);
 
@@ -69,6 +71,10 @@ namespace ShPlonk {
         json toJson();
 
         FrElement getChallengeXi();
+
+        u_int32_t getEvaluations();
+
+        std::string *getEvaluationsNames();
 
     protected:
         void computeR();
@@ -99,9 +105,9 @@ namespace ShPlonk {
 
         void prepareCommits();
 
-        AltBn128::G1Point sumCommits(u_int32_t nCommits, G1Point *commits);
+        void sumCommits(u_int32_t nCommits, std::string* polynomialsNames, std::string dstName);
 
-        Polynomial<AltBn128::Engine>* sumPolynomials(u_int32_t nPols, Polynomial<AltBn128::Engine>** polynomials);
+        void sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::string dstName);
 
         int find(std::string* arr, u_int32_t n, std::string x);
         int find(u_int32_t* arr, u_int32_t n, u_int32_t x);

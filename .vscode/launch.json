@@ -14,8 +14,9 @@
             // "args": ["fibonacci.zkey","fibonacci.fflonkinfo.json","fibonacci.const","fibonacci.commit"],
             // "args": ["tmp/simple1.zkey","tmp/simple1.fflonkinfo.json","tmp/simple1.cnst", "tmp/simple1.ext.cnst", "tmp/simple1.cmmt", "tmp/proof_simple1.json", "tmp/public_simple1.json"],
             // "args": ["tmp/all.zkey", "tmp/all.fflonkinfo.json", "tmp/all.cnst", "tmp/all.ext.cnst", "tmp/all.cmmt", "tmp/proof_all.json", "tmp/public_all.json"],
-            "args":["tmp/simple_connection.zkey", "tmp/simple_connection.fflonkinfo.json", "tmp/simple_connection.cnst", "tmp/simple_connection.ext.cnst", "tmp/simple_connection.cmmt", "tmp/proof_simple_connection.json", "tmp/public_simple_connection.json"]
+            // "args":["tmp/simple_connection.zkey", "tmp/simple_connection.fflonkinfo.json", "tmp/simple_connection.cnst", "tmp/simple_connection.ext.cnst", "tmp/simple_connection.cmmt", "tmp/proof_simple_connection.json", "tmp/public_simple_connection.json"]
             // "args": ["tmp/connection.zkey", "tmp/connection.fflonkinfo.json", "tmp/connection.cnst", "tmp/connection.ext.cnst", "tmp/connection.cmmt", "tmp/proof_connection.json", "tmp/public_connection.json"],
+            "args": ["tmp/fibonacci.zkey", "tmp/fibonacci.fflonkinfo.json", "tmp/fibonacci.cnst", "tmp/fibonacci.ext.cnst", "tmp/fibonacci.cmmt", "tmp/proof_fibonacci.json", "tmp/public_fibonacci.json"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

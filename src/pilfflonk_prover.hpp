@@ -71,19 +71,24 @@ namespace PilFflonk
 
         ShPlonk::ShPlonkProver *shPlonkProver;
 
+        Keccak256Transcript *transcript;
+
+        G1PointAffine *PTau;
+
         PilFflonkSteps pilFflonkSteps;
 
         u_int64_t lengthBufferCommitted;
         u_int64_t lengthBuffer;
+        u_int64_t lengthBufferShPlonk;
+
 
         FrElement *bBufferCommitted;
         FrElement *bBufferConstant;
-        G1PointAffine *PTau;
+        FrElement *bBufferShPlonk;
 
         std::map<std::string, AltBn128::FrElement *> ptrCommitted;
         std::map<std::string, AltBn128::FrElement *> ptrConstant;
-
-        Keccak256Transcript *transcript;
+        std::map<std::string, AltBn128::FrElement *> ptrShPlonk;
 
     public:
         PilFflonkProver(AltBn128::Engine &E,
