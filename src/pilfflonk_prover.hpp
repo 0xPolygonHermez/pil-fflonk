@@ -41,6 +41,9 @@ namespace PilFflonk
         AltBn128::Engine &E;
         std::string curveName;
 
+        FrElement *reservedMemoryPtr;
+        uint64_t reservedMemorySize;
+
         FFT<AltBn128::Engine::Fr> *fft = NULL;
 
         PilFflonkZkey::PilFflonkZkey *zkey;
@@ -96,11 +99,11 @@ namespace PilFflonk
         ~PilFflonkProver();
 
         // Set the configuration data that is required once per prover
-        void setConstantData(BinFileUtils::BinFile *fdZkey, std::string fflonkInfoFile,
-                             std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst);
+        void setConstantData(std::string zkeyFilename, std::string fflonkInfoFilename,
+                             std::string constPolsFilename, std::string precomputedFilename);
 
-        std::tuple<json, json> prove(BinFileUtils::BinFile *fdZkey, std::string fflonkInfoFile,
-                                     std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst,
+        std::tuple<json, json> prove(std::string zkeyFilename, std::string fflonkInfoFilename,
+                                     std::string constPolsFilename, std::string precomputedFilename,
                                      std::string committedPolsFilename);
         std::tuple<json, json> prove(std::string committedPolsFilename);
 

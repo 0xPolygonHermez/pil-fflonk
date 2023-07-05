@@ -11,15 +11,15 @@ namespace PilFflonk
     {
         zkey = NULL;
 
-        // this->reservedMemoryPtr = (FrElement *)reservedMemoryPtr;
-        // this->reservedMemorySize = reservedMemorySize;
+        reservedMemoryPtr = (FrElement *)reservedMemoryPtr;
+        reservedMemorySize = reservedMemorySize;
 
         curveName = "bn128";
     }
 
     PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E) : E(_E)
     {
-        initialize(NULL, 0);
+        initialize(NULL);
     }
 
     PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, void *reservedMemoryPtr, uint64_t reservedMemorySize) : E(_E)
@@ -29,7 +29,9 @@ namespace PilFflonk
 
     PilFflonkProver::~PilFflonkProver()
     {
+        // TODO remove precomputed data when necessary
 
+        // TODO check -> remove data
         free(pConstPolsAddress);
         free(pConstPolsAddress2ns);
         free(pCommittedPolsAddress);
@@ -46,12 +48,20 @@ namespace PilFflonk
         delete fflonkInfo;
     }
 
-    void PilFflonkProver::setConstantData(BinFileUtils::BinFile *fdZkey, std::string fflonkInfoFile,
-                                          std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst)
+    void PilFflonkProver::setConstantData(std::string zkeyFilename, std::string fflonkInfoFile,
+                                          std::string constPolsFilename, std::string precomputedFilename)
     {
         try
         {
             TimerStart(LOAD_ZKEY_TO_MEMORY);
+
+            cout << "> Opening zkey data file" << endl;
+            auto zkeyBinFile = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
+            auto fdZkey = zkeyBinFile.get();
+
+            cout << "> Opening precomputed data file" << endl;
+            auto precomputedBinFile = BinFileUtils::openExisting(precomputedFilename, "pols", 1);
+            auto fdPrecomputed = precomputedBinFile.get();
 
             if (Zkey::getProtocolIdFromZkey(fdZkey) != Zkey::PILFFLONK_PROTOCOL_ID)
             {
@@ -188,7 +198,7 @@ namespace PilFflonk
 
             TimerStart(LOAD_CONST_POLS_ZKEY_TO_MEMORY);
 
-            ConstPolsSerializer::readConstPolsFile(E, fdZkeyConst, ptr["const_coefs"], ptr["const_2ns"], ptr["x_n"], ptr["x_2ns"]);
+            ConstPolsSerializer::readConstPolsFile(E, fdPrecomputed, ptr["const_coefs"], ptr["const_2ns"], ptr["x_n"], ptr["x_2ns"]);
 
             TimerStopAndLog(LOAD_CONST_POLS_ZKEY_TO_MEMORY);
 
@@ -204,11 +214,11 @@ namespace PilFflonk
         }
     }
 
-    std::tuple<json, json> PilFflonkProver::prove(BinFileUtils::BinFile *fdZkey, std::string fflonkInfoFile,
-                                                  std::string constPolsFilename, BinFileUtils::BinFile *fdZkeyConst,
+    std::tuple<json, json> PilFflonkProver::prove(std::string zkeyFilename, std::string fflonkInfoFilename,
+                                                  std::string constPolsFilename, std::string precomputedFilename,
                                                   std::string committedPolsFilename)
     {
-        this->setConstantData(fdZkey, fflonkInfoFile, constPolsFilename, fdZkeyConst);
+        this->setConstantData(zkeyFilename, fflonkInfoFilename, constPolsFilename, precomputedFilename);
         return this->prove(committedPolsFilename);
     }
 

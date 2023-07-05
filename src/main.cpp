@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     string zkeyFilename = argv[1];
     string fflonkInfoFileName = argv[2];
     string cnstFilename = argv[3];
-    string cnstZkeyFilename = argv[4];
+    string precomputedFilename = argv[4];
     string cmtdFilename = argv[5];
     string proofFilename = argv[6];
     string publicFilename = argv[7];
@@ -80,9 +80,9 @@ int main(int argc, char **argv)
         bError = true;
     }
 
-    if (!fileExists(cnstZkeyFilename))
+    if (!fileExists(precomputedFilename))
     {
-        cerr << "Error: constant 2 polynomials file '" << cnstZkeyFilename << "' does not exist" << endl;
+        cerr << "Error: constant 2 polynomials file '" << precomputedFilename << "' does not exist" << endl;
         bError = true;
     }
 
@@ -94,15 +94,9 @@ int main(int argc, char **argv)
 
     if (bError) return -1; // exitProcess();
 
-    cout << "> Opening zkey file" << endl;
-    auto zkey = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
-
-    cout << "> Opening const zkey file" << endl;
-    auto const_zkey = BinFileUtils::openExisting(cnstZkeyFilename, "pols", 1);
-
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine);
 
-    auto [proofJson, publicSignalsJson] = prover->prove(zkey.get(), fflonkInfoFileName, cnstFilename, const_zkey.get(), cmtdFilename);
+    auto [proofJson, publicSignalsJson] = prover->prove(zkeyFilename, fflonkInfoFileName, cnstFilename, precomputedFilename, cmtdFilename);
 
     std::ofstream file;
     file.open(proofFilename);
