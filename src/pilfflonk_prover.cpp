@@ -29,13 +29,6 @@ namespace PilFflonk
 
     PilFflonkProver::~PilFflonkProver()
     {
-        // TODO remove precomputed data when necessary
-
-        // TODO check -> remove data
-        free(pConstPolsAddress);
-        free(pConstPolsAddress2ns);
-        free(pCommittedPolsAddress);
-
         delete[] bBuffer;
         ptr.clear();
 
@@ -184,10 +177,10 @@ namespace PilFflonk
 
             if (constPolsSize > 0)
             {
-                pConstPolsAddress = copyFile(constPolsFilename, constPolsSize);
+                auto pConstPolsAddress = copyFile(constPolsFilename, constPolsSize);
                 zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsSize) + " bytes from constant file " + constPolsFilename);
 
-#pragma omp parallel for
+                #pragma omp parallel for
                 for (u_int64_t i = 0; i < fflonkInfo->nConstants * N; i++)
                 {
                     E.fr.fromRprBE(ptr["const_n"][i], reinterpret_cast<uint8_t *>(pConstPolsAddress) + i * 32, 32);
@@ -285,12 +278,12 @@ namespace PilFflonk
 
             u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
 
-            pCommittedPolsAddress = copyFile(committedPolsFilename, cmtdPolsSize);
+            auto pCommittedPolsAddress = copyFile(committedPolsFilename, cmtdPolsSize);
             zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(cmtdPolsSize) + " bytes from constant file " + committedPolsFilename);
 
             TimerStart(CONVERT_COMMITTED_POLS_TO_FR);
 
-#pragma omp parallel for
+            #pragma omp parallel for
             for (u_int64_t i = 0; i < fflonkInfo->mapSectionsN.section[cm1_n] * N; i++)
             {
                 E.fr.fromRprBE(ptrCommitted["cm1_n"][i], reinterpret_cast<uint8_t *>(pCommittedPolsAddress) + i * 32, 32);

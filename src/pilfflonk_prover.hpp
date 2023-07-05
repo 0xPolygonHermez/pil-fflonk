@@ -66,15 +66,7 @@ namespace PilFflonk
 
         FflonkInfo *fflonkInfo;
 
-        BinFilePolsData *cnstPols;
-        BinFilePolsData *cmtdPols;
-
-        void *pConstPolsAddress;
-        void *pConstPolsAddress2ns;
-
         uint64_t constPolsSize;
-
-        void *pCommittedPolsAddress;
 
         ShPlonk::ShPlonkProver *shPlonkProver;
 
