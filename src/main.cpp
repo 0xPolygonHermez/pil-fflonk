@@ -94,9 +94,18 @@ int main(int argc, char **argv)
 
     if (bError) return -1; // exitProcess();
 
-    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine);
+    // Example using reserved memory from main.cpp
+    // int numElements = 200;
+    // auto reservedMemorySize = numElements * sizeof(AltBn128::FrElement);
+    // auto reservedMemory = new FrElement[numElements];
+    // auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine,
+    //                                              zkeyFilename, fflonkInfoFileName, cnstFilename, precomputedFilename,
+    //                                              reservedMemory, reservedMemorySize);
 
-    auto [proofJson, publicSignalsJson] = prover->prove(zkeyFilename, fflonkInfoFileName, cnstFilename, precomputedFilename, cmtdFilename);
+    auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine,
+                                                 zkeyFilename, fflonkInfoFileName, cnstFilename, precomputedFilename);
+
+    auto [proofJson, publicSignalsJson] = prover->prove(cmtdFilename);
 
     std::ofstream file;
     file.open(proofFilename);

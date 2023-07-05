@@ -7,35 +7,25 @@
 
 namespace PilFflonk
 {
-    void PilFflonkProver::initialize(void *reservedMemoryPtr, uint64_t reservedMemorySize)
+    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E,
+                                     std::string zkeyFilename, std::string fflonkInfoFilename,
+                                     std::string constPolsFilename, std::string precomputedFilename,
+                                     void *reservedMemoryPtr, uint64_t reservedMemorySize) : E(_E)
     {
-        zkey = NULL;
+        this->reservedMemoryPtr = (FrElement *)reservedMemoryPtr;
+        this->reservedMemorySize = reservedMemorySize;
 
-        reservedMemoryPtr = (FrElement *)reservedMemoryPtr;
-        reservedMemorySize = reservedMemorySize;
+        setConstantData(zkeyFilename, fflonkInfoFilename, constPolsFilename, precomputedFilename);
 
         curveName = "bn128";
     }
 
-    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E) : E(_E)
-    {
-        initialize(NULL);
-    }
-
-    PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E, void *reservedMemoryPtr, uint64_t reservedMemorySize) : E(_E)
-    {
-        initialize(reservedMemoryPtr, reservedMemorySize);
-    }
-
     PilFflonkProver::~PilFflonkProver()
     {
-        if (NULL == reservedMemoryPtr)
-        {
-            delete[] bBufferConstant;
-        }
+        delete[] bBufferConstant;
         ptrConstant.clear();
 
-        delete[] bBufferCommitted;
+        if (NULL == reservedMemoryPtr) delete[] bBufferCommitted;
         ptrCommitted.clear();
 
         delete fft;
@@ -149,7 +139,18 @@ namespace PilFflonk
 
             zklog.info("lengthBufferCommitted: " + lengthBufferCommitted);
 
-            bBufferCommitted = new FrElement[lengthBufferCommitted];
+            if(reservedMemoryPtr == NULL) {
+                bBufferCommitted = new FrElement[lengthBufferCommitted];
+            } else {
+                uint64_t requiredMemorySize = lengthBufferCommitted * sizeof(AltBn128::FrElement);
+                if(reservedMemorySize < requiredMemorySize) {
+                    uint64_t additionalBytes = requiredMemorySize - reservedMemorySize;
+                    string errorMsg = "Insufficient reserved memory size. Additional " + std::to_string(additionalBytes) + " bytes required. Total required " + std::to_string(requiredMemorySize) + " bytes.";
+                    zklog.error(errorMsg);
+                    throw std::runtime_error(errorMsg);
+                }
+                bBufferCommitted = reservedMemoryPtr;
+            }
 
             ptrCommitted["cm1_n"] = &bBufferCommitted[0];
             ptrCommitted["cm2_n"] = ptrCommitted["cm1_n"] + N * fflonkInfo->mapSectionsN.section[cm1_n];
@@ -209,14 +210,6 @@ namespace PilFflonk
             std::cerr << "EXCEPTION: " << e.what() << "\n";
             exit(EXIT_FAILURE);
         }
-    }
-
-    std::tuple<json, json> PilFflonkProver::prove(std::string zkeyFilename, std::string fflonkInfoFilename,
-                                                  std::string constPolsFilename, std::string precomputedFilename,
-                                                  std::string committedPolsFilename)
-    {
-        this->setConstantData(zkeyFilename, fflonkInfoFilename, constPolsFilename, precomputedFilename);
-        return this->prove(committedPolsFilename);
     }
 
     std::tuple<json, json> PilFflonkProver::prove(std::string committedPolsFilename)

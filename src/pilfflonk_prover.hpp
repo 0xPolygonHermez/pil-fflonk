@@ -85,8 +85,10 @@ namespace PilFflonk
         Keccak256Transcript *transcript;
 
     public:
-        PilFflonkProver(AltBn128::Engine &E);
-        PilFflonkProver(AltBn128::Engine &E, void *reservedMemoryPtr, uint64_t reservedMemorySize);
+        PilFflonkProver(AltBn128::Engine &E,
+                        std::string zkeyFilename, std::string fflonkInfoFilename,
+                        std::string constPolsFilename, std::string precomputedFilename,
+                        void *reservedMemoryPtr = NULL, uint64_t reservedMemorySize = 0);
 
         ~PilFflonkProver();
 
@@ -94,16 +96,9 @@ namespace PilFflonk
         void setConstantData(std::string zkeyFilename, std::string fflonkInfoFilename,
                              std::string constPolsFilename, std::string precomputedFilename);
 
-        std::tuple<json, json> prove(std::string zkeyFilename, std::string fflonkInfoFilename,
-                                     std::string constPolsFilename, std::string precomputedFilename,
-                                     std::string committedPolsFilename);
         std::tuple<json, json> prove(std::string committedPolsFilename);
 
     protected:
-        void initialize(void *reservedMemoryPtr, uint64_t reservedMemorySize = 0);
-
-        void removePrecomputedData();
-
         void stage1(StepsParams &params);
 
         void stage2(StepsParams &params);
