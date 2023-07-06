@@ -170,7 +170,7 @@ namespace PilFflonk
 
             bBufferShPlonk = new FrElement[lengthBufferShPlonk];
 
-            for(auto i = 0; i < names.size(); ++i) {
+            for(u_int32_t i = 0; i < names.size(); ++i) {
                 auto [name, degree] = names[i];
                 if(i == 0) {
                     ptrShPlonk[name] = &bBufferShPlonk[0];
@@ -518,8 +518,9 @@ namespace PilFflonk
 
                 uint64_t h1Id = fflonkInfo->varPolMap[fflonkInfo->cm_n[nCm2 + 2 * i]].sectionPos;
                 uint64_t h2Id = fflonkInfo->varPolMap[fflonkInfo->cm_n[nCm2 + 2 * i + 1]].sectionPos;
-                // calculateH1H2(fPol, tPol, h1Id, h2Id);
+                calculateH1H2(fPol, tPol, h1Id, h2Id);
             }
+
             TimerStopAndLog(PIL_FFLONK_STAGE_2_CALCULATE_H1H2);
 
             TimerStart(PIL_FFLONK_STAGE_2_EXTEND);
@@ -787,44 +788,55 @@ namespace PilFflonk
         map<AltBn128::FrElement, uint64_t, CompareFe> idx_t(E);
         multimap<AltBn128::FrElement, uint64_t, CompareFe> s(E);
         multimap<AltBn128::FrElement, uint64_t>::iterator it;
-
-        std::vector<int> counter(N, 1);
+        uint64_t i = 0;
 
         for (uint64_t i = 0; i < N; i++)
         {
             AltBn128::FrElement key = tPol[i];
-            idx_t[key] = i + 1;
+            std::pair<AltBn128::FrElement, uint64_t> pr(key, i);
+
+            auto const result = idx_t.insert(pr);
+            if (not result.second)
+            {
+                result.first->second = i;
+            }
+
+            s.insert(pr);
         }
 
         for (uint64_t i = 0; i < N; i++)
         {
             AltBn128::FrElement key = fPol[i];
-            uint64_t indx = idx_t[key];
-            if (indx == 0)
+
+            if (idx_t.find(key) == idx_t.end())
             {
-                zklog.error("calculateH1H2() Number not included: " + E.fr.toString(fPol[i]));
+                zklog.error("Polinomial::calculateH1H2() Number not included: " + E.fr.toString(fPol[i]));
                 exitProcess();
             }
-            ++counter[indx - 1];
+            uint64_t idx = idx_t[key];
+            s.insert(pair<AltBn128::FrElement, uint64_t>(key, idx));
         }
 
-        uint64_t id = 0;
-        for (u_int64_t i = 0; i < N; ++i)
+        multimap<uint64_t, AltBn128::FrElement> s_sorted;
+        multimap<uint64_t, AltBn128::FrElement>::iterator it_sorted;
+
+        for (it = s.begin(); it != s.end(); it++)
         {
-            if (counter[id] == 0)
-            {
-                ++id;
-            }
-            counter[id] -= 1;
-        
-            ptrCommitted["cm2_n"][h1Id + fflonkInfo->nCm2 * i] = tPol[id];
-            if (counter[id] == 0)
-            {
-                ++id;
-            }
-            counter[id] -= 1;
-            ptrCommitted["cm2_n"][h2Id + fflonkInfo->nCm2 * i] = tPol[id];
+            s_sorted.insert(make_pair(it->second, it->first));
         }
-    }
+
+        for (it_sorted = s_sorted.begin(); it_sorted != s_sorted.end(); it_sorted++, i++)
+        {
+            if ((i & 1) == 0)
+            {
+                ptrCommitted["cm2_n"][h1Id + fflonkInfo->nCm2 * (i/2)] = it_sorted->second;
+            }
+            else
+            {
+                ptrCommitted["cm2_n"][h2Id + fflonkInfo->nCm2 * (i/2)] = it_sorted->second;
+            }
+        }
+    };
+
 
 }

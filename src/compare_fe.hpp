@@ -3,6 +3,7 @@
 
 #include <alt_bn128.hpp>
 
+
 struct CompareFe
 {
     AltBn128::Engine& E;
@@ -11,10 +12,17 @@ struct CompareFe
     
     bool operator()(const AltBn128::FrElement& a, const AltBn128::FrElement& b) const
     {
-        // cout << E.fr.toString(a) << " " << E.fr.toString(b) << " " << E.fr.lt(a,b) << endl;
-        // return E.fr.lt(a, b);
+        // std::istringstream iss1(E.fr.toString(a));
+        // std::istringstream iss2(E.fr.toString(b));
+        // long long n1, n2;
+        // iss1 >> n1;
+        // iss2 >> n2;
+
+        // // Perform the comparison
+        // return n1 < n2;
+
+        return E.fr.lt(a, b);
     }
-    
 };
 
 #endif

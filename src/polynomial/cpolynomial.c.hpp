@@ -30,7 +30,7 @@ u_int64_t CPolynomial<Engine>::getDegree() const {
     u_int64_t degree = 0;
     for (int i = 0; i < n; i++) {
         if (this->polynomials[i] != NULL) {
-            degree = std::max(degree, this->polynomials[i]->getDegree() * n + i);
+            degree = std::max(degree, this->polynomials[i]->getDegree() * n + i + 1);
         }
     }
     return degree;
