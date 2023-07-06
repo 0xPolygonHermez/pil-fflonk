@@ -65,9 +65,11 @@ namespace PilFflonk
 
         FrElement challenges[5];
 
-        FflonkInfo *fflonkInfo;
+        u_int64_t lengthBufferCommitted;
+        u_int64_t lengthBuffer;
+        u_int64_t lengthBufferShPlonk;
 
-        uint64_t constPolsSize;
+        FflonkInfo *fflonkInfo;
 
         ShPlonk::ShPlonkProver *shPlonkProver;
 
@@ -76,11 +78,6 @@ namespace PilFflonk
         G1PointAffine *PTau;
 
         PilFflonkSteps pilFflonkSteps;
-
-        u_int64_t lengthBufferCommitted;
-        u_int64_t lengthBuffer;
-        u_int64_t lengthBufferShPlonk;
-
 
         FrElement *bBufferCommitted;
         FrElement *bBufferConstant;

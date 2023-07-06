@@ -64,7 +64,7 @@ namespace ShPlonk {
 
         void commit(u_int32_t stage, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp);
 
-        json open(G1PointAffine *PTau, FrElement previousChallenge);
+        json open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement previousChallenge);
 
         json toJson();
 

@@ -108,6 +108,8 @@ namespace PilFflonk
 
             lengthBuffer += maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement); // PTau buffer
 
+            zklog.info("lengthBuffer: " + std::to_string(lengthBuffer));
+
             bBufferConstant = new FrElement[lengthBuffer];
 
             ptrConstant["const_n"] = &bBufferConstant[0];
@@ -124,40 +126,40 @@ namespace PilFflonk
             // SHPLONK BIG BUFFER
             // //////////////////////////////////////////////////
             
-            std::vector<std::string> evals;
-            std::vector<std::tuple<std::string, u_int32_t>> stages;
+            std::vector<std::tuple<std::string, u_int64_t>> names;
 
-            lengthBufferShPlonk = 0;
+            lengthBufferShPlonk = 0; 
 
             for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
                 for(u_int32_t k = 0; k < zkey->f[i]->nPols; ++k) {
-                    evals.push_back(zkey->f[i]->pols[k]);
-                    lengthBufferShPlonk += N * factorZK;
+                    std::string name = zkey->f[i]->pols[k];
+                    u_int64_t length = name == "Q" ? (fflonkInfo->qDeg + 1) * N : N * factorZK;
+                    names.push_back(std::make_tuple(name, length));
+                    lengthBufferShPlonk += length;
                 }
+
+                u_int64_t lengthStage = std::pow(2, ((u_int64_t)log2(zkey->f[i]->degree - 1)) + 1);
                 for(u_int32_t k = 0; k < zkey->f[i]->nStages; ++k) {
                     std::string stage = "f" + std::to_string(zkey->f[i]->index) + "_" + std::to_string(zkey->f[i]->stages[k].stage);
-                    stages.push_back(std::make_tuple(stage, zkey->f[i]->degree));
-                    lengthBufferShPlonk += zkey->f[i]->degree;
+                    names.push_back(std::make_tuple(stage, lengthStage));
+                    lengthBufferShPlonk += lengthStage;
                 }
+                
+                // stages.push_back(std::make_tuple("f" + std::to_string(zkey->f[i]->index), lengthStage));
+                // lengthBufferShPlonk += lengthStage;
             }
+
+            zklog.info("lengthBufferShPlonk: " + std::to_string(lengthBufferShPlonk));
 
             bBufferShPlonk = new FrElement[lengthBufferShPlonk];
 
-            for(auto i = 0; i < evals.size(); ++i) {
+            for(auto i = 0; i < names.size(); ++i) {
+                auto [name, degree] = names[i];
                 if(i == 0) {
-                    ptrShPlonk[evals[i]] = &bBufferShPlonk[0];
+                    ptrShPlonk[name] = &bBufferShPlonk[0];
                 } else {
-                    ptrShPlonk[evals[i]] = ptrShPlonk[evals[i-1]] + N * factorZK;
-                }
-            }
-
-            for(auto i = 0; i < stages.size(); ++i) {
-                auto [stage, degree] = stages[i];
-                 if(i == 0) {
-                    ptrShPlonk[stage] = ptrShPlonk[evals[evals.size()-1]] + N * factorZK;
-                } else {
-                    auto [previousStage, previousDegree] = stages[i - 1];
-                    ptrShPlonk[stage] = ptrShPlonk[previousStage] + previousDegree;
+                    auto [prevName, prevLength] = names[i - 1];
+                    ptrShPlonk[name] = ptrShPlonk[prevName] + prevLength;
                 }
             }
 
@@ -180,7 +182,7 @@ namespace PilFflonk
             lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];      // cm2_coefs   >> Stage2 polynomials coefficients
             lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];      // cm3_coefs   >> Stage3 polynomials coefficients
 
-            zklog.info("lengthBufferCommitted: " + lengthBufferCommitted);
+            zklog.info("lengthBufferCommitted: " + std::to_string(lengthBufferCommitted));
 
             if(reservedMemoryPtr == NULL) {
                 bBufferCommitted = new FrElement[lengthBufferCommitted];
@@ -284,21 +286,6 @@ namespace PilFflonk
                 q_2ns : ptrCommitted["q_2ns"]
             };
 
-            // if(NULL != wtnsHeader) {
-            //     if (mpz_cmp(zkey->rPrime, wtnsHeader->prime) != 0)
-            //     {
-            //         throw std::invalid_argument("Curve of the witness does not match the curve of the proving key");
-            //     }
-
-            //     if (wtnsHeader->nVars != zkey->nVars - zkey->nAdditions)
-            //     {
-            //         std::ostringstream ss;
-            //         ss << "Invalid witness length. Circuit: " << zkey->nVars << ", witness: " << wtnsHeader->nVars << ", "
-            //         << zkey->nAdditions;
-            //         throw std::invalid_argument(ss.str());
-            //     }
-            // }
-
             std::ostringstream ss;
             zklog.info("-----------------------------");
             zklog.info("  PIL-FFLONK PROVE SETTINGS");
@@ -394,7 +381,7 @@ namespace PilFflonk
             zklog.info("STAGE 4. Compute Trace Quotient Polynomials");
             stage4(params);
 
-            json pilFflonkProof = shPlonkProver->open(PTau, challenges[4]);
+            json pilFflonkProof = shPlonkProver->open(PTau, ptrShPlonk, challenges[4]);
 
             FrElement challengeXi = shPlonkProver->getChallengeXi();
 
@@ -653,7 +640,7 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_4_CALCULATE_EXPS);
 
         TimerStart(PIL_FFLONK_STAGE_4_CALCULATE_Q);
-        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], fflonkInfo->qDim * NExt * factorZK);
+        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], ptrShPlonk["Q"], fflonkInfo->qDim * NExt * factorZK);
         polQ->divZh(N, 1 << extendBitsTotal);
         shPlonkProver->addPolynomialShPlonk("Q", polQ);
         TimerStopAndLog(PIL_FFLONK_STAGE_4_CALCULATE_Q);
@@ -716,16 +703,12 @@ namespace PilFflonk
         for (u_int32_t i = 0; i < nPols; i++)
         {
             std::string name = (*zkey->polsNamesStage[stage])[i].name;
+            Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], N * factorZK);
             for (u_int32_t j = 0; j < N * factorZK; j++)
             {
-                ptrShPlonk[name][j] = buffCoefs[i + j * nPols];
+                pol->coef[j] = buffCoefs[j * nPols + i];
             }
-            cout << "BEFORE " << E.fr.toString(ptrShPlonk[name][32]) << endl;
-            Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], N * factorZK);
             pol->fixDegree();
-
-            cout << "AFTER " << E.fr.toString(ptrShPlonk[name][32]) << endl;
-            cout << E.fr.toString(pol->getCoef(32)) << endl;
 
             shPlonkProver->addPolynomialShPlonk(name, pol);
         }

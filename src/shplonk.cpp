@@ -654,8 +654,7 @@ namespace ShPlonk {
 
                 std::string index = "f" + std::to_string(pol->index) + "_" + std::to_string(stage);
 
-                // polynomialsShPlonk[index] = fi->getPolynomial(ptrShPlonk[index]);
-                polynomialsShPlonk[index] = fi->getPolynomial();
+                polynomialsShPlonk[index] = fi->getPolynomial(ptrShPlonk[index]);            
 
                 // Check degree
                 if (polynomialsShPlonk[index]->getDegree() > pol->degree) 
@@ -668,7 +667,7 @@ namespace ShPlonk {
                     zklog.info("Commit " + index + ": " + E.g1.toString(Fi));
                     polynomialCommitments[index] = Fi;
                 }
-
+                delete fi;
                 delete[] lengths;
             }
 
@@ -676,7 +675,7 @@ namespace ShPlonk {
         }
     }
 
-    json ShPlonkProver::open(G1PointAffine *PTau, FrElement previousChallenge) {
+    json ShPlonkProver::open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement previousChallenge) {
         TimerStart(SHPLONK_OPEN);
         if(NULL == zkeyPilFflonk) {
             throw std::runtime_error("Zkey data not set");
@@ -752,15 +751,13 @@ namespace ShPlonk {
         G1Point value;
         FrElement *pol = this->polynomialFromMontgomery(polynomial);
         E.g1.multiMulByScalar(value, PTau, (uint8_t *)pol, sizeof(pol[0]), polynomial->getDegree() + 1, nx, x);
-
         TimerStopAndLog(SHPLONK_CALCULATE_MSM);
         return value;
     }
 
         AltBn128::FrElement *ShPlonkProver::polynomialFromMontgomery(Polynomial<AltBn128::Engine> *polynomial)
     {
-        const u_int64_t length = polynomial->getLength();
-
+        const u_int64_t length = polynomial->getDegree() + 1;
         FrElement *result = new FrElement[length];
         int nThreads = omp_get_max_threads() / 2;
         ThreadUtils::parset(result, 0, length * sizeof(FrElement), nThreads);

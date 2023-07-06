@@ -23,12 +23,14 @@ void Polynomial<Engine>::initialize(u_int64_t length, u_int64_t blindLength, boo
 
 template<typename Engine>
 Polynomial<Engine>::Polynomial(Engine &_E, u_int64_t length, u_int64_t blindLength) : E(_E) {
+    cout << "ADEU" << endl;
     this->initialize(length, blindLength);
 }
 
 template<typename Engine>
 Polynomial<Engine>::Polynomial(Engine &_E, FrElement *reservedBuffer, u_int64_t length, u_int64_t blindLength) : E(_E) {
     this->coef = reservedBuffer;
+    cout << "HOLA" << endl;
     this->initialize(length, blindLength, false);
 }
 
