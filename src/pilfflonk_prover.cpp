@@ -751,34 +751,27 @@ namespace PilFflonk
 
     std::tuple<std::string, uint64_t, uint64_t> PilFflonkProver::find(uint64_t x)
     {
-        if (x < fflonkInfo->nCm1 * 2 + fflonkInfo->nCm2 * 2)
-        {
-            for (uint64_t i = 0; i < fflonkInfo->mapSections.section[cm2_n].size(); i++)
+        for (uint64_t i = 0; i < fflonkInfo->mapSections.section[cm2_n].size(); i++)
+        {   
+            if (fflonkInfo->mapSections.section[cm2_n][i] == x)
             {
-                if (fflonkInfo->mapSections.section[cm2_n][i] == x)
-                {
-                    return std::make_tuple("cm2_n", i, fflonkInfo->mapSections.section[cm2_n].size());
-                }
+                return std::make_tuple("cm2_n", i, fflonkInfo->mapSections.section[cm2_n].size());
             }
         }
-        else if (x < fflonkInfo->nCm1 * 2 + fflonkInfo->nCm2 * 2 + fflonkInfo->nCm3 * 2)
+
+        for (uint64_t i = 0; i < fflonkInfo->mapSections.section[cm3_n].size(); i++)
         {
-            for (uint64_t i = 0; i < fflonkInfo->mapSections.section[cm3_n].size(); i++)
+            if (fflonkInfo->mapSections.section[cm3_n][i] == x)
             {
-                if (fflonkInfo->mapSections.section[cm3_n][i] == x)
-                {
-                    return std::make_tuple("cm3_n", i, fflonkInfo->mapSections.section[cm3_n].size());
-                }
+                return std::make_tuple("cm3_n", i, fflonkInfo->mapSections.section[cm3_n].size());
             }
         }
-        else
+
+        for (uint64_t i = 0; i < fflonkInfo->tmpExp_n.size(); i++)
         {
-            for (uint64_t i = 0; i < fflonkInfo->tmpExp_n.size(); i++)
+            if (fflonkInfo->tmpExp_n[i] == x)
             {
-                if (fflonkInfo->tmpExp_n[i] == x)
-                {
-                    return std::make_tuple("tmpExp_n", i, fflonkInfo->tmpExp_n.size());
-                }
+                return std::make_tuple("tmpExp_n", i, fflonkInfo->tmpExp_n.size());
             }
         }
 
