@@ -17,6 +17,7 @@ struct StepsParams
     AltBn128::FrElement* challenges;
     AltBn128::FrElement* x_n;
     AltBn128::FrElement* x_2ns;
+    AltBn128::FrElement* constValues;
     AltBn128::FrElement* publicInputs;
     AltBn128::FrElement* q_2ns;
 };
@@ -24,6 +25,8 @@ struct StepsParams
 class PilFflonkSteps {
     
     public:
+        
+        AltBn128::FrElement* setConstValues(AltBn128::Engine &E);
 
         AltBn128::FrElement publics_first(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub);
         AltBn128::FrElement publics_i(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub);

@@ -289,6 +289,8 @@ namespace PilFflonk
 
             TimerStart(PIL_FFLONK_PROVE);
 
+            AltBn128::FrElement* constValues = pilFflonkSteps.setConstValues(E);
+
             // Initialize vars
             StepsParams params = {
                 cm1_n : ptrCommitted["cm1_n"],
@@ -303,6 +305,7 @@ namespace PilFflonk
                 challenges : challenges,
                 x_n : ptrConstant["x_n"],
                 x_2ns : ptrConstant["x_2ns"],
+                constValues: constValues,
                 publicInputs : ptrCommitted["publics"],
                 q_2ns : ptrCommitted["q_2ns"]
             };
