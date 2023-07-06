@@ -367,22 +367,6 @@ void FflonkInfo::load(json j)
 
 }
 
-void FflonkInfo::getPol(void *pAddress, uint64_t idPol, PolInfo &polInfo)
-{
-    polInfo.map = varPolMap[idPol];
-    polInfo.N = mapDeg.section[polInfo.map.section];
-    polInfo.offset = polInfo.map.sectionPos;
-    polInfo.size = mapSectionsN.section[polInfo.map.section];
-    polInfo.pAddress = ((AltBn128::FrElement *)pAddress) + polInfo.offset;
-}
-
-uint64_t FflonkInfo::getPolSize(uint64_t polId)
-{
-    VarPolMap p = varPolMap[polId];
-    uint64_t N = mapDeg.section[p.section];
-    return N * p.dim * sizeof(AltBn128::FrElement);
-}
-
 
 eSection string2section(const std::string s)
 {
@@ -405,4 +389,29 @@ eSection string2section(const std::string s)
     zklog.error("string2section() found invalid string=" + s);
     exitProcess();
     exit(-1);
+}
+
+std::string FflonkInfo::getSectionName(eSection section) {
+    switch (section) {
+        case cm1_n:
+            return "cm1_n";
+        case cm1_2ns:
+            return "cm1_2ns";
+        case cm2_n:
+            return "cm2_n";
+        case cm2_2ns:
+            return "cm2_2ns";
+        case cm3_n:
+            return "cm3_n";
+        case cm3_2ns:
+            return "cm3_2ns";
+        case eSection::tmpExp_n:
+            return "tmpExp_n";
+        case q_2ns:
+            return "q_2ns";
+        default:
+            zklog.error("Invalid section");
+            exitProcess();
+            exit(-1);
+    }
 }

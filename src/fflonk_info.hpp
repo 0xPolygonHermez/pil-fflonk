@@ -265,11 +265,7 @@ public:
     /* Loads data from a json object */
     void load (json j);
 
-    /* Returns information about a polynomial specified by its ID */
-    void getPol(void * pAddress, uint64_t idPol, PolInfo &polInfo);
-
-    /* Returns the size of a polynomial specified by its ID */
-    uint64_t getPolSize(uint64_t polId);
+    std::string getSectionName(eSection section);
 };
 
 #endif

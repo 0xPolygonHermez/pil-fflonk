@@ -513,15 +513,11 @@ namespace PilFflonk
             TimerStart(PIL_FFLONK_STAGE_2_CALCULATE_H1H2);
             for (uint64_t i = 0; i < fflonkInfo->puCtx.size(); i++)
             {
-                auto [fName, fIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].fExpId)]);
-                auto [tName, tIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].tExpId)]);
+                AltBn128::FrElement *fPol = getPolynomial(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].fExpId)]);
+                AltBn128::FrElement *tPol = getPolynomial(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].tExpId)]);
 
-                AltBn128::FrElement *fPol = getPolynomial(ptrCommitted[fName], nPols1, fIndex);
-                AltBn128::FrElement *tPol = getPolynomial(ptrCommitted[tName], nPols2, tIndex);
-
-                uint64_t h1Id = find(fflonkInfo->mapSections.section[cm2_n], fflonkInfo->cm_n[nCm2 + 2 * i]);
-                uint64_t h2Id = find(fflonkInfo->mapSections.section[cm2_n], fflonkInfo->cm_n[nCm2 + 2 * i + 1]);
-
+                uint64_t h1Id = fflonkInfo->varPolMap[fflonkInfo->cm_n[nCm2 + 2 * i]].sectionPos;
+                uint64_t h2Id = fflonkInfo->varPolMap[fflonkInfo->cm_n[nCm2 + 2 * i + 1]].sectionPos;
                 // calculateH1H2(fPol, tPol, h1Id, h2Id);
             }
             TimerStopAndLog(PIL_FFLONK_STAGE_2_CALCULATE_H1H2);
@@ -582,39 +578,30 @@ namespace PilFflonk
             for (uint64_t i = 0; i < nPlookups; i++)
             {
                 zklog.info("Calculating z for plookup " + to_string(i) + " / " + to_string(nPlookups));
-                auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
-                auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
+                AltBn128::FrElement *pNum = getPolynomial(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].numId)]);
+                AltBn128::FrElement *pDen = getPolynomial(fflonkInfo->exp2pol[to_string(fflonkInfo->puCtx[i].denId)]);
 
-                AltBn128::FrElement *pNum = getPolynomial(ptrCommitted[numName], nPols1, numIndex);
-                AltBn128::FrElement *pDen = getPolynomial(ptrCommitted[denName], nPols2, denIndex);
-
-                uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + i]);
+                uint64_t zIndex = fflonkInfo->varPolMap[fflonkInfo->cm_n[nCm3 + i]].sectionPos;
                 calculateZ(pNum, pDen, zIndex);
             }
 
             for (uint64_t i = 0; i < nPermutations; i++)
             {
                 zklog.info("Calculating z for permutation " + to_string(i) + " / " + to_string(nPermutations));
-                auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
-                auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
+                AltBn128::FrElement *pNum = getPolynomial(fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].numId)]);
+                AltBn128::FrElement *pDen = getPolynomial(fflonkInfo->exp2pol[to_string(fflonkInfo->peCtx[i].denId)]);
 
-                AltBn128::FrElement *pNum = getPolynomial(ptrCommitted[numName], nPols1, numIndex);
-                AltBn128::FrElement *pDen = getPolynomial(ptrCommitted[denName], nPols2, denIndex);
-
-                uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + nPlookups + i]);
+                uint64_t zIndex = fflonkInfo->varPolMap[fflonkInfo->cm_n[nCm3 + nPlookups + i]].sectionPos;
                 calculateZ(pNum, pDen, zIndex);
             }
 
             for (uint64_t i = 0; i < nConnections; i++)
             {
                 zklog.info("Calculating z for connection " + to_string(i) + " / " + to_string(nConnections));
-                auto [numName, numIndex, nPols1] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
-                auto [denName, denIndex, nPols2] = find(fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
+                AltBn128::FrElement *pNum = getPolynomial(fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].numId)]);
+                AltBn128::FrElement *pDen = getPolynomial(fflonkInfo->exp2pol[to_string(fflonkInfo->ciCtx[i].denId)]);
 
-                AltBn128::FrElement *pNum = getPolynomial(ptrCommitted[numName], nPols1, numIndex);
-                AltBn128::FrElement *pDen = getPolynomial(ptrCommitted[denName], nPols2, denIndex);
-
-                uint64_t zIndex = find(fflonkInfo->mapSections.section[cm3_n], fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]);
+                uint64_t zIndex = fflonkInfo->varPolMap[fflonkInfo->cm_n[nCm3 + nPlookups + nPermutations + i]].sectionPos;
                 calculateZ(pNum, pDen, zIndex);
             }
             TimerStopAndLog(PIL_FFLONK_STAGE_3_CALCULATE_Z);
@@ -737,53 +724,17 @@ namespace PilFflonk
         }
     }
 
-    uint64_t PilFflonkProver::find(std::vector<uint64_t> arr, uint64_t x)
+    AltBn128::FrElement *PilFflonkProver::getPolynomial(uint64_t polId)
     {
-        for (uint64_t i = 0; i < arr.size(); i++)
-        {
-            if (arr[i] == x)
-            {
-                return i;
-            }
-        }
-        throw new std::runtime_error("Index " + std::to_string(x) + " not found");
-    }
+        eSection section = fflonkInfo->varPolMap[polId].section;
+        std::string sectionName = fflonkInfo->getSectionName(section);
+        u_int64_t pos = fflonkInfo->varPolMap[polId].sectionPos;
+        u_int64_t nPols = fflonkInfo->mapSections.section[section].size();
 
-    std::tuple<std::string, uint64_t, uint64_t> PilFflonkProver::find(uint64_t x)
-    {
-        for (uint64_t i = 0; i < fflonkInfo->mapSections.section[cm2_n].size(); i++)
-        {   
-            if (fflonkInfo->mapSections.section[cm2_n][i] == x)
-            {
-                return std::make_tuple("cm2_n", i, fflonkInfo->mapSections.section[cm2_n].size());
-            }
-        }
-
-        for (uint64_t i = 0; i < fflonkInfo->mapSections.section[cm3_n].size(); i++)
-        {
-            if (fflonkInfo->mapSections.section[cm3_n][i] == x)
-            {
-                return std::make_tuple("cm3_n", i, fflonkInfo->mapSections.section[cm3_n].size());
-            }
-        }
-
-        for (uint64_t i = 0; i < fflonkInfo->tmpExp_n.size(); i++)
-        {
-            if (fflonkInfo->tmpExp_n[i] == x)
-            {
-                return std::make_tuple("tmpExp_n", i, fflonkInfo->tmpExp_n.size());
-            }
-        }
-
-        throw new std::runtime_error("Index " + std::to_string(x) + " not found");
-    }
-
-    AltBn128::FrElement *PilFflonkProver::getPolynomial(AltBn128::FrElement *buffer, uint64_t nPols, uint64_t id)
-    {
         AltBn128::FrElement *pol = new AltBn128::FrElement[N];
         for (uint64_t i = 0; i < N; i++)
         {
-            pol[i] = buffer[i * nPols + id];
+            pol[i] = ptrCommitted[sectionName][i * nPols + pos];
         }
         return pol;
     }
