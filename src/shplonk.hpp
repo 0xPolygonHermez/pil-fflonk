@@ -101,11 +101,11 @@ namespace ShPlonk {
 
         void calculateEvaluations();
 
-        void prepareCommits();
+        void prepareCommits(std::map<std::string, AltBn128::FrElement *> ptrShPlonk);
 
         void sumCommits(u_int32_t nCommits, std::string* polynomialsNames, std::string dstName);
 
-        void sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::string dstName);
+        void sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, std::string dstName);
 
         int find(std::string* arr, u_int32_t n, std::string x);
         int find(u_int32_t* arr, u_int32_t n, u_int32_t x);

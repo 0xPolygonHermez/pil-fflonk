@@ -558,9 +558,10 @@ namespace ShPlonk {
         polynomialCommitments[dstName] = commit;
     }
 
-    void ShPlonkProver::sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::string dstName) {
+    void ShPlonkProver::sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, std::string dstName) {
         if(nPols == 1) {
-            polynomialsShPlonk[dstName] = polynomialsShPlonk[polynomialsNames[0]];
+            polynomialsShPlonk[dstName] = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk[polynomialsNames[0]], ptrShPlonk[dstName]); 
+            return;            
         }
     
         u_int64_t maxDegree = 0;
@@ -571,9 +572,9 @@ namespace ShPlonk {
             }
         }
 
-        u_int64_t lengthBuffer = std::pow(2, (u_int64_t)log2(maxDegree) + 1);
+        u_int64_t lengthBuffer = std::pow(2, (u_int64_t)log2(maxDegree - 1) + 1);
         
-        AltBn128::FrElement *buffer = new AltBn128::FrElement[lengthBuffer];
+        polynomialsShPlonk[dstName] = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[dstName], lengthBuffer);
 
         #pragma omp parallel for
         for (u_int64_t i = 0; i <= maxDegree; i++) {
@@ -583,13 +584,12 @@ namespace ShPlonk {
                     coef = E.fr.add(coef, polynomialsShPlonk[polynomialsNames[j]]->coef[i]);
                 }
             }
-            buffer[i] = coef;
+            polynomialsShPlonk[dstName]->coef[i] = coef;
         }
-
-        polynomialsShPlonk[dstName] = new Polynomial<AltBn128::Engine>(E, buffer, lengthBuffer);
+        polynomialsShPlonk[dstName]->fixDegree();
     }
 
-    void ShPlonkProver::prepareCommits() {
+    void ShPlonkProver::prepareCommits(std::map<std::string, AltBn128::FrElement *> ptrShPlonk) {
         u_int32_t nPols = zkeyPilFflonk->f.size();
         for(u_int64_t i = 0; i < nPols; ++i) {
 
@@ -605,7 +605,7 @@ namespace ShPlonk {
             }
             
             sumCommits(zkeyPilFflonk->f[i]->nStages, polynomialsNames, "f" + std::to_string(zkeyPilFflonk->f[i]->index));
-            sumPolynomials(zkeyPilFflonk->f[i]->nStages, polynomialsNames, "f" + std::to_string(zkeyPilFflonk->f[i]->index));
+            sumPolynomials(zkeyPilFflonk->f[i]->nStages, polynomialsNames, ptrShPlonk,  "f" + std::to_string(zkeyPilFflonk->f[i]->index));
 
             if(polynomialsShPlonk["f" + std::to_string(zkeyPilFflonk->f[i]->index)]->getDegree() > zkeyPilFflonk->f[i]->degree) {
                 throw std::runtime_error("Polynomial f" + std::to_string(i) + " degree is greater than expected");
@@ -686,7 +686,7 @@ namespace ShPlonk {
             polynomialCommitments[key] = C;
         }
 
-        prepareCommits();
+        prepareCommits(ptrShPlonk);
 
         // Compute challenge xi seed
         computeChallengeXiSeed(previousChallenge);
