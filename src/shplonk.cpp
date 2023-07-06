@@ -124,7 +124,7 @@ namespace ShPlonk {
         delete[] degrees;
     }
 
-    void ShPlonkProver::computeL()
+    void ShPlonkProver::computeL(AltBn128::FrElement *reservedBuffer, AltBn128::FrElement *tmpBuffer)
     {
         TimerStart(SHPLONK_COMPUTE_L_POLYNOMIAL);
 
@@ -173,9 +173,9 @@ namespace ShPlonk {
         u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
 
         // COMPUTE L(X)
-        polynomialsShPlonk["Wp"] = new Polynomial<AltBn128::Engine>(E, lengthBuffer);
+        polynomialsShPlonk["Wp"] = new Polynomial<AltBn128::Engine>(E, reservedBuffer, lengthBuffer);
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
-            auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)]);
+            auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)], tmpBuffer);
             fTmp->subScalar(evalRiY[i]);
             fTmp->mulScalar(preL[i]);
             polynomialsShPlonk["Wp"]->add(*fTmp);
@@ -231,7 +231,7 @@ namespace ShPlonk {
         delete[] arr;
     }
 
-    void ShPlonkProver::computeW()
+    void ShPlonkProver::computeW(AltBn128::FrElement *reservedBuffer, AltBn128::FrElement *tmpBuffer)
     {
 
         TimerStart(SHPLONK_COMPUTE_W_POLYNOMIAL);
@@ -253,7 +253,7 @@ namespace ShPlonk {
 
         u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
 
-        Polynomial<AltBn128::Engine> * polynomialW = new Polynomial<AltBn128::Engine>(E, lengthBuffer);
+        Polynomial<AltBn128::Engine> * polynomialW = new Polynomial<AltBn128::Engine>(E, reservedBuffer, lengthBuffer);
               
         FrElement* initialOpenValues = new FrElement[openingPoints.size()];
         for(u_int32_t i = 0; i < openingPoints.size(); ++i) {
@@ -266,7 +266,7 @@ namespace ShPlonk {
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             u_int32_t openingPoint = zkeyPilFflonk->f[i]->openingPoints[0];
 
-            auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)]);
+            auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)], tmpBuffer);
             fTmp->sub(*polynomialsShPlonk["R" + std::to_string(i)]);
             fTmp->mulScalar(alpha);
 
@@ -294,10 +294,10 @@ namespace ShPlonk {
         
     }
 
-    void ShPlonkProver::computeWp() {
+    void ShPlonkProver::computeWp(AltBn128::FrElement *reservedBuffer, AltBn128::FrElement *tmpBuffer) {
         TimerStart(SHPLONK_COMPUTE_WP_POLYNOMIAL);
 
-        computeL();
+        computeL(reservedBuffer, tmpBuffer);
         computeZTS2();
 
         FrElement ZTS2Y = polynomialsShPlonk["ZTS2"]->fastEvaluate(challengeY);
@@ -560,7 +560,7 @@ namespace ShPlonk {
 
     void ShPlonkProver::sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, std::string dstName) {
         if(nPols == 1) {
-            polynomialsShPlonk[dstName] = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk[polynomialsNames[0]], ptrShPlonk[dstName]); 
+            polynomialsShPlonk[dstName] = polynomialsShPlonk[polynomialsNames[0]];
             return;            
         }
     
@@ -667,7 +667,6 @@ namespace ShPlonk {
                     zklog.info("Commit " + index + ": " + E.g1.toString(Fi));
                     polynomialCommitments[index] = Fi;
                 }
-                delete fi;
                 delete[] lengths;
             }
 
@@ -677,9 +676,11 @@ namespace ShPlonk {
 
     json ShPlonkProver::open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement previousChallenge) {
         TimerStart(SHPLONK_OPEN);
+
         if(NULL == zkeyPilFflonk) {
             throw std::runtime_error("Zkey data not set");
         }
+        
         for(auto const&[key, commit] : zkeyPilFflonk->committedConstants) {
             G1Point C;
             E.g1.copy(C, *((G1PointAffine *)commit));
@@ -714,7 +715,7 @@ namespace ShPlonk {
 
         computeR();
         
-        computeW();
+        computeW(ptrShPlonk["W"], ptrShPlonk["tmp"]);
 
         u_int64_t* lengthsW = new u_int64_t[1]{polynomialsShPlonk["W"]->getDegree() + 1};
         G1Point W = multiExponentiation(PTau, polynomialsShPlonk["W"], 1, lengthsW);
@@ -726,7 +727,7 @@ namespace ShPlonk {
 
         zklog.info("Challenge Y: " + E.fr.toString(challengeY));
 
-        computeWp();
+        computeWp(ptrShPlonk["Wp"], ptrShPlonk["tmp"]);
         u_int64_t* lengthsWp = new u_int64_t[1]{polynomialsShPlonk["Wp"]->getDegree() + 1};
         G1Point Wp = multiExponentiation(PTau, polynomialsShPlonk["Wp"], 1, lengthsWp);
 

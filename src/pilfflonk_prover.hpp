@@ -47,6 +47,9 @@ namespace PilFflonk
 
         FFT<AltBn128::Engine::Fr> *fft = NULL;
 
+        NTT_AltBn128 *ntt;
+        NTT_AltBn128 *nttExtended;
+
         PilFflonkZkey::PilFflonkZkey *zkey;
 
         u_int32_t n8r;

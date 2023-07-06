@@ -77,7 +77,10 @@ namespace PilFflonk
             nBitsExtZK = nBits + extendBitsTotal;
 
             fft = new FFT<AltBn128::Engine::Fr>(NExt * factorZK);
-            
+
+            ntt = new NTT_AltBn128(E, N);
+            nttExtended = new NTT_AltBn128(E, NExt * factorZK);
+
             transcript = new Keccak256Transcript(E);
 
             mpz_t altBbn128r;
@@ -129,7 +132,7 @@ namespace PilFflonk
             std::vector<std::tuple<std::string, u_int64_t>> names;
 
             lengthBufferShPlonk = 0; 
-
+            u_int64_t maxDegree = 0;        
             for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
                 for(u_int32_t k = 0; k < zkey->f[i]->nPols; ++k) {
                     std::string name = zkey->f[i]->pols[k];
@@ -148,7 +151,20 @@ namespace PilFflonk
                     names.push_back(std::make_tuple(stage, lengthStage));
                     lengthBufferShPlonk += lengthStage;
                 }
+
+                if(zkey->f[i]->degree > maxDegree) {
+                    maxDegree = zkey->f[i]->degree;
+                }
             }
+
+            u_int64_t lengthW = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
+            names.push_back(std::make_tuple("W", lengthW));
+            names.push_back(std::make_tuple("Wp", lengthW));
+            lengthBufferShPlonk += lengthW * 2;
+            
+            // Add tmp buffer
+            names.push_back(std::make_tuple("tmp", lengthW));
+            lengthBufferShPlonk += lengthW;
 
             zklog.info("lengthBufferShPlonk: " + std::to_string(lengthBufferShPlonk));
 
@@ -183,9 +199,8 @@ namespace PilFflonk
             lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];      // cm2_coefs   >> Stage2 polynomials coefficients
             lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];      // cm3_coefs   >> Stage3 polynomials coefficients
 
-            u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[cm1_2ns], max(fflonkInfo->mapSectionsN.section[cm2_2ns], fflonkInfo->mapSectionsN.section[cm3_2ns]));
+            u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[cm1_n], max(fflonkInfo->mapSectionsN.section[cm2_n], fflonkInfo->mapSectionsN.section[cm3_n]));
             lengthBufferCommitted += NExt * factorZK * maxNPols;                                  // tmp   >> Buffer used to perform ifft / fft
-
             
             zklog.info("lengthBufferCommitted: " + std::to_string(lengthBufferCommitted));
 
@@ -646,6 +661,7 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_4_CALCULATE_EXPS);
 
         TimerStart(PIL_FFLONK_STAGE_4_CALCULATE_Q);
+
         Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], ptrShPlonk["Q"], fflonkInfo->qDim * NExt * factorZK);
         polQ->divZh(N, 1 << extendBitsTotal);
         shPlonkProver->addPolynomialShPlonk("Q", polQ);
@@ -673,8 +689,7 @@ namespace PilFflonk
         ThreadUtils::parcpy(buffCoefs, buffSrc, N * nPols * sizeof(AltBn128::FrElement), nThreads);
 
         TimerStart(EXTEND_INTT);
-        NTT_AltBn128 ntt(E, N);
-        ntt.INTT(buffCoefs, buffSrc, N, nPols, ptrCommitted["tmp"]);
+        ntt->INTT(buffCoefs, buffSrc, N, nPols, ptrCommitted["tmp"]);
         TimerStopAndLog(EXTEND_INTT);
 
         for (u_int32_t i = 0; i < nPols; i++)
@@ -693,32 +708,18 @@ namespace PilFflonk
         }
 
         addCoefsToContext(stage, nPols, buffCoefs);
-
+                
         ThreadUtils::parset(buffDst, 0, NExt * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
         ThreadUtils::parcpy(buffDst, buffCoefs, N * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
-
-            for (auto const &[key, commit] : zkey->committedConstants)
-                {
-                    G1Point C;
-                    E.g1.copy(C, *((G1PointAffine *)commit));
-                    cout << "Commitment " << key << ": " << E.g1.toString(C) << endl;
-                }
+               
         TimerStart(EXTEND_NTT);
-        NTT_AltBn128 nttExtended(E, 1 << nBitsExtZK);
-        nttExtended.NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols, ptrCommitted["tmp"]);
+        nttExtended->NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols, ptrCommitted["tmp"]);
         TimerStopAndLog(EXTEND_NTT);
-
-                    for (auto const &[key, commit] : zkey->committedConstants)
-                {
-                    G1Point C;
-                    E.g1.copy(C, *((G1PointAffine *)commit));
-                    cout << "Commitment " << key << ": " << E.g1.toString(C) << endl;
-                }
     }
 
     void PilFflonkProver::addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs)
     {
-        // Store coefs to context
+        // Store coefs to context 
         for (u_int32_t i = 0; i < nPols; i++)
         {
             std::string name = (*zkey->polsNamesStage[stage])[i].name;

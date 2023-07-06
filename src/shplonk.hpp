@@ -79,13 +79,13 @@ namespace ShPlonk {
 
         void computeZT();
 
-        void computeL();
+        void computeL(AltBn128::FrElement *reservedBuffer, AltBn128::FrElement *tmpBuffer);
 
         void computeZTS2();
 
-        void computeW();
+        void computeW(AltBn128::FrElement *reservedBuffer, AltBn128::FrElement *tmpBuffer);
 
-        void computeWp();
+        void computeWp(AltBn128::FrElement *reservedBuffer, AltBn128::FrElement *tmpBuffer);
 
         void computeChallengeXiSeed(FrElement previousChallenge);
 
