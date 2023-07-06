@@ -12,16 +12,20 @@ struct CompareFe
     
     bool operator()(const AltBn128::FrElement& a, const AltBn128::FrElement& b) const
     {
-        // std::istringstream iss1(E.fr.toString(a));
-        // std::istringstream iss2(E.fr.toString(b));
-        // long long n1, n2;
-        // iss1 >> n1;
-        // iss2 >> n2;
+        std::string num1 = E.fr.toString(a);
+        std::string num2 = E.fr.toString(b);
 
-        // // Perform the comparison
-        // return n1 < n2;
-
-        return E.fr.lt(a, b);
+        if(num1.length() < num2.length()) {
+            return true;
+        } else if(num1.length() > num2.length()) {
+            return false;
+        } else {
+            return num1 < num2;
+        }
+       
+        // bool res = E.fr.gt(a, b);
+        // std::cout << E.fr.toString(a) << " < " << E.fr.toString(b) << " = " << res << std::endl;
+        // return res;
     }
 };
 

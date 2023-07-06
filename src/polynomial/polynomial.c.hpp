@@ -623,7 +623,7 @@ void Polynomial<Engine>::divByZerofier(u_int64_t n, FrElement beta) {
     isNegOne = E.fr.eq(negOne, invBeta);
 
     #pragma omp parallel for
-    for (int k = 0; k < nThreads; k++) {
+    for (int k = 0; k < n; k++) {
         for (uint64_t i = 0; i < nChunks - 1; i++) {
             for (uint64_t j = 0; j < nElementsThread; j++) {
                 u_int64_t idxBase = k * nElementsThread + j;

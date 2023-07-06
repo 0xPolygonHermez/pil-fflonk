@@ -827,16 +827,16 @@ namespace PilFflonk
 
         for (it_sorted = s_sorted.begin(); it_sorted != s_sorted.end(); it_sorted++, i++)
         {
+            int ind = i/2;
             if ((i & 1) == 0)
-            {
-                ptrCommitted["cm2_n"][h1Id + fflonkInfo->nCm2 * (i/2)] = it_sorted->second;
+            {   
+                ptrCommitted["cm2_n"][h1Id + fflonkInfo->nCm2 * ind] = it_sorted->second;
             }
             else
             {
-                ptrCommitted["cm2_n"][h2Id + fflonkInfo->nCm2 * (i/2)] = it_sorted->second;
+                ptrCommitted["cm2_n"][h2Id + fflonkInfo->nCm2 * ind] = it_sorted->second;
             }
         }
     };
-
 
 }
