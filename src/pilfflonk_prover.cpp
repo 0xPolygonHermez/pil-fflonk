@@ -32,6 +32,8 @@ namespace PilFflonk
         ptrShPlonk.clear();
 
         delete fft;
+        delete ntt;
+        delete nttExtended;
         delete zkey;
         delete transcript;
         delete shPlonkProver;

@@ -41,14 +41,6 @@ namespace ShPlonk {
         delete zkeyPilFflonk;
     }  
 
-    u_int32_t ShPlonkProver::getEvaluations() {
-        return this->nEvaluations;
-    }
-
-    std::string *ShPlonkProver::getEvaluationsNames() {
-        return this->evaluationsNames;
-    }
-
     void ShPlonkProver::reset() {
         this->polynomialsShPlonk.clear();
         this->rootsMap.clear();
@@ -287,7 +279,7 @@ namespace ShPlonk {
             throw std::runtime_error("W Polynomial is not well calculated");
         }
         
-        delete initialOpenValues;
+        delete[] initialOpenValues;
 
         polynomialsShPlonk["W"] = polynomialW;
         TimerStopAndLog(SHPLONK_COMPUTE_W_POLYNOMIAL);
@@ -739,8 +731,8 @@ namespace ShPlonk {
 
         zklog.info("Batched Inverse shplonk: " + E.fr.toString(evaluationCommitments["inv"]));
 
-        delete lengthsW;
-        delete lengthsWp;
+        delete[] lengthsW;
+        delete[] lengthsWp;
 
         TimerStopAndLog(SHPLONK_OPEN);
         return toJson();

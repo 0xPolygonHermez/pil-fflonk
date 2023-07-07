@@ -69,11 +69,6 @@ namespace ShPlonk {
         json toJson();
 
         FrElement getChallengeXi();
-
-        u_int32_t getEvaluations();
-
-        std::string *getEvaluationsNames();
-
     protected:
         void computeR();
 
