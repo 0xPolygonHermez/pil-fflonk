@@ -380,7 +380,7 @@ namespace PilFflonk
                 }
                 else if ("imP" == publicPol.polType)
                 {
-                    ptrCommitted["publics"][i] = pilFflonkSteps.publics_first(E, params, fflonkInfo->publics[i].polId, i);
+                    pilFflonkSteps.publics_first(E, params, fflonkInfo->publics[i].polId, i);
                 }
                 else
                 {
