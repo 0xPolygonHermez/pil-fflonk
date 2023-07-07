@@ -26,7 +26,9 @@ class PilFflonkSteps {
     
     public:
         
-        AltBn128::FrElement* setConstValues(AltBn128::Engine &E);
+        u_int64_t getNumConstValues();
+
+        void setConstValues(AltBn128::Engine &E, StepsParams &params);
 
         void publics_first(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub);
         void publics_i(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub);

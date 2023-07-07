@@ -23,7 +23,7 @@ struct CompareFe
             return num1 < num2;
         }
        
-        // bool res = E.fr.gt(a, b);
+        // bool res = E.fr.lt(a, b);
         // std::cout << E.fr.toString(a) << " < " << E.fr.toString(b) << " = " << res << std::endl;
         // return res;
     }
