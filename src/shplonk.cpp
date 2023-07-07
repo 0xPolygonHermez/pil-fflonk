@@ -261,11 +261,11 @@ namespace ShPlonk {
             for(u_int32_t j = 0; j < openingPoints[i]; ++j) {
                 initialOpenValues[i] = E.fr.mul(initialOpenValues[i], zkeyPilFflonk->omegas["w1_1d1"]);
             }
-        }
+        } 
 
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             u_int32_t openingPoint = zkeyPilFflonk->f[i]->openingPoints[0];
-
+ 
             auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)], tmpBuffer);
             fTmp->sub(*polynomialsShPlonk["R" + std::to_string(i)]);
             fTmp->mulScalar(alpha);

@@ -622,44 +622,51 @@ void Polynomial<Engine>::divByZerofier(u_int64_t n, FrElement beta) {
     isOne = E.fr.eq(E.fr.one(), invBeta);
     isNegOne = E.fr.eq(negOne, invBeta);
 
-    #pragma omp parallel for
-    for (int k = 0; k < n; k++) {
-        for (uint64_t i = 0; i < nChunks - 1; i++) {
-            for (uint64_t j = 0; j < nElementsThread; j++) {
-                u_int64_t idxBase = k * nElementsThread + j;
-                u_int64_t idx0 = idxBase + i * n;
-                u_int64_t idx1 = idxBase + (i + 1) * n;
+    
+    u_int64_t threadIters = (n + nThreads*nElementsThread - 1) / (nThreads*nElementsThread);
+    for(uint64_t l = 0; l < threadIters; ++l) {
+        u_int64_t idxThreads0 = l * nThreads;
+        u_int64_t idxThreads1 = std::min((l + 1) * nThreads, n);
+        #pragma omp parallel for
+        for (u_int64_t k = idxThreads0; k < idxThreads1; k++) {
+            for (uint64_t i = 0; i < nChunks - 1; i++) {
+                for (uint64_t j = 0; j < nElementsThread; j++) {
+                    u_int64_t idxBase = k * nElementsThread + j;
+                    u_int64_t idx0 = idxBase + i * n;
+                    u_int64_t idx1 = idxBase + (i + 1) * n;
 
-                if(idx1 > this->degree) {
-                    if (idx1 < this->length && !E.fr.isZero(coef[idx1])) {
-                        throw std::runtime_error("Polynomial is not divisible");
+                    if(idx1 > this->degree) {
+                        if (idx1 < this->length && !E.fr.isZero(coef[idx1])) {
+                            throw std::runtime_error("Polynomial is not divisible");
+                        }
+                        break;
+                    } 
+
+                    FrElement element = E.fr.sub(coef[idx0], coef[idx1]);
+
+                    // If invBeta === 1 we'll not do anything
+                    if(!isOne) {
+                        // If invBeta === -1 we'll save a multiplication changing it by a neg function call
+                        if(isNegOne) {
+                            E.fr.neg(element, element);
+                        } else {
+                            element = E.fr.mul(invBeta, element);
+                        }
                     }
-                    break;
-                } 
 
-                FrElement element = E.fr.sub(coef[idx0], coef[idx1]);
+                    coef[idx1] = element;
 
-                // If invBeta === 1 we'll not do anything
-                if(!isOne) {
-                    // If invBeta === -1 we'll save a multiplication changing it by a neg function call
-                    if(isNegOne) {
-                        E.fr.neg(element, element);
-                    } else {
-                        element = E.fr.mul(invBeta, element);
-                    }
-                }
-
-                coef[idx1] = element;
-
-                // Check if polynomial is divisible by checking if n high coefficients are zero
-                if (idx1 > this->degree - n) {
-                    if (!E.fr.isZero(element)) {
-                        throw std::runtime_error("Polynomial is not divisible");
+                    // Check if polynomial is divisible by checking if n high coefficients are zero
+                    if (idx1 > this->degree - n) {
+                        if (!E.fr.isZero(element)) {
+                            throw std::runtime_error("Polynomial is not divisible");
+                        }
                     }
                 }
             }
         }
     }
+   
 
     fixDegreeFrom(this->degree);
 }

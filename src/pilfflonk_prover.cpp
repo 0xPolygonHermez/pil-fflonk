@@ -126,6 +126,56 @@ namespace PilFflonk
             PTau = (G1PointAffine *)(ptrConstant["const_coefs"] + N * factorZK * fflonkInfo->nConstants);
 
             // //////////////////////////////////////////////////
+            // BIG BUFFER
+            // //////////////////////////////////////////////////
+            lengthBufferCommitted = 0;
+
+            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm1_n];    // cm1_n       >> Stage1, committed polynomials evaluations
+            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm2_n];    // cm2_n       >> Stage2, H1&H2 polynomials evaluations
+            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm3_n];    // cm3_n       >> Stage3, Z polynomial evaluations
+            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[tmpExp_n]; // tmpExp_n    >> Temporal expressions polynomials evaluations
+
+            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_2ns]; // cm1_2ns     >> Stage1, committed polynomials extended evaluations
+            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_2ns]; // cm2_2ns     >> Stage2, H1&H2 polynomials extended evaluations
+            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_2ns]; // cm3_2ns     >> Stage3, Z polynomial extended evaluations
+            lengthBufferCommitted += NExt * factorZK * fflonkInfo->qDim;                          // q_2ns       >> Stage4, Q polynomial extended evaluations
+            lengthBufferCommitted += fflonkInfo->nPublics;                                        // publics
+            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];      // cm1_coefs   >> Stage1 polynomials coefficients
+            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];      // cm2_coefs   >> Stage2 polynomials coefficients
+            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];      // cm3_coefs   >> Stage3 polynomials coefficients
+
+            zklog.info("lengthBufferCommitted: " + std::to_string(lengthBufferCommitted));
+
+            if(reservedMemoryPtr == NULL) {
+                bBufferCommitted = new FrElement[lengthBufferCommitted];
+            } else {
+                uint64_t requiredMemorySize = lengthBufferCommitted * sizeof(AltBn128::FrElement);
+                if(reservedMemorySize < requiredMemorySize) {
+                    uint64_t additionalBytes = requiredMemorySize - reservedMemorySize;
+                    string errorMsg = "Insufficient reserved memory size. Additional " + std::to_string(additionalBytes) + " bytes required. Total required " + std::to_string(requiredMemorySize) + " bytes.";
+                    zklog.error(errorMsg);
+
+                    throw std::runtime_error(errorMsg);
+                }
+                bBufferCommitted = reservedMemoryPtr;
+            }
+
+            ptrCommitted["cm1_n"] = &bBufferCommitted[0];
+            ptrCommitted["cm2_n"] = ptrCommitted["cm1_n"] + N * fflonkInfo->mapSectionsN.section[cm1_n];
+            ptrCommitted["cm3_n"] = ptrCommitted["cm2_n"] + N * fflonkInfo->mapSectionsN.section[cm2_n];
+            ptrCommitted["tmpExp_n"] = ptrCommitted["cm3_n"] + N * fflonkInfo->mapSectionsN.section[cm3_n];
+            ptrCommitted["cm1_2ns"] = ptrCommitted["tmpExp_n"] + N * fflonkInfo->mapSectionsN.section[tmpExp_n];
+            ptrCommitted["cm2_2ns"] = ptrCommitted["cm1_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
+            ptrCommitted["cm3_2ns"] = ptrCommitted["cm2_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
+            ptrCommitted["q_2ns"] = ptrCommitted["cm3_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
+
+            ptrCommitted["publics"] = ptrCommitted["q_2ns"] + NExt * factorZK * fflonkInfo->qDim;
+            ptrCommitted["cm1_coefs"] = ptrCommitted["publics"] + fflonkInfo->nPublics;
+            ptrCommitted["cm2_coefs"] = ptrCommitted["cm1_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
+            ptrCommitted["cm3_coefs"] = ptrCommitted["cm2_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
+
+
+            // //////////////////////////////////////////////////
             // SHPLONK BIG BUFFER
             // //////////////////////////////////////////////////
             
@@ -163,8 +213,11 @@ namespace PilFflonk
             lengthBufferShPlonk += lengthW * 2;
             
             // Add tmp buffer
-            names.push_back(std::make_tuple("tmp", lengthW));
-            lengthBufferShPlonk += lengthW;
+            u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[cm1_n], max(fflonkInfo->mapSectionsN.section[cm2_n], fflonkInfo->mapSectionsN.section[cm3_n]));
+            u_int64_t tmpLength = max(NExt * factorZK * maxNPols, lengthW);
+            
+            names.push_back(std::make_tuple("tmp", tmpLength));
+            lengthBufferShPlonk += tmpLength;
 
             zklog.info("lengthBufferShPlonk: " + std::to_string(lengthBufferShPlonk));
 
@@ -179,59 +232,6 @@ namespace PilFflonk
                     ptrShPlonk[name] = ptrShPlonk[prevName] + prevLength;
                 }
             }
-
-            // //////////////////////////////////////////////////
-            // BIG BUFFER
-            // //////////////////////////////////////////////////
-            lengthBufferCommitted = 0;
-
-            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm1_n];    // cm1_n       >> Stage1, committed polynomials evaluations
-            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm2_n];    // cm2_n       >> Stage2, H1&H2 polynomials evaluations
-            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm3_n];    // cm3_n       >> Stage3, Z polynomial evaluations
-            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[tmpExp_n]; // tmpExp_n    >> Temporal expressions polynomials evaluations
-
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_2ns]; // cm1_2ns     >> Stage1, committed polynomials extended evaluations
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_2ns]; // cm2_2ns     >> Stage2, H1&H2 polynomials extended evaluations
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_2ns]; // cm3_2ns     >> Stage3, Z polynomial extended evaluations
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->qDim;                          // q_2ns       >> Stage4, Q polynomial extended evaluations
-            lengthBufferCommitted += fflonkInfo->nPublics;                                        // publics
-            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];      // cm1_coefs   >> Stage1 polynomials coefficients
-            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];      // cm2_coefs   >> Stage2 polynomials coefficients
-            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];      // cm3_coefs   >> Stage3 polynomials coefficients
-
-            u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[cm1_n], max(fflonkInfo->mapSectionsN.section[cm2_n], fflonkInfo->mapSectionsN.section[cm3_n]));
-            lengthBufferCommitted += NExt * factorZK * maxNPols;                                  // tmp   >> Buffer used to perform ifft / fft
-            
-            zklog.info("lengthBufferCommitted: " + std::to_string(lengthBufferCommitted));
-
-            if(reservedMemoryPtr == NULL) {
-                bBufferCommitted = new FrElement[lengthBufferCommitted];
-            } else {
-                uint64_t requiredMemorySize = lengthBufferCommitted * sizeof(AltBn128::FrElement);
-                if(reservedMemorySize < requiredMemorySize) {
-                    uint64_t additionalBytes = requiredMemorySize - reservedMemorySize;
-                    string errorMsg = "Insufficient reserved memory size. Additional " + std::to_string(additionalBytes) + " bytes required. Total required " + std::to_string(requiredMemorySize) + " bytes.";
-                    zklog.error(errorMsg);
-
-                    throw std::runtime_error(errorMsg);
-                }
-                bBufferCommitted = reservedMemoryPtr;
-            }
-
-            ptrCommitted["cm1_n"] = &bBufferCommitted[0];
-            ptrCommitted["cm2_n"] = ptrCommitted["cm1_n"] + N * fflonkInfo->mapSectionsN.section[cm1_n];
-            ptrCommitted["cm3_n"] = ptrCommitted["cm2_n"] + N * fflonkInfo->mapSectionsN.section[cm2_n];
-            ptrCommitted["tmpExp_n"] = ptrCommitted["cm3_n"] + N * fflonkInfo->mapSectionsN.section[cm3_n];
-            ptrCommitted["cm1_2ns"] = ptrCommitted["tmpExp_n"] + N * fflonkInfo->mapSectionsN.section[tmpExp_n];
-            ptrCommitted["cm2_2ns"] = ptrCommitted["cm1_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
-            ptrCommitted["cm3_2ns"] = ptrCommitted["cm2_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
-            ptrCommitted["q_2ns"] = ptrCommitted["cm3_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
-
-            ptrCommitted["publics"] = ptrCommitted["q_2ns"] + NExt * factorZK * fflonkInfo->qDim;
-            ptrCommitted["cm1_coefs"] = ptrCommitted["publics"] + fflonkInfo->nPublics;
-            ptrCommitted["cm2_coefs"] = ptrCommitted["cm1_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
-            ptrCommitted["cm3_coefs"] = ptrCommitted["cm2_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
-            ptrCommitted["tmp"] = ptrCommitted["cm3_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
 
             int nThreads = omp_get_max_threads() / 2;
 
@@ -680,7 +680,7 @@ namespace PilFflonk
         ThreadUtils::parcpy(buffCoefs, buffSrc, N * nPols * sizeof(AltBn128::FrElement), nThreads);
 
         TimerStart(EXTEND_INTT);
-        ntt->INTT(buffCoefs, buffSrc, N, nPols, ptrCommitted["tmp"]);
+        ntt->INTT(buffCoefs, buffSrc, N, nPols, ptrShPlonk["tmp"]);
         TimerStopAndLog(EXTEND_INTT);
 
         for (u_int32_t i = 0; i < nPols; i++)
@@ -704,7 +704,7 @@ namespace PilFflonk
         ThreadUtils::parcpy(buffDst, buffCoefs, N * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
                
         TimerStart(EXTEND_NTT);
-        nttExtended->NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols, ptrCommitted["tmp"]);
+        nttExtended->NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols, ptrShPlonk["tmp"]);
         TimerStopAndLog(EXTEND_NTT);
     }
 
