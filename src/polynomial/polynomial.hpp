@@ -94,6 +94,8 @@ public:
 
     void fastDivByVanishing(FrElement *reservedBuffer, uint32_t m, FrElement beta);
 
+    void divByXSubValue(FrElement &value);
+
     void divZh(u_int64_t domainSize, int extension = 4);
 
     void divByZerofier(u_int64_t n, FrElement beta);

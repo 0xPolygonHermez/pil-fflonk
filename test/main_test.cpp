@@ -2,6 +2,7 @@
 
 #include "ntt_altbn128.test.hpp"
 #include "polinomial.test.hpp" 
+#include "polynomial.test.hpp"
 
 // // Test fixture for common setup and teardown
 // class MyTestFixture : public ::testing::Test {
@@ -17,12 +18,13 @@
 
 AltBn128::Engine E;
  
-int main(int argc, char** argv) {
+int main(int argc, char** argv) { 
     ::testing::InitGoogleTest(&argc, argv);
     
     // Check the command-line arguments to execute desired test(s) 
     bool bn128 = false;
     bool polinomial = false;
+    bool polynomial = false;
 
     for (int i = 1; i < argc; ++i) {
         if (std::string(argv[i]) == "--bn128") {  
@@ -30,7 +32,7 @@ int main(int argc, char** argv) {
         } else if (std::string(argv[i]) == "--polinomial") {  
             polinomial = true;
         }
-    } 
+    }
 
     if (!bn128 && !polinomial) {
         return RUN_ALL_TESTS();
@@ -46,6 +48,11 @@ int main(int argc, char** argv) {
     if (polinomial) {
         result |= RUN_ALL_TESTS();
         result &= ~2; // Clear the second lowest bit to ignore test1's result
+    }
+
+    if (polynomial) {
+        result |= RUN_ALL_TESTS();
+        result &= ~3; // Clear the second lowest bit to ignore test1's result
     }
 
     return result;
