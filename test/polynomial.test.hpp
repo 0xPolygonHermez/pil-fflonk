@@ -461,3 +461,51 @@ TEST(POLYNOMIAL, divByXSubValue) {
 
     ASSERT_TRUE(polA.isEqual(polB));
 }
+
+TEST(POLYNOMIAL, divZh) {
+    auto polA = Polynomial<AltBn128::Engine>(E, 8);
+    auto polB = Polynomial<AltBn128::Engine>(E, 4);
+    AltBn128::FrElement bufferA[8] = {
+        E.fr.set(-1),
+        E.fr.set(-2),
+        E.fr.set(-2),
+        E.fr.set(-2),
+        E.fr.set(3),
+        E.fr.set(4),
+        E.fr.zero(), E.fr.zero()
+    };
+
+    AltBn128::FrElement bufferB[4] = {
+        E.fr.set(1),
+        E.fr.set(2),
+        E.fr.set(3),
+        E.fr.set(4)
+    };
+
+    for(int i = 0; i < 8; i++) {
+        polA.coef[i] = bufferA[i];
+        polB.coef[i] = bufferB[i];
+    }
+
+    polA.fixDegree();
+    polB.fixDegree();
+
+    polA.divZh(2, 1);
+
+    ASSERT_TRUE(polA.isEqual(polB));
+
+//     auto polC = Polynomial<AltBn128::Engine>(E, 2048);
+//     for(int i = 0; i < 2048; i++) {
+//         polC.coef[i] = E.fr.set(i+1);
+//     }
+//     auto polD = Polynomial<AltBn128::Engine>::fromPolynomial(E, polA);
+
+//     polC.fixDegree();
+//     AltBn128::FrElement element = E.fr.set(3);
+//     polC.byXNSubValue(64, element);
+//     polC.divZh(64, 3);
+// polC.print();
+// std::cout <<" ----" << std::endl;
+// polD->print();
+//     ASSERT_TRUE(polC.isEqual(*polD));
+}
