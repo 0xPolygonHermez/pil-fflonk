@@ -137,20 +137,17 @@ template<typename Engine>
 typename Engine::FrElement Polynomial<Engine>::getCoef(u_int64_t index) const {
     if (index > length - 1) {
         return E.fr.zero();
-        //throw std::runtime_error("Polynomial::getCoef: invalid index");
     }
     return coef[index];
 }
 
 template<typename Engine>
 void Polynomial<Engine>::setCoef(u_int64_t index, FrElement value) {
-    if (index > degree) {
+    if (index > length - 1) {
         throw std::runtime_error("Polynomial::setCoef: invalid index");
     }
     coef[index] = value;
 }
-
-//TODO     static async to4T(buffer, domainSize, blindingFactors, Fr) {
 
 template<typename Engine>
 u_int64_t Polynomial<Engine>::getLength() const {
@@ -161,16 +158,6 @@ template<typename Engine>
 u_int64_t Polynomial<Engine>::getDegree() const {
     return degree;
 }
-
-//template<typename Engine>
-//typename Engine::FrElement Polynomial<Engine>::evaluate(FrElement point) const {
-//    FrElement result = E.fr.zero();
-//
-//    for (u_int64_t i = degree + 1; i > 0; i--) {
-//        result = E.fr.add(coef[i - 1], E.fr.mul(result, point));
-//    }
-//    return result;
-//}
 
 template<typename Engine>
 typename Engine::FrElement Polynomial<Engine>::fastEvaluate(FrElement point) const {

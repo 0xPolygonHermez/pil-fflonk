@@ -34,6 +34,100 @@ TEST(POLYNOMIAL, PolynomialFromReservedBuffer) {
     ASSERT_EQ(pol.getDegree(), 0);
 }
 
+TEST(POLYNOMIAL, isEqual) {
+    auto polA = Polynomial<AltBn128::Engine>(E, 8);
+    auto polB = Polynomial<AltBn128::Engine>(E, 16);
+
+    AltBn128::FrElement buffer[8] = {
+        E.fr.set(1),
+        E.fr.set(2),
+        E.fr.set(3),
+        E.fr.set(4),
+        E.fr.set(5),
+        E.fr.set(6),
+        E.fr.zero(), E.fr.zero()
+    };
+
+    for(int i = 0; i < 8; i++) {
+        polA.coef[i] = buffer[i];
+        polB.coef[i] = buffer[i];
+    }
+
+    polA.fixDegree();
+    polB.fixDegree();
+
+    ASSERT_TRUE(polA.isEqual(polB));
+    ASSERT_TRUE(polB.isEqual(polA));
+
+    polB.setCoef(7, E.fr.set(33));
+    polB.fixDegree();
+
+    ASSERT_FALSE(polA.isEqual(polB));
+    ASSERT_FALSE(polB.isEqual(polA));
+}
+
+TEST(POLYNOMIAL, getCoef) {
+    auto pol = getPolynomial(8);
+
+    ASSERT_TRUE(E.fr.eq(E.fr.zero(), pol->getCoef(8)));
+    ASSERT_TRUE(E.fr.eq(pol->coef[6], pol->getCoef(6)));
+}
+
+TEST(POLYNOMIAL, setCoef) {
+    auto pol = getPolynomial(8);
+
+    EXPECT_ANY_THROW(pol->setCoef(8, E.fr.one()));
+    EXPECT_NO_THROW(pol->setCoef(7, E.fr.one()));
+    EXPECT_NO_THROW(pol->setCoef(0, E.fr.one()));
+}
+
+TEST(POLYNOMIAL, fixDegree) {
+    auto polA = Polynomial<AltBn128::Engine>(E, 8);
+    auto polB = Polynomial<AltBn128::Engine>(E, 16);
+
+    AltBn128::FrElement buffer[8] = {
+        E.fr.set(1),
+        E.fr.set(2),
+        E.fr.set(3),
+        E.fr.set(4),
+        E.fr.set(5),
+        E.fr.set(6),
+        E.fr.zero(), E.fr.zero()
+    };
+
+    for(int i = 0; i < 8; i++) {
+        polA.coef[i] = buffer[i];
+        polB.coef[i] = buffer[i];
+    }
+
+    polA.fixDegree();
+    polB.fixDegree();
+
+    ASSERT_EQ(polA.getDegree(), 5);
+    ASSERT_EQ(polB.getDegree(), 5);
+
+    polA.fixDegreeFrom(7);
+
+    ASSERT_EQ(polA.getDegree(), 5);
+
+    polA.fixDegreeFrom(5);
+
+    ASSERT_EQ(polA.getDegree(), 5);
+
+    polB.setCoef(7, E.fr.set(33));
+    polB.fixDegree();
+
+    ASSERT_EQ(polB.getDegree(), 7);
+
+    for(int i = 0; i < 8; i++) {
+        polA.coef[i] = E.fr.zero();
+    }
+
+    polA.fixDegree();
+
+    ASSERT_EQ(polA.getDegree(), 0);
+}
+
 TEST(POLYNOMIAL, AddWhenPowerOfTwoDegree) {
     // Check correctness of a+b polynomial operation where a degree is less than b degree
     auto polA = getPolynomial(8);
