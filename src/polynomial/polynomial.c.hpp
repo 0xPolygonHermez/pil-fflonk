@@ -58,6 +58,18 @@ Polynomial<Engine>::fromPolynomial(Engine &_E, Polynomial<Engine> &polynomial, F
 
 template<typename Engine>
 Polynomial<Engine> *
+Polynomial<Engine>::fromCoefficients(Engine &_E, FrElement* coefficients, u_int64_t length) {
+    Polynomial<Engine> *newPol = new Polynomial<Engine>(_E, length);
+
+    int nThreads = omp_get_max_threads() / 2;
+    ThreadUtils::parcpy(newPol->coef, coefficients, length * sizeof(FrElement), nThreads);
+    newPol->fixDegree();
+
+    return newPol;
+}
+
+template<typename Engine>
+Polynomial<Engine> *
 Polynomial<Engine>::fromEvaluations(Engine &_E, FFT<typename Engine::Fr> *fft, FrElement *evaluations, u_int64_t length,
                                     u_int64_t blindLength) {
     Polynomial<Engine> *pol = new Polynomial<Engine>(_E, length, blindLength);
@@ -147,6 +159,11 @@ void Polynomial<Engine>::setCoef(u_int64_t index, FrElement value) {
         throw std::runtime_error("Polynomial::setCoef: invalid index");
     }
     coef[index] = value;
+    if (index > degree) {
+        degree = index;
+    } else if (index == degree && E.fr.isZero(value)) {
+        fixDegreeFrom(index - 1);
+    }
 }
 
 template<typename Engine>

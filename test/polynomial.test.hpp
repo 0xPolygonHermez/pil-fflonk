@@ -8,14 +8,13 @@
 extern AltBn128::Engine E;
 
 Polynomial<AltBn128::Engine>* getPolynomial(u_int32_t n) {
-    Polynomial<AltBn128::Engine>* a = new Polynomial<AltBn128::Engine>(E, n);
+    Polynomial<AltBn128::Engine>* pol = new Polynomial<AltBn128::Engine>(E, n);
     for (u_int32_t i = 0; i < n; i++)
     {
-        a->coef[i] = E.fr.set(i + 1);
+        pol->setCoef(i, E.fr.set(i + 1));
     }
 
-    a->fixDegree();
-    return a;
+    return pol;
 }
 
 // POLYNOMIAL BASIC OPERATIONS
@@ -35,9 +34,6 @@ TEST(POLYNOMIAL, PolynomialFromReservedBuffer) {
 }
 
 TEST(POLYNOMIAL, isEqual) {
-    auto polA = Polynomial<AltBn128::Engine>(E, 8);
-    auto polB = Polynomial<AltBn128::Engine>(E, 16);
-
     AltBn128::FrElement buffer[8] = {
         E.fr.set(1),
         E.fr.set(2),
@@ -48,22 +44,16 @@ TEST(POLYNOMIAL, isEqual) {
         E.fr.zero(), E.fr.zero()
     };
 
-    for(int i = 0; i < 8; i++) {
-        polA.coef[i] = buffer[i];
-        polB.coef[i] = buffer[i];
-    }
+    auto polA = Polynomial<AltBn128::Engine>::fromCoefficients(E, buffer, 8);
+    auto polB = Polynomial<AltBn128::Engine>::fromCoefficients(E, buffer, 8);
 
-    polA.fixDegree();
-    polB.fixDegree();
+    ASSERT_TRUE(polA->isEqual(*polB));
+    ASSERT_TRUE(polB->isEqual(*polA));
 
-    ASSERT_TRUE(polA.isEqual(polB));
-    ASSERT_TRUE(polB.isEqual(polA));
+    polB->setCoef(7, E.fr.set(33));
 
-    polB.setCoef(7, E.fr.set(33));
-    polB.fixDegree();
-
-    ASSERT_FALSE(polA.isEqual(polB));
-    ASSERT_FALSE(polB.isEqual(polA));
+    ASSERT_FALSE(polA->isEqual(*polB));
+    ASSERT_FALSE(polB->isEqual(*polA));
 }
 
 TEST(POLYNOMIAL, getCoef) {
@@ -82,9 +72,6 @@ TEST(POLYNOMIAL, setCoef) {
 }
 
 TEST(POLYNOMIAL, fixDegree) {
-    auto polA = Polynomial<AltBn128::Engine>(E, 8);
-    auto polB = Polynomial<AltBn128::Engine>(E, 16);
-
     AltBn128::FrElement buffer[8] = {
         E.fr.set(1),
         E.fr.set(2),
@@ -95,37 +82,27 @@ TEST(POLYNOMIAL, fixDegree) {
         E.fr.zero(), E.fr.zero()
     };
 
-    for(int i = 0; i < 8; i++) {
-        polA.coef[i] = buffer[i];
-        polB.coef[i] = buffer[i];
-    }
+    auto polA = Polynomial<AltBn128::Engine>::fromCoefficients(E, buffer, 8);
 
-    polA.fixDegree();
-    polB.fixDegree();
+    ASSERT_EQ(polA->getDegree(), 5);
 
-    ASSERT_EQ(polA.getDegree(), 5);
-    ASSERT_EQ(polB.getDegree(), 5);
+    polA->fixDegreeFrom(7);
 
-    polA.fixDegreeFrom(7);
+    ASSERT_EQ(polA->getDegree(), 5);
 
-    ASSERT_EQ(polA.getDegree(), 5);
+    polA->fixDegreeFrom(5);
 
-    polA.fixDegreeFrom(5);
+    ASSERT_EQ(polA->getDegree(), 5);
 
-    ASSERT_EQ(polA.getDegree(), 5);
+    polA->setCoef(7, E.fr.set(33));
 
-    polB.setCoef(7, E.fr.set(33));
-    polB.fixDegree();
-
-    ASSERT_EQ(polB.getDegree(), 7);
+    ASSERT_EQ(polA->getDegree(), 7);
 
     for(int i = 0; i < 8; i++) {
-        polA.coef[i] = E.fr.zero();
+        polA->setCoef(i, E.fr.zero());
     }
 
-    polA.fixDegree();
-
-    ASSERT_EQ(polA.getDegree(), 0);
+    ASSERT_EQ(polA->getDegree(), 0);
 }
 
 TEST(POLYNOMIAL, AddWhenPowerOfTwoDegree) {
@@ -331,8 +308,6 @@ TEST(POLYNOMIAL, subScalar) {
 }
 
 TEST(POLYNOMIAL, byXSubValue) {
-    auto polA = Polynomial<AltBn128::Engine>(E, 8);
-    auto polB = Polynomial<AltBn128::Engine>(E, 8);
     AltBn128::FrElement bufferA[8] = {
         E.fr.set(1),
         E.fr.set(2),
@@ -352,23 +327,16 @@ TEST(POLYNOMIAL, byXSubValue) {
         E.fr.zero(), E.fr.zero()
     };
 
-    for(int i = 0; i < 8; i++) {
-        polA.coef[i] = bufferA[i];
-        polB.coef[i] = bufferB[i];
-    }
-
-    polA.fixDegree();
-    polB.fixDegree();
+    auto polA = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferA, 8);
+    auto polB = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferB, 8);
 
     AltBn128::FrElement element = E.fr.set(7);
-    polA.byXSubValue(element);
+    polA->byXSubValue(element);
 
-    ASSERT_TRUE(polA.isEqual(polB));
+    ASSERT_TRUE(polA->isEqual(*polB));
 }
 
 TEST(POLYNOMIAL, byXNSubValue) {
-    auto polA = Polynomial<AltBn128::Engine>(E, 8);
-    auto polB = Polynomial<AltBn128::Engine>(E, 8);
     AltBn128::FrElement bufferA[8] = {
         E.fr.set(1),
         E.fr.set(2),
@@ -388,21 +356,14 @@ TEST(POLYNOMIAL, byXNSubValue) {
         E.fr.zero(), E.fr.zero()
     };
 
-    for(int i = 0; i < 8; i++) {
-        polA.coef[i] = bufferA[i];
-        polB.coef[i] = bufferB[i];
-
-    }
-
-    polA.fixDegree();
-    polB.fixDegree();
+    auto polA = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferA, 8);
+    auto polB = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferB, 8);
 
     AltBn128::FrElement element = E.fr.set(7);
-    polA.byXNSubValue(1, element);
+    polA->byXNSubValue(1, element);
 
-    ASSERT_TRUE(polA.isEqual(polB));
+    ASSERT_TRUE(polA->isEqual(*polB));
 
-    auto polC = Polynomial<AltBn128::Engine>(E, 8);
     AltBn128::FrElement bufferC[8] = {
         E.fr.set(-7),
         E.fr.set(-14),
@@ -413,22 +374,16 @@ TEST(POLYNOMIAL, byXNSubValue) {
         E.fr.set(5), E.fr.zero()
     };
 
-    for(int i = 0; i < 8; i++) {
-        polA.coef[i] = bufferA[i];
-        polC.coef[i] = bufferC[i];
-    }
+    delete polA;
+    polA = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferA, 8);
+    auto polC = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferC, 8);
 
-    polA.fixDegree();
-    polC.fixDegree();
+    polA->byXNSubValue(2, element);
 
-    polA.byXNSubValue(2, element);
-
-    ASSERT_TRUE(polA.isEqual(polC));
+    ASSERT_TRUE(polA->isEqual(*polC));
 }
 
 TEST(POLYNOMIAL, divByXSubValue) {
-    auto polA = Polynomial<AltBn128::Engine>(E, 8);
-    auto polB = Polynomial<AltBn128::Engine>(E, 8);
     AltBn128::FrElement bufferA[8] = {
         E.fr.set(1),
         E.fr.set(2),
@@ -448,23 +403,16 @@ TEST(POLYNOMIAL, divByXSubValue) {
         E.fr.zero(), E.fr.zero()
     };
 
-    for(int i = 0; i < 8; i++) {
-        polA.coef[i] = bufferA[i];
-        polB.coef[i] = bufferB[i];
-    }
-
-    polA.fixDegree();
-    polB.fixDegree();
+    auto polA = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferA, 8);
+    auto polB = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferB, 8);
 
     AltBn128::FrElement element = E.fr.set(7);
-    polB.divByXSubValue(element);
+    polB->divByXSubValue(element);
 
-    ASSERT_TRUE(polA.isEqual(polB));
+    ASSERT_TRUE(polA->isEqual(*polB));
 }
 
 TEST(POLYNOMIAL, divZh) {
-    auto polA = Polynomial<AltBn128::Engine>(E, 8);
-    auto polB = Polynomial<AltBn128::Engine>(E, 4);
     AltBn128::FrElement bufferA[8] = {
         E.fr.set(-1),
         E.fr.set(-2),
@@ -482,17 +430,14 @@ TEST(POLYNOMIAL, divZh) {
         E.fr.set(4)
     };
 
-    for(int i = 0; i < 8; i++) {
-        polA.coef[i] = bufferA[i];
-        polB.coef[i] = bufferB[i];
-    }
+    auto polA = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferA, 8);
+    auto polB = Polynomial<AltBn128::Engine>::fromCoefficients(E, bufferB, 4);
 
-    polA.fixDegree();
-    polB.fixDegree();
+    polA->divZh(2, 1);
 
-    polA.divZh(2, 1);
+    ASSERT_TRUE(polA->isEqual(*polB));
 
-    ASSERT_TRUE(polA.isEqual(polB));
+
 
 //     auto polC = Polynomial<AltBn128::Engine>(E, 2048);
 //     for(int i = 0; i < 2048; i++) {
