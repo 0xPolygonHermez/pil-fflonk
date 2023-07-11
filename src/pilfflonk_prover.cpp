@@ -31,6 +31,10 @@ namespace PilFflonk
         delete[] bBufferShPlonk;
         ptrShPlonk.clear();
 
+        mapBufferCommitted.clear();
+        mapBufferConstant.clear();
+        mapBufferShPlonk.clear();
+
         delete fft;
         delete ntt;
         delete nttExtended;
@@ -97,54 +101,56 @@ namespace PilFflonk
             // //////////////////////////////////////////////////
             // CONSTANT BIG BUFFER
             // //////////////////////////////////////////////////
-            lengthBuffer = 0;
-
-            u_int32_t maxFiDegree = 0;
-            for (auto const &[key, f] : zkey->f)
+            u_int64_t maxFiDegree = 0;
+            for (auto const &[key, f] : zkey->f) {
                 maxFiDegree = max(maxFiDegree, f->degree);
+            }
             maxFiDegree += 1;
 
             // Polynomial evaluations
-            lengthBuffer += N * fflonkInfo->nConstants;                              // const_n     >> Constant polynomials evaluations
-            lengthBuffer += NExt * factorZK * fflonkInfo->nConstants;                // const_2ns   >> Constant polynomials extended evaluations
-            lengthBuffer += N * factorZK * fflonkInfo->nConstants;                   // const_coefs >> Constant polynomials coefficients
-            lengthBuffer += N;                                                       // x_n
-            lengthBuffer += NExt * factorZK;                                         // x_2ns
+            mapBufferConstant["const_n"] = N * fflonkInfo->nConstants;
+            mapBufferConstant["const_2ns"] = NExt * factorZK * fflonkInfo->nConstants;
+            mapBufferConstant["const_coefs"] = N * factorZK * fflonkInfo->nConstants;
+            mapBufferConstant["x_n"] = N;
+            mapBufferConstant["x_2ns"] = NExt * factorZK;
+            mapBufferConstant["PTau"] = maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement);
 
-            lengthBuffer += maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement); // PTau buffer
+            lengthBufferConstant = 0;
+            for (auto const &[key, value] : mapBufferConstant) {
+                lengthBufferConstant += value;
+            }
 
-            zklog.info("lengthBuffer: " + std::to_string(lengthBuffer));
+            zklog.info("lengthBufferConstant: " + std::to_string(lengthBufferConstant));
 
-            bBufferConstant = new FrElement[lengthBuffer];
+            bBufferConstant = new FrElement[lengthBufferConstant];
 
-            ptrConstant["const_n"] = &bBufferConstant[0];
-            ptrConstant["const_2ns"] = ptrConstant["const_n"] + N * fflonkInfo->nConstants;
-
-            ptrConstant["x_n"] = ptrConstant["const_2ns"] + NExt * factorZK * fflonkInfo->nConstants;
-            ptrConstant["x_2ns"] = ptrConstant["x_n"] + N;
-
-            ptrConstant["const_coefs"] = ptrConstant["x_2ns"] + NExt * factorZK;
-
-            PTau = (G1PointAffine *)(ptrConstant["const_coefs"] + N * factorZK * fflonkInfo->nConstants);
+            u_int64_t offset = 0;
+            for(auto const &[key, value] : mapBufferConstant) {
+                ptrConstant[key] = bBufferConstant + offset;
+                offset += value;
+            }
 
             // //////////////////////////////////////////////////
             // BIG BUFFER
             // //////////////////////////////////////////////////
+            mapBufferCommitted["cm1_n"] = N * fflonkInfo->mapSectionsN.section[cm1_n];
+            mapBufferCommitted["cm2_n"] = N * fflonkInfo->mapSectionsN.section[cm2_n];
+            mapBufferCommitted["cm3_n"] = N * fflonkInfo->mapSectionsN.section[cm3_n];
+            mapBufferCommitted["tmpExp_n"] = N * fflonkInfo->mapSectionsN.section[tmpExp_n];
+
+            mapBufferCommitted["cm1_2ns"] = NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_2ns];
+            mapBufferCommitted["cm2_2ns"] = NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_2ns];
+            mapBufferCommitted["cm3_2ns"] = NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_2ns];
+            mapBufferCommitted["q_2ns"] = NExt * factorZK * fflonkInfo->qDim;
+            mapBufferCommitted["publics"] = fflonkInfo->nPublics;
+            mapBufferCommitted["cm1_coefs"] = N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
+            mapBufferCommitted["cm2_coefs"] = N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
+            mapBufferCommitted["cm3_coefs"] = N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
+
             lengthBufferCommitted = 0;
-
-            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm1_n];    // cm1_n       >> Stage1, committed polynomials evaluations
-            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm2_n];    // cm2_n       >> Stage2, H1&H2 polynomials evaluations
-            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[cm3_n];    // cm3_n       >> Stage3, Z polynomial evaluations
-            lengthBufferCommitted += N * fflonkInfo->mapSectionsN.section[tmpExp_n]; // tmpExp_n    >> Temporal expressions polynomials evaluations
-
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_2ns]; // cm1_2ns     >> Stage1, committed polynomials extended evaluations
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_2ns]; // cm2_2ns     >> Stage2, H1&H2 polynomials extended evaluations
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_2ns]; // cm3_2ns     >> Stage3, Z polynomial extended evaluations
-            lengthBufferCommitted += NExt * factorZK * fflonkInfo->qDim;                          // q_2ns       >> Stage4, Q polynomial extended evaluations
-            lengthBufferCommitted += fflonkInfo->nPublics;                                        // publics
-            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];      // cm1_coefs   >> Stage1 polynomials coefficients
-            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];      // cm2_coefs   >> Stage2 polynomials coefficients
-            lengthBufferCommitted += N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];      // cm3_coefs   >> Stage3 polynomials coefficients
+            for (auto const &[key, value] : mapBufferCommitted) {
+                lengthBufferCommitted += value;
+            }
 
             zklog.info("lengthBufferCommitted: " + std::to_string(lengthBufferCommitted));
 
@@ -162,86 +168,74 @@ namespace PilFflonk
                 bBufferCommitted = reservedMemoryPtr;
             }
 
-            ptrCommitted["cm1_n"] = &bBufferCommitted[0];
-            ptrCommitted["cm2_n"] = ptrCommitted["cm1_n"] + N * fflonkInfo->mapSectionsN.section[cm1_n];
-            ptrCommitted["cm3_n"] = ptrCommitted["cm2_n"] + N * fflonkInfo->mapSectionsN.section[cm2_n];
-            ptrCommitted["tmpExp_n"] = ptrCommitted["cm3_n"] + N * fflonkInfo->mapSectionsN.section[cm3_n];
-            ptrCommitted["cm1_2ns"] = ptrCommitted["tmpExp_n"] + N * fflonkInfo->mapSectionsN.section[tmpExp_n];
-            ptrCommitted["cm2_2ns"] = ptrCommitted["cm1_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
-            ptrCommitted["cm3_2ns"] = ptrCommitted["cm2_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
-            ptrCommitted["q_2ns"] = ptrCommitted["cm3_2ns"] + NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
-
-            ptrCommitted["publics"] = ptrCommitted["q_2ns"] + NExt * factorZK * fflonkInfo->qDim;
-            ptrCommitted["cm1_coefs"] = ptrCommitted["publics"] + fflonkInfo->nPublics;
-            ptrCommitted["cm2_coefs"] = ptrCommitted["cm1_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
-            ptrCommitted["cm3_coefs"] = ptrCommitted["cm2_coefs"] + N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
-
+            offset = 0;
+            for(auto const &[key, value] : mapBufferCommitted) {
+                ptrCommitted[key] = bBufferCommitted + offset;
+                offset += value;
+            }
 
             // //////////////////////////////////////////////////
             // SHPLONK BIG BUFFER
             // //////////////////////////////////////////////////
-            
             std::vector<std::tuple<std::string, u_int64_t>> names;
 
-            lengthBufferShPlonk = 0; 
             u_int64_t maxDegree = 0;        
             for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
                 for(u_int32_t k = 0; k < zkey->f[i]->nPols; ++k) {
                     std::string name = zkey->f[i]->pols[k];
                     u_int64_t length = name == "Q" ? (fflonkInfo->qDeg + 1) * N : N * factorZK;
                     names.push_back(std::make_tuple(name, length));
-                    lengthBufferShPlonk += length;
                 }
 
                 u_int64_t lengthStage = std::pow(2, ((u_int64_t)log2(zkey->f[i]->degree - 1)) + 1);
 
                 names.push_back(std::make_tuple("f" + std::to_string(zkey->f[i]->index), lengthStage));
-                lengthBufferShPlonk += lengthStage;
 
                 for(u_int32_t k = 0; k < zkey->f[i]->nStages; ++k) {
                     std::string stage = "f" + std::to_string(zkey->f[i]->index) + "_" + std::to_string(zkey->f[i]->stages[k].stage);
                     names.push_back(std::make_tuple(stage, lengthStage));
-                    lengthBufferShPlonk += lengthStage;
                 }
 
-                if(zkey->f[i]->degree > maxDegree) {
-                    maxDegree = zkey->f[i]->degree;
-                }
+                maxDegree = std::max(maxDegree, zkey->f[i]->degree);
             }
 
             u_int64_t lengthW = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
             names.push_back(std::make_tuple("W", lengthW));
             names.push_back(std::make_tuple("Wp", lengthW));
-            lengthBufferShPlonk += lengthW * 2;
             
             // Add tmp buffer
             u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[cm1_n], max(fflonkInfo->mapSectionsN.section[cm2_n], fflonkInfo->mapSectionsN.section[cm3_n]));
             u_int64_t tmpLength = max(NExt * factorZK * maxNPols, lengthW);
-            
             names.push_back(std::make_tuple("tmp", tmpLength));
             lengthBufferShPlonk += tmpLength;
+
+            lengthBufferShPlonk = 0;
+            for (u_int64_t i = 0; i < names.size(); i++)
+            {
+                auto [name, degree] = names[i];
+                lengthBufferShPlonk += degree;
+            }
 
             zklog.info("lengthBufferShPlonk: " + std::to_string(lengthBufferShPlonk));
 
             bBufferShPlonk = new FrElement[lengthBufferShPlonk];
 
-            for(u_int32_t i = 0; i < names.size(); ++i) {
+            offset = 0;
+            for (u_int64_t i = 0; i < names.size(); i++)
+            {
                 auto [name, degree] = names[i];
-                if(i == 0) {
-                    ptrShPlonk[name] = &bBufferShPlonk[0];
-                } else {
-                    auto [prevName, prevLength] = names[i - 1];
-                    ptrShPlonk[name] = ptrShPlonk[prevName] + prevLength;
-                }
+
+                ptrShPlonk[name] = bBufferShPlonk + offset;
+                offset += degree;
             }
 
             int nThreads = omp_get_max_threads() / 2;
 
             u_int32_t lenPTau = maxFiDegree * sizeof(G1PointAffine);
 
-            ThreadUtils::parset(PTau, 0, lenPTau, nThreads);
+            ThreadUtils::parset(ptrConstant["PTau"], 0, lenPTau, nThreads);
 
-            ThreadUtils::parcpy(PTau,
+            ThreadUtils::parcpy(ptrConstant["PTau"],
                                 (G1PointAffine *)(fdZkey->getSectionData(PilFflonkZkey::ZKEY_PF_PTAU_SECTION)),
                                 lenPTau, nThreads);
 
@@ -411,7 +405,7 @@ namespace PilFflonk
 
             delete[] constValues;
 
-            json pilFflonkProof = shPlonkProver->open(PTau, ptrShPlonk, challenges[4]);
+            json pilFflonkProof = shPlonkProver->open((G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, challenges[4]);
 
             FrElement challengeXi = shPlonkProver->getChallengeXi();
 
@@ -447,7 +441,7 @@ namespace PilFflonk
         {
             addCoefsToContext(0, fflonkInfo->nConstants, ptrConstant["const_coefs"]);
 
-            shPlonkProver->commit(0, PTau, ptrShPlonk, false);
+            shPlonkProver->commit(0, (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, false);
         }
         TimerStopAndLog(PIL_FFLONK_STAGE_1_ADD_CONSTANT_POLS);
 
@@ -460,7 +454,7 @@ namespace PilFflonk
 
             // STEP 1.4 - Commit stage 1 polynomials
             TimerStart(PIL_FFLONK_STAGE_1_COMMIT);
-            shPlonkProver->commit(1, PTau, ptrShPlonk, true);
+            shPlonkProver->commit(1, (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, true);
             TimerStopAndLog(PIL_FFLONK_STAGE_1_COMMIT);
         }
 
@@ -535,7 +529,7 @@ namespace PilFflonk
 
             // STEP 2.3 - Commit stage 2 polynomials
             TimerStart(PIL_FFLONK_STAGE_2_COMMIT);
-            shPlonkProver->commit(2, PTau, ptrShPlonk, true);
+            shPlonkProver->commit(2, (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, true);
             TimerStopAndLog(PIL_FFLONK_STAGE_2_COMMIT);
         }
 
@@ -626,7 +620,7 @@ namespace PilFflonk
             TimerStopAndLog(PIL_FFLONK_STAGE_3_EXTEND);
 
             TimerStart(PIL_FFLONK_STAGE_3_COMMIT);
-            shPlonkProver->commit(3, PTau, ptrShPlonk, true);
+            shPlonkProver->commit(3, (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, true);
             TimerStopAndLog(PIL_FFLONK_STAGE_3_COMMIT);
         }
         TimerStopAndLog(PIL_FFLONK_STAGE_3);
@@ -665,7 +659,7 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_4_CALCULATE_Q);
 
         TimerStart(PIL_FFLONK_STAGE_4_COMMIT);
-        shPlonkProver->commit(4, PTau, ptrShPlonk, true);
+        shPlonkProver->commit(4, (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, true);
         TimerStopAndLog(PIL_FFLONK_STAGE_4_COMMIT);
 
         TimerStopAndLog(PIL_FFLONK_STAGE_4);

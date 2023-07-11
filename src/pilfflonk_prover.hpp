@@ -69,8 +69,12 @@ namespace PilFflonk
         FrElement challenges[5];
 
         u_int64_t lengthBufferCommitted;
-        u_int64_t lengthBuffer;
+        u_int64_t lengthBufferConstant;
         u_int64_t lengthBufferShPlonk;
+
+        std::map<std::string, u_int64_t> mapBufferCommitted;
+        std::map<std::string, u_int64_t> mapBufferConstant;
+        std::map<std::string, u_int64_t> mapBufferShPlonk;
 
         FflonkInfo *fflonkInfo;
 

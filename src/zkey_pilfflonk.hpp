@@ -22,7 +22,7 @@ namespace PilFflonkZkey
     struct ShPlonkStagePol
     {
         std::string name;
-        u_int32_t degree;
+        u_int64_t degree;
     };
 
     struct ShPlonkStage
@@ -35,7 +35,7 @@ namespace PilFflonkZkey
     struct ShPlonkPol
     {
         uint32_t index;
-        uint32_t degree;
+        u_int64_t degree;
         uint32_t nOpeningPoints;
         uint32_t *openingPoints;
         uint32_t nPols;
