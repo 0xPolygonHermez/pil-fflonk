@@ -18,11 +18,72 @@ Polynomial<AltBn128::Engine>* getPolynomial(u_int32_t n) {
 }
 
 // POLYNOMIAL BASIC OPERATIONS
-TEST(POLYNOMIAL, Polynomial) {
-    Polynomial pol = Polynomial(E, 8);
+TEST(POLYNOMIAL, PolynomialConstructor) {
+    Polynomial<AltBn128::Engine>* polA = new Polynomial<AltBn128::Engine>(E, 8);
 
-    ASSERT_EQ(pol.getLength(), 8);
-    ASSERT_EQ(pol.getDegree(), 0);
+    ASSERT_EQ(polA->getLength(), 8);
+    ASSERT_EQ(polA->getDegree(), 0);
+
+    Polynomial<AltBn128::Engine>* polB = new Polynomial<AltBn128::Engine>(E, 8, 2);
+
+    ASSERT_EQ(polB->getLength(), 10);
+    ASSERT_EQ(polB->getDegree(), 0);
+
+    AltBn128::FrElement bufferC[8];
+    Polynomial<AltBn128::Engine>* polC = new Polynomial<AltBn128::Engine>(E, bufferC, 8);
+
+    ASSERT_EQ(polC->getLength(), 8);
+    ASSERT_EQ(polC->getDegree(), 0);
+
+    AltBn128::FrElement bufferD[10];
+    Polynomial<AltBn128::Engine>* polD = new Polynomial<AltBn128::Engine>(E, bufferD, 8, 2);
+
+    ASSERT_EQ(polD->getLength(), 10);
+    ASSERT_EQ(polD->getDegree(), 0);
+}
+
+TEST(POLYNOMIAL, fromPolynomial) {
+    auto polA = getPolynomial(8);
+    auto polB = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polA);
+
+    ASSERT_EQ(polA->getLength(), polB->getLength());
+    ASSERT_EQ(polA->getDegree(), polB->getDegree());
+    ASSERT_TRUE(polA->isEqual(*polB));
+
+    polA->setCoef(0, E.fr.set(33));
+    ASSERT_FALSE(polA->isEqual(*polB));
+
+    polA = getPolynomial(8);
+    auto polC = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polA, 2);
+
+    ASSERT_EQ(polA->getLength() + 2, polC->getLength());
+    ASSERT_EQ(polA->getDegree(), polC->getDegree());
+    ASSERT_TRUE(polA->isEqual(*polC));
+
+    polC->setCoef(9, E.fr.set(33));
+    ASSERT_FALSE(polA->isEqual(*polC));
+
+    polA = getPolynomial(8);
+    AltBn128::FrElement bufferD[8];
+    auto polD = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polA, bufferD);
+
+    ASSERT_EQ(polA->getLength(), polD->getLength());
+    ASSERT_EQ(polA->getDegree(), polD->getDegree());
+    ASSERT_TRUE(polA->isEqual(*polD));
+
+    polA->setCoef(0, E.fr.set(33));
+    ASSERT_FALSE(polA->isEqual(*polD));
+
+    polA = getPolynomial(8);
+    AltBn128::FrElement bufferE[10];
+    auto polE = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polA, bufferE, 2);
+
+    ASSERT_EQ(polA->getLength() + 2, polE->getLength());
+    ASSERT_EQ(polA->getDegree(), polE->getDegree());
+    ASSERT_TRUE(polA->isEqual(*polE));
+
+    polE->setCoef(9, E.fr.set(33));
+    ASSERT_FALSE(polA->isEqual(*polE));
 }
 
 TEST(POLYNOMIAL, PolynomialFromReservedBuffer) {
@@ -64,11 +125,33 @@ TEST(POLYNOMIAL, getCoef) {
 }
 
 TEST(POLYNOMIAL, setCoef) {
-    auto pol = getPolynomial(8);
+    auto polA = getPolynomial(8);
 
-    EXPECT_ANY_THROW(pol->setCoef(8, E.fr.one()));
-    EXPECT_NO_THROW(pol->setCoef(7, E.fr.one()));
-    EXPECT_NO_THROW(pol->setCoef(0, E.fr.one()));
+    EXPECT_ANY_THROW(polA->setCoef(8, E.fr.one()));
+    EXPECT_NO_THROW(polA->setCoef(7, E.fr.one()));
+    EXPECT_NO_THROW(polA->setCoef(0, E.fr.one()));
+
+    AltBn128::FrElement buffer[8] = {
+    E.fr.set(1),
+    E.fr.set(2),
+    E.fr.set(3),
+    E.fr.set(4),
+    E.fr.set(5),
+    E.fr.set(6),
+    E.fr.zero(), E.fr.zero()
+};
+
+    auto polB = Polynomial<AltBn128::Engine>::fromCoefficients(E, buffer, 8);
+
+    ASSERT_EQ(polB->getDegree(), 5);
+
+    polB->setCoef(7, E.fr.one());
+
+    ASSERT_EQ(polB->getDegree(), 7);
+
+    polB->setCoef(7, E.fr.zero());
+
+    ASSERT_EQ(polB->getDegree(), 5);
 }
 
 TEST(POLYNOMIAL, fixDegree) {
@@ -437,20 +520,50 @@ TEST(POLYNOMIAL, divZh) {
 
     ASSERT_TRUE(polA->isEqual(*polB));
 
+    auto polC = getPolynomial(64);
+    auto polD = getPolynomial(64);
 
+    auto one = E.fr.one();
+    polC->byXNSubValue(16, one);
 
-//     auto polC = Polynomial<AltBn128::Engine>(E, 2048);
-//     for(int i = 0; i < 2048; i++) {
-//         polC.coef[i] = E.fr.set(i+1);
-//     }
-//     auto polD = Polynomial<AltBn128::Engine>::fromPolynomial(E, polA);
+    polC->divZh(16, 1);
 
-//     polC.fixDegree();
-//     AltBn128::FrElement element = E.fr.set(3);
-//     polC.byXNSubValue(64, element);
-//     polC.divZh(64, 3);
-// polC.print();
-// std::cout <<" ----" << std::endl;
-// polD->print();
-//     ASSERT_TRUE(polC.isEqual(*polD));
+    ASSERT_TRUE(polC->isEqual(*polD));
+}
+
+TEST(POLYNOMIAL, divByZerofier) {
+    auto polA = getPolynomial(64);
+    auto polB = getPolynomial(64);
+
+    auto seven = E.fr.set(7);
+    polA->byXNSubValue(16, seven);
+
+    polA->divByZerofier(16, seven);
+
+    ASSERT_TRUE(polA->isEqual(*polB));
+}
+
+TEST(POLYNOMIAL, byX) {
+    auto polA = getPolynomial(8);
+    auto polB = getPolynomial(8);
+
+    polA->byX();
+
+    ASSERT_TRUE(E.fr.isZero(polA->getCoef(0)));
+
+    for(int i = 1; i < 8; i++) {
+        ASSERT_TRUE(E.fr.eq(polA->getCoef(i), polB->getCoef(i-1)));
+    }
+
+    polA = getPolynomial(8);
+    polA->setCoef(7, E.fr.zero());
+
+    polA->byX();
+
+    ASSERT_TRUE(E.fr.isZero(polA->getCoef(0)));
+
+    for(int i = 1; i < 8; i++) {
+        ASSERT_TRUE(E.fr.eq(polA->getCoef(i), polB->getCoef(i-1)));
+    }
+
 }

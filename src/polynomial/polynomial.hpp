@@ -88,14 +88,6 @@ public:
     // Euclidean division, returns reminder polygon
     Polynomial<Engine>* divBy(Polynomial<Engine> &polynomial);
 
-    void divByMonic(uint32_t m, FrElement beta);
-
-    Polynomial<Engine>* divByVanishing(uint32_t m, FrElement beta);
-
-    Polynomial<Engine>* divByVanishing(FrElement *reservedBuffer, uint64_t m, FrElement beta);
-
-    void fastDivByVanishing(FrElement *reservedBuffer, uint32_t m, FrElement beta);
-
     void divByXSubValue(FrElement &value);
 
     void divZh(u_int64_t domainSize, int extension = 4);

@@ -10,13 +10,11 @@ template<typename Engine>
 void Polynomial<Engine>::initialize(u_int64_t length, u_int64_t blindLength, bool createBuffer) {
     this->createBuffer = createBuffer;
     u_int64_t totalLength = length + blindLength;
-    if(createBuffer) {
-        coef = new FrElement[totalLength];
-    }
+
+    if(createBuffer) coef = new FrElement[totalLength];
 
     int nThreads = omp_get_max_threads() / 2;
     ThreadUtils::parset(coef, 0, totalLength * sizeof(FrElement), nThreads);
-    //memset(coef, 0, totalLength * sizeof(FrElement));
     this->length = totalLength;
     degree = 0;
 }
@@ -116,6 +114,7 @@ void Polynomial<Engine>::fixDegree() {
 template<typename Engine>
 void Polynomial<Engine>::fixDegreeFrom(u_int64_t initial) {
     u_int64_t degree;
+    initial = std::max(initial, this->degree);
     for (degree = initial; degree != 0 && this->E.fr.isZero(coef[degree]); degree--);
     this->degree = degree;
 }
@@ -284,8 +283,7 @@ void Polynomial<Engine>::sub(Polynomial<Engine> &polynomial) {
 
     if (resize)
     {
-        if (createBuffer)
-            delete[] this->coef;
+        if (createBuffer) delete[] this->coef;
         this->coef = newCoef;
         this->length = polynomial.length;
     }
@@ -338,6 +336,7 @@ void Polynomial<Engine>::byXSubValue(FrElement &value) {
     // Swap buffers
     if(this->createBuffer) delete[] this->coef;
     this->coef = pol->coef;
+    this->length = pol->length;
 
     fixDegreeFrom(this->degree + 1);
 }
@@ -366,226 +365,9 @@ void Polynomial<Engine>::byXNSubValue(int n, FrElement &value) {
     // Swap buffers
     if(this->createBuffer) delete[] this->coef;
     this->coef = pol->coef;
+    this->length = pol->length;
 
     fixDegreeFrom(this->degree + n);
-}
-
-// Euclidean division
-template<typename Engine>
-Polynomial<Engine> *Polynomial<Engine>::divBy(Polynomial<Engine> &polynomial) {
-    u_int64_t degreeA = this->degree;
-    u_int64_t degreeB = polynomial.degree;
-
-    Polynomial<Engine> *polR = new Polynomial<Engine>(this->E, this->length);
-    FrElement *ptr = this->coef;
-    this->coef = polR->coef;
-    polR->coef = ptr;
-
-    FrElement val = polynomial.coef[degreeB];
-    for (int64_t i = degreeA - degreeB; i >= 0; i--) {
-        E.fr.div(this->coef[i], polR->coef[i + degreeB], val);
-
-        for (u_int64_t j = 0; j <= degreeB; j++) {
-            polR->coef[i + j] = E.fr.sub(polR->coef[i + j], E.fr.mul(this->coef[i], polynomial.coef[j]));
-        }
-    }
-
-    fixDegree();
-    polR->fixDegree();
-
-    return polR;
-}
-
-template<typename Engine>
-void Polynomial<Engine>::divByMonic(uint32_t m, FrElement beta) {
-    u_int64_t d = this->degree;
-
-    Polynomial<Engine> *polResult = new Polynomial<Engine>(this->E, this->length);
-    FrElement *bArr = new FrElement[m];
-
-    for (uint32_t i = 0; i < m; i++) {
-        polResult->coef[(d - i) - m] = this->coef[d - i];
-        bArr[i] = this->coef[d - i];
-    }
-
-    uint32_t nThreads = m;
-    #pragma omp parallel for
-    for(uint32_t k = 0; k<nThreads;k++) {
-        for (int i = d - 2 * m - k; i >= 0; i = i - nThreads) {
-            if(i<0) break;
-            uint32_t idx = k;
-            bArr[idx] = E.fr.add(this->coef[i + m], E.fr.mul(bArr[idx], beta));
-            polResult->coef[i] = bArr[idx];
-        }
-    }
-
-    // Swap buffers
-    if(createBuffer) {
-        delete[] this->coef;
-    }
-    this->coef = polResult->coef;
-
-    fixDegree();
-}
-
-template<typename Engine>
-Polynomial<Engine> *Polynomial<Engine>::divByVanishing(uint32_t m, FrElement beta) {
-    if(this->degree < m) {
-        throw std::runtime_error("divByVanishing polynomial divisor must be of degree lower than the dividend polynomial");
-    }
-
-    Polynomial<Engine> *polR = new Polynomial<Engine>(this->E, this->length);
-    FrElement *ptr = this->coef;
-    this->coef = polR->coef;
-    polR->coef = ptr;
-
-    #pragma omp parallel for
-    for (int k = 0; k < m; k++) {
-        for (int32_t i = this->length - 1 - k; i >= m; i = i - m) {
-            FrElement leadingCoef = polR->coef[i];
-            if (E.fr.eq(E.fr.zero(), leadingCoef)) continue;
-
-            polR->coef[i] = E.fr.zero();
-            polR->coef[i - m] = E.fr.add(polR->coef[i - m], E.fr.mul(beta, leadingCoef));
-            this->coef[i - m] = E.fr.add(this->coef[i - m], leadingCoef);
-        }
-    }
-
-    fixDegree();
-    polR->fixDegree();
-
-    return polR;
-}
-
-template<typename Engine>
-Polynomial<Engine> *Polynomial<Engine>::divByVanishing(FrElement *reservedBuffer, uint64_t m, FrElement beta) {
-    if(this->degree < m) {
-        throw std::runtime_error("divByVanishing polynomial divisor must be of degree lower than the dividend polynomial");
-    }
-
-    Polynomial<Engine> *polR = new Polynomial<Engine>(this->E, reservedBuffer, this->length);
-
-    int nThreads = omp_get_max_threads() / 2;
-    ThreadUtils::parcpy(reservedBuffer, coef, this->length * sizeof(FrElement), nThreads);
-    ThreadUtils::parset(coef, 0, this->length * sizeof(FrElement), nThreads);
-
-    #pragma omp parallel for
-    for (uint32_t k = 0; k < m; k++) {
-        for (uint32_t i = this->length - 1 - k; i >= m; i = i - m) {
-            FrElement leadingCoef = polR->coef[i];
-            if (E.fr.eq(E.fr.zero(), leadingCoef)) continue;
-
-            polR->coef[i] = E.fr.zero();
-            polR->coef[i - m] = E.fr.add(polR->coef[i - m], E.fr.mul(beta, leadingCoef));
-            this->coef[i - m] = E.fr.add(this->coef[i - m], leadingCoef);
-        }
-    }
-
-    fixDegreeFrom(this->degree);
-
-    polR->fixDegreeFrom(this->degree);
-
-    return polR;
-}
-
-template<typename Engine>
-void Polynomial<Engine>::fastDivByVanishing(FrElement *reservedBuffer, uint32_t m, FrElement beta) {
-    if(this->degree < m) {
-        throw std::runtime_error("divByVanishing polynomial divisor must be of degree lower than the dividend polynomial");
-    }
-
-    Polynomial<Engine> *polTmp = new Polynomial<Engine>(this->E, reservedBuffer, this->length);
-
-    int nThreads = omp_get_max_threads();
-    u_int32_t nElements = this->length - m;
-    u_int32_t nElementsBucket = (u_int32_t)(nElements / nThreads / m);
-    u_int32_t nElementsChunk = nElementsBucket * m;
-    u_int32_t nElementsLast = nElements - nThreads * nElementsChunk;
-
-    ThreadUtils::parcpy(reservedBuffer, coef, this->length * sizeof(FrElement), nThreads);
-    ThreadUtils::parset(coef, 0, this->length * sizeof(FrElement), nThreads);
-
-    // STEP 1: Setejar els m valors del següent bucket al chunk actual
-    #pragma omp parallel
-    {
-        #pragma omp for
-        for (int k = 0; k < nThreads; k++) {
-            uint32_t idx0 = (k + 1) * nElementsChunk + nElementsLast;
-
-            for (int i = 0; i < m; i++) {
-                coef[idx0 + i - m] = polTmp->coef[idx0 + i];
-            }
-
-            for (uint32_t i = 0; i < nElementsChunk - m; i++) {
-                uint32_t offset = idx0 - i - 1;
-                FrElement val = E.fr.add(polTmp->coef[offset], E.fr.mul(beta, coef[offset]));
-                coef[offset - m] = val;
-            }
-        }
-
-        //STEP 2: Setejar els valors del elements last NO PARAL·LELITZAR
-        int idx0 = nElementsLast;
-        int pending = nElementsLast;
-
-        for (int i = 0; i < m && pending; i++) {
-            coef[idx0 - i - 1] = polTmp->coef[idx0 + m - i - 1];
-            pending--;
-        }
-
-        for (int i = 0; i < pending; i++) {
-            uint32_t offset = idx0 - i - 1;
-            FrElement val = E.fr.add(polTmp->coef[offset], E.fr.mul(beta, coef[offset]));
-            coef[offset - m] = val;
-        }
-
-        //Step 3: calcular acumulats
-        FrElement acc[nThreads][m];
-        FrElement betaPow = E.fr.one();
-        for (uint32_t i = 0; i < nElementsBucket; i++) {
-            betaPow = E.fr.mul(betaPow, beta);
-        }
-        FrElement currentBeta = E.fr.one();
-
-        for (int k = nThreads; k > 0; k--) {
-            int idThread = k - 1;
-            uint32_t idx0 = idThread * nElementsChunk + nElementsLast;
-
-            for (int i = 0; i < m; i++) {
-                acc[idThread][i] = coef[idx0 + i];
-
-                if (k != nThreads) {
-                    acc[idThread][i] = E.fr.add(acc[idThread][i], E.fr.mul(betaPow, acc[idThread + 1][i]));
-                }
-            }
-            currentBeta = E.fr.mul(currentBeta, betaPow);
-        }
-
-        //STEP 4 recalcular
-        #pragma omp for
-        for (int k = 0; k < nThreads; k++) {
-            uint32_t idx0 = k * nElementsChunk + nElementsLast;
-            FrElement currentBeta = beta;
-            int currentM = m - 1;
-
-            uint32_t limit = k == 0 ? nElementsLast : nElementsChunk;
-            for (uint32_t i = 0; i < limit; i++) {
-                uint32_t offset = idx0 - i - 1;
-                FrElement val = E.fr.add(coef[offset], E.fr.mul(currentBeta, acc[k][currentM]));
-
-                coef[offset] = val;
-
-                // To avoid modular operations in each loop...
-                if (currentM == 0) {
-                    currentM = m - 1;
-                    currentBeta = E.fr.mul(currentBeta, beta);
-                } else {
-                    currentM--;
-                }
-            }
-        }
-    }
-
-    fixDegreeFrom(this->degree+1);
 }
 
 template<typename Engine>
@@ -605,6 +387,8 @@ void Polynomial<Engine>::divByXSubValue(FrElement &value) {
 
     if (createBuffer) delete[] this->coef;
     this->coef = pol->coef;
+    this->length = pol->length;
+
     this->fixDegreeFrom(degree);
 }
 
@@ -732,21 +516,28 @@ void Polynomial<Engine>::divByZerofier(u_int64_t n, FrElement beta) {
     fixDegreeFrom(this->degree);
 }
 
-template<typename Engine>
-void Polynomial<Engine>::byX() {
-    bool resize = E.fr.neq(E.fr.zero, this->coef[this->length - 1]);
+template <typename Engine>
+void Polynomial<Engine>::byX()
+{
     int nThreads = omp_get_max_threads() / 2;
 
-    if (resize) {
+    bool resize = !E.fr.isZero(this->coef[this->length - 1]);
+    if (resize)
+    {
         FrElement *newCoef = new FrElement[this->length + 1];
-        ThreadUtils::parcpy(newCoef[1], coef[0], sizeof(coef), nThreads);
+        ThreadUtils::parcpy(&newCoef[1], &coef[0], length * sizeof(FrElement), nThreads);
+        if (createBuffer) delete[] this->coef;
         coef = newCoef;
-    } else {
-        ThreadUtils::parcpy(coef[1], coef[0], sizeof(coef), nThreads);
+        this->length++;
+    }
+    else
+    {
+        memcpy(&coef[1], &coef[0], (length - 1) * sizeof(FrElement));
     }
 
-    coef[0] = E.fr.zero;
-    fixDegree();
+    this->degree++;
+
+    coef[0] = E.fr.zero();
 }
 
 template<typename Engine>
