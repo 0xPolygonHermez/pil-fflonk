@@ -52,11 +52,11 @@ namespace PilFflonk
             TimerStart(LOAD_ZKEY_TO_MEMORY);
 
             zklog.info("> Opening zkey data file");
-            auto zkeyBinFile = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
+            zkeyBinFile = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
             auto fdZkey = zkeyBinFile.get();
 
             zklog.info("> Opening precomputed data file");
-            auto precomputedBinFile = BinFileUtils::openExisting(precomputedFilename, "pols", 1);
+            precomputedBinFile = BinFileUtils::openExisting(precomputedFilename, "pols", 1);
             auto fdPrecomputed = precomputedBinFile.get();
 
             if (Zkey::getProtocolIdFromZkey(fdZkey) != Zkey::PILFFLONK_PROTOCOL_ID)

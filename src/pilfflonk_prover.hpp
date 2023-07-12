@@ -42,6 +42,9 @@ namespace PilFflonk
         AltBn128::Engine &E;
         std::string curveName;
 
+        std::unique_ptr<BinFileUtils::BinFile> zkeyBinFile;
+        std::unique_ptr<BinFileUtils::BinFile> precomputedBinFile;
+
         FrElement *reservedMemoryPtr;
         uint64_t reservedMemorySize;
 
