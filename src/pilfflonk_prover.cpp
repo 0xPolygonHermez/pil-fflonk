@@ -177,43 +177,37 @@ namespace PilFflonk
             // //////////////////////////////////////////////////
             // SHPLONK BIG BUFFER
             // //////////////////////////////////////////////////
-            std::vector<std::tuple<std::string, u_int64_t>> names;
-
             u_int64_t maxDegree = 0;        
             for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
                 for(u_int32_t k = 0; k < zkey->f[i]->nPols; ++k) {
                     std::string name = zkey->f[i]->pols[k];
-                    u_int64_t length = name == "Q" ? (fflonkInfo->qDeg + 1) * N : N * factorZK;
-                    names.push_back(std::make_tuple(name, length));
+                    u_int64_t length = name == "Q" ? (fflonkInfo->qDeg + 1) * N * factorZK: N * factorZK;
+                    mapBufferShPlonk[name] = length;
                 }
 
                 u_int64_t lengthStage = std::pow(2, ((u_int64_t)log2(zkey->f[i]->degree - 1)) + 1);
-
-                names.push_back(std::make_tuple("f" + std::to_string(zkey->f[i]->index), lengthStage));
+                mapBufferShPlonk["f" + std::to_string(zkey->f[i]->index)] = lengthStage;
 
                 for(u_int32_t k = 0; k < zkey->f[i]->nStages; ++k) {
                     std::string stage = "f" + std::to_string(zkey->f[i]->index) + "_" + std::to_string(zkey->f[i]->stages[k].stage);
-                    names.push_back(std::make_tuple(stage, lengthStage));
+                    mapBufferShPlonk[stage] = lengthStage;
                 }
 
                 maxDegree = std::max(maxDegree, zkey->f[i]->degree);
             }
 
             u_int64_t lengthW = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
-            names.push_back(std::make_tuple("W", lengthW));
-            names.push_back(std::make_tuple("Wp", lengthW));
+            mapBufferShPlonk["W"] = lengthW;
+            mapBufferShPlonk["Wp"] = lengthW;
             
             // Add tmp buffer
             u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[cm1_n], max(fflonkInfo->mapSectionsN.section[cm2_n], fflonkInfo->mapSectionsN.section[cm3_n]));
             u_int64_t tmpLength = max(NExt * factorZK * maxNPols, lengthW);
-            names.push_back(std::make_tuple("tmp", tmpLength));
-            lengthBufferShPlonk += tmpLength;
+            mapBufferShPlonk["tmp"] = tmpLength;
 
             lengthBufferShPlonk = 0;
-            for (u_int64_t i = 0; i < names.size(); i++)
-            {
-                auto [name, degree] = names[i];
-                lengthBufferShPlonk += degree;
+            for (auto const &[key, value] : mapBufferShPlonk) {
+                lengthBufferShPlonk += value;
             }
 
             zklog.info("lengthBufferShPlonk: " + std::to_string(lengthBufferShPlonk));
@@ -221,35 +215,32 @@ namespace PilFflonk
             bBufferShPlonk = new FrElement[lengthBufferShPlonk];
 
             offset = 0;
-            for (u_int64_t i = 0; i < names.size(); i++)
-            {
-                auto [name, degree] = names[i];
-
-                ptrShPlonk[name] = bBufferShPlonk + offset;
-                offset += degree;
+            for(auto const &[key, value] : mapBufferShPlonk) {
+                ptrShPlonk[key] = bBufferShPlonk + offset;
+                offset += value;
             }
 
             int nThreads = omp_get_max_threads() / 2;
 
-            u_int32_t lenPTau = maxFiDegree * sizeof(G1PointAffine);
+            u_int32_t PTauBytes = mapBufferConstant["PTau"] * sizeof(FrElement);
 
-            ThreadUtils::parset(ptrConstant["PTau"], 0, lenPTau, nThreads);
+            ThreadUtils::parset(ptrConstant["PTau"], 0, PTauBytes, nThreads);
 
             ThreadUtils::parcpy(ptrConstant["PTau"],
                                 (G1PointAffine *)(fdZkey->getSectionData(PilFflonkZkey::ZKEY_PF_PTAU_SECTION)),
-                                lenPTau, nThreads);
+                                PTauBytes, nThreads);
 
             TimerStart(LOAD_CONST_POLS_TO_MEMORY);
 
-            u_int64_t constPolsSize = fflonkInfo->nConstants * sizeof(FrElement) * N;
+            u_int64_t constPolsBytes = mapBufferConstant["const_n"] * sizeof(FrElement);
 
-            if (constPolsSize > 0)
+            if (constPolsBytes > 0)
             {
-                auto pConstPolsAddress = copyFile(constPolsFilename, constPolsSize);
-                zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsSize) + " bytes from constant file " + constPolsFilename);
+                auto pConstPolsAddress = copyFile(constPolsFilename, constPolsBytes);
+                zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsBytes) + " bytes from constant file " + constPolsFilename);
 
 #pragma omp parallel for
-                for (u_int64_t i = 0; i < fflonkInfo->nConstants * N; i++)
+                for (u_int64_t i = 0; i < mapBufferConstant["const_n"]; i++)
                 {
                     E.fr.fromRprLE(ptrConstant["const_n"][i], reinterpret_cast<uint8_t *>(pConstPolsAddress) + i * 32, 32);
                 }
