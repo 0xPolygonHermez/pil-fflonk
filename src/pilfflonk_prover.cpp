@@ -110,7 +110,7 @@ namespace PilFflonk
             // Polynomial evaluations
             mapBufferConstant["const_n"] = N * fflonkInfo->nConstants;
             mapBufferConstant["const_2ns"] = NExt * factorZK * fflonkInfo->nConstants;
-            mapBufferConstant["const_coefs"] = N * factorZK * fflonkInfo->nConstants;
+            mapBufferConstant["const_coefs"] = N * fflonkInfo->nConstants;
             mapBufferConstant["x_n"] = N;
             mapBufferConstant["x_2ns"] = NExt * factorZK;
             mapBufferConstant["PTau"] = maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement);
@@ -177,14 +177,18 @@ namespace PilFflonk
             // //////////////////////////////////////////////////
             // SHPLONK BIG BUFFER
             // //////////////////////////////////////////////////
-            u_int64_t maxDegree = 0;        
-            for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
-                for(u_int32_t k = 0; k < zkey->f[i]->nPols; ++k) {
-                    std::string name = zkey->f[i]->pols[k];
-                    u_int64_t length = name == "Q" ? (fflonkInfo->qDeg + 1) * N * factorZK: N * factorZK;
+            u_int64_t maxDegree = 0;  
+            for(u_int32_t i = 0; i < zkey->polsNamesStage.size(); ++i) {
+                for(u_int32_t j = 0; j < zkey->polsNamesStage[i]->size(); ++j) {
+                    std::string name = (*zkey->polsNamesStage[i])[j].name;
+                    u_int64_t length = i == 0 ? N : N * factorZK;
                     mapBufferShPlonk[name] = length;
                 }
+            }
 
+            mapBufferShPlonk["Q"] = (fflonkInfo->qDeg + 1) * N * factorZK;
+
+            for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
                 u_int64_t lengthStage = std::pow(2, ((u_int64_t)log2(zkey->f[i]->degree - 1)) + 1);
                 mapBufferShPlonk["f" + std::to_string(zkey->f[i]->index)] = lengthStage;
 
@@ -396,7 +400,22 @@ namespace PilFflonk
 
             delete[] constValues;
 
-            json pilFflonkProof = shPlonkProver->open((G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, challenges[4]);
+            // Compute challenge xi seed
+            transcript->reset();
+            transcript->addScalar(challenges[4]);
+
+            for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
+                if(zkey->f[i]->stages[0].stage == 4) {
+                    G1Point commit = shPlonkProver->polynomialCommitments["f" + std::to_string(zkey->f[i]->index) + "_4"]; 
+                    transcript->addPolCommitment(commit);
+                }
+            }
+
+            AltBn128::FrElement challengeXiSeed = transcript->getChallenge();
+
+            zklog.info("Challenge xi seed: " + E.fr.toString(challengeXiSeed));
+
+            json pilFflonkProof = shPlonkProver->open((G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, challengeXiSeed);
 
             FrElement challengeXi = shPlonkProver->getChallengeXi();
 
@@ -410,6 +429,9 @@ namespace PilFflonk
 
             E.fr.inv(Z, Z);
             pilFflonkProof["evaluations"]["invZh"] = E.fr.toString(Z);
+
+            // Q should not be committed
+            pilFflonkProof["evaluations"].erase("Q");
 
             TimerStopAndLog(PIL_FFLONK_PROVE);
 
@@ -430,7 +452,7 @@ namespace PilFflonk
         // STEP 1.2 - Compute constant polynomials (coefficients + evaluations) and commit them
         if (fflonkInfo->nConstants > 0)
         {
-            addCoefsToContext(0, fflonkInfo->nConstants, ptrConstant["const_coefs"]);
+            addCoefsToContext(0, fflonkInfo->nConstants, ptrConstant["const_coefs"], N);
 
             shPlonkProver->commit(0, (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, false);
         }
@@ -463,7 +485,7 @@ namespace PilFflonk
         {
             G1Point C;
             E.g1.copy(C, *((G1PointAffine *)commit));
-            cout << "Commitment " << key << ": " << E.g1.toString(C) << endl;
+            zklog.info("Commitment " + key + ": " + E.g1.toString(C));
             transcript->addPolCommitment(C);
         }
 
@@ -471,6 +493,13 @@ namespace PilFflonk
         for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
         {
             transcript->addScalar(ptrCommitted["publics"][i]);
+        }
+
+        for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
+            if(zkey->f[i]->stages[0].stage == 1) {
+                G1Point commit = shPlonkProver->polynomialCommitments["f" + std::to_string(zkey->f[i]->index) + "_1"]; 
+                transcript->addPolCommitment(commit);
+            }
         }
 
         if (0 == transcript->nElements())
@@ -538,6 +567,13 @@ namespace PilFflonk
 
         // Compute challenge gamma
         transcript->addScalar(challenges[1]);
+
+        for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
+            if(zkey->f[i]->stages[0].stage == 2) {
+                G1Point commit = shPlonkProver->polynomialCommitments["f" + std::to_string(zkey->f[i]->index) + "_2"]; 
+                transcript->addPolCommitment(commit);
+            }
+        }
 
         challenges[2] = transcript->getChallenge();
         zklog.info("Challenge gamma: " + E.fr.toString(challenges[2]));
@@ -629,6 +665,13 @@ namespace PilFflonk
         // Compute challenge a
         transcript->addScalar(challenges[3]);
 
+        for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
+            if(zkey->f[i]->stages[0].stage == 3) {
+                G1Point commit = shPlonkProver->polynomialCommitments["f" + std::to_string(zkey->f[i]->index) + "_3"]; 
+                transcript->addPolCommitment(commit);
+            }
+        }
+
         challenges[4] = transcript->getChallenge();
         zklog.info("Challenge a: " + E.fr.toString(challenges[4]));
 
@@ -663,12 +706,10 @@ namespace PilFflonk
         AltBn128::FrElement *buffDst = ptrCommitted["cm" + std::to_string(stage) + "_2ns"];     // NEXT * FACTORZK
         AltBn128::FrElement *buffCoefs = ptrCommitted["cm" + std::to_string(stage) + "_coefs"]; // N * FACTORZK
 
-        // AltBn128::FrElement* buffer = stage == 0 ? bBuffer : bBufferCommitted;
 
         int nThreads = omp_get_max_threads() / 2;
 
         ThreadUtils::parset(buffCoefs, 0, N * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
-        ThreadUtils::parcpy(buffCoefs, buffSrc, N * nPols * sizeof(AltBn128::FrElement), nThreads);
 
         TimerStart(EXTEND_INTT);
         ntt->INTT(buffCoefs, buffSrc, N, nPols, ptrShPlonk["tmp"]);
@@ -689,7 +730,7 @@ namespace PilFflonk
             }
         }
 
-        addCoefsToContext(stage, nPols, buffCoefs);
+        addCoefsToContext(stage, nPols, buffCoefs, N * factorZK);
                 
         ThreadUtils::parset(buffDst, 0, NExt * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
         ThreadUtils::parcpy(buffDst, buffCoefs, N * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
@@ -699,14 +740,14 @@ namespace PilFflonk
         TimerStopAndLog(EXTEND_NTT);
     }
 
-    void PilFflonkProver::addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs)
+    void PilFflonkProver::addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs, u_int32_t domainSize)
     {
         // Store coefs to context 
         for (u_int32_t i = 0; i < nPols; i++)
         {
             std::string name = (*zkey->polsNamesStage[stage])[i].name;
-            Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], N * factorZK);
-            for (u_int32_t j = 0; j < N * factorZK; j++)
+            Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], domainSize);
+            for (u_int32_t j = 0; j < domainSize; j++)
             {
                 pol->coef[j] = buffCoefs[j * nPols + i];
             }

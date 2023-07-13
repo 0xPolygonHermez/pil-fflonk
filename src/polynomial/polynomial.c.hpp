@@ -372,10 +372,10 @@ void Polynomial<Engine>::byXNSubValue(int n, FrElement &value) {
 
 template<typename Engine>
 void Polynomial<Engine>::divByXSubValue(FrElement &value) {
-    Polynomial<Engine> *pol = new Polynomial<Engine>(E, length);
+    Polynomial<Engine> *pol = new Polynomial<Engine>(E, degree + 1);
 
-    pol->coef[length - 2] = this->coef[length - 1];
-    for (u_int64_t i = this->length - 3; i >= 0; i--)
+    pol->coef[degree -1] = this->coef[degree];
+    for (u_int64_t i = this->degree - 2; i >= 0; i--)
     {
         pol->coef[i] = E.fr.add(this->coef[i + 1], E.fr.mul(value, pol->coef[i + 1]));
         if(i == 0) break;
@@ -387,7 +387,6 @@ void Polynomial<Engine>::divByXSubValue(FrElement &value) {
 
     if (createBuffer) delete[] this->coef;
     this->coef = pol->coef;
-    this->length = pol->length;
 
     this->fixDegreeFrom(degree);
 }

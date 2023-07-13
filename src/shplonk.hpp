@@ -42,16 +42,14 @@ namespace ShPlonk {
         std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsShPlonk;
 
         std::map<std::string, AltBn128::FrElement> evaluationCommitments;
-
-        std::map <std::string, AltBn128::G1Point> polynomialCommitments;
-
-        u_int32_t nEvaluations;
         
-        std::string *evaluationsNames;
-
         std::vector<u_int32_t> openingPoints;
 
+        std::vector<FrElement> inverseElements;
+
     public:
+        std::map <std::string, AltBn128::G1Point> polynomialCommitments;
+
         void addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine>* pol);
         
         Polynomial<AltBn128::Engine> * getPolynomialShPlonk(const std::string &key);
@@ -64,7 +62,7 @@ namespace ShPlonk {
 
         void commit(u_int32_t stage, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp);
 
-        json open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement previousChallenge);
+        json open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement challengeXiSeed);
 
         json toJson();
 
@@ -93,6 +91,12 @@ namespace ShPlonk {
         void calculateRoots();
 
         void getMontgomeryBatchedInverse();
+
+        void computeLiSingleOpeningPoint(u_int32_t i);
+
+        void computeLiMultipleOpeningPoints(u_int32_t i);
+
+        void computeLiTwoOpeningPoints(u_int32_t i);
 
         void calculateEvaluations();
 
