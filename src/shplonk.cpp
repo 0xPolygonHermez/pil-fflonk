@@ -2,6 +2,7 @@
 #include "timer.hpp"
 #include "zklog.hpp"
 #include "shplonk.hpp"
+#include <algorithm>
 
 namespace ShPlonk {
 
@@ -35,6 +36,14 @@ namespace ShPlonk {
 
     Polynomial<AltBn128::Engine> * ShPlonkProver::getPolynomialShPlonk(const std::string &key) {
         return this->polynomialsShPlonk[key];
+    }
+
+    void ShPlonkProver::addPolynomialCommitment(const std::string &key, AltBn128::G1Point commit) {
+        polynomialCommitments[key] = commit;
+    }
+
+    AltBn128::G1Point ShPlonkProver::getPolynomialCommitment(const std::string &key) {
+        return this->polynomialCommitments[key];
     }
 
     void ShPlonkProver::computeR() {
@@ -284,7 +293,7 @@ namespace ShPlonk {
     }
 
 
-    void ShPlonkProver::computeChallengeAlpha()
+    void ShPlonkProver::computeChallengeAlpha(std::vector<std::string> nonCommittedPols)
     {    
         transcript->reset();
         transcript->addScalar(challengeXiSeed);
@@ -312,7 +321,7 @@ namespace ShPlonk {
         }
 
         for (u_int32_t i = 0; i < nEvaluations; ++i) {
-            if(evaluationsNames[i] != "Q") {
+            if(std::find(nonCommittedPols.begin(), nonCommittedPols.end(), evaluationsNames[i]) == nonCommittedPols.end()) {
                 transcript->addScalar(evaluationCommitments[evaluationsNames[i]]);
             }
         }
@@ -689,7 +698,7 @@ namespace ShPlonk {
                     fi->addPolynomial(index, polynomialsShPlonk[name]);
                 }
 
-                std::string index = "f" + std::to_string(pol->index) + "_" + std::to_string(stage);
+                std::string index = "f" + std::to_string(pol->index);
 
                 polynomialsShPlonk[index] = fi->getPolynomial(ptrShPlonk[index]);            
 
@@ -711,20 +720,16 @@ namespace ShPlonk {
         }
     }
 
-    json ShPlonkProver::open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement xiSeed) {
+    json ShPlonkProver::open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement xiSeed, std::vector<std::string> nonCommittedPols, bool prepCommits) {
         TimerStart(SHPLONK_OPEN);
 
         if(NULL == zkeyPilFflonk) {
             throw std::runtime_error("Zkey data not set");
         }
         
-        for(auto const&[key, commit] : zkeyPilFflonk->committedConstants) {
-            G1Point C;
-            E.g1.copy(C, *((G1PointAffine *)commit));
-            polynomialCommitments[key] = C;
+        if(prepCommits) {
+            prepareCommits(ptrShPlonk);
         }
-
-        prepareCommits(ptrShPlonk);
 
         // Calculate opening points
         calculateOpeningPoints();
@@ -743,7 +748,7 @@ namespace ShPlonk {
 
         calculateEvaluations();        
 
-        computeChallengeAlpha();
+        computeChallengeAlpha(nonCommittedPols);
 
         zklog.info("Challenge alpha: " + E.fr.toString(challengeAlpha));
 

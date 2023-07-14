@@ -1,20 +1,67 @@
 {
  "protocol": "pil-fflonk",
  "curve": "bn128",
- "nPublics": 0,
+ "nPublics": 3,
  "power": 8,
- "powerW": 2,
+ "powerW": 12,
  "f": [
   {
    "index": 0,
-   "degree": 513,
+   "degree": 1541,
+   "openingPoints": [
+    0
+   ],
+   "pols": [
+    "Connection.S3",
+    "Connection.S2",
+    "Connection.S1",
+    "Fibonacci.LLAST",
+    "Fibonacci.L1",
+    "Global.L1"
+   ],
+   "stages": [
+    {
+     "stage": 0,
+     "pols": [
+      {
+       "name": "Connection.S3",
+       "degree": 256
+      },
+      {
+       "name": "Connection.S2",
+       "degree": 256
+      },
+      {
+       "name": "Connection.S1",
+       "degree": 256
+      },
+      {
+       "name": "Fibonacci.LLAST",
+       "degree": 256
+      },
+      {
+       "name": "Fibonacci.L1",
+       "degree": 256
+      },
+      {
+       "name": "Global.L1",
+       "degree": 256
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "index": 1,
+   "degree": 770,
    "openingPoints": [
     0,
     1
    ],
    "pols": [
     "Plookup.B",
-    "Plookup.A"
+    "Plookup.A",
+    "Plookup.SEL"
    ],
    "stages": [
     {
@@ -27,32 +74,9 @@
       {
        "name": "Plookup.A",
        "degree": 256
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "index": 1,
-   "degree": 513,
-   "openingPoints": [
-    0,
-    1
-   ],
-   "pols": [
-    "Plookup.SEL",
-    "Global.L1"
-   ],
-   "stages": [
-    {
-     "stage": 0,
-     "pols": [
-      {
-       "name": "Plookup.SEL",
-       "degree": 256
       },
       {
-       "name": "Global.L1",
+       "name": "Plookup.SEL",
        "degree": 256
       }
      ]
@@ -61,14 +85,16 @@
   },
   {
    "index": 2,
-   "degree": 520,
+   "degree": 1040,
    "openingPoints": [
     0,
     1
    ],
    "pols": [
     "Plookup.b",
-    "Plookup.cc"
+    "Plookup.cc",
+    "Fibonacci.l2",
+    "Fibonacci.l1"
    ],
    "stages": [
     {
@@ -81,6 +107,14 @@
       {
        "name": "Plookup.cc",
        "degree": 259
+      },
+      {
+       "name": "Fibonacci.l2",
+       "degree": 259
+      },
+      {
+       "name": "Fibonacci.l1",
+       "degree": 259
       }
      ]
     }
@@ -88,14 +122,14 @@
   },
   {
    "index": 3,
-   "degree": 521,
+   "degree": 776,
    "openingPoints": [
-    0,
-    1
+    0
    ],
    "pols": [
     "Plookup.a",
-    "Plookup.sel"
+    "Plookup.sel",
+    "Permutation.selD"
    ],
    "stages": [
     {
@@ -103,11 +137,15 @@
      "pols": [
       {
        "name": "Plookup.a",
-       "degree": 260
+       "degree": 258
       },
       {
        "name": "Plookup.sel",
-       "degree": 260
+       "degree": 258
+      },
+      {
+       "name": "Permutation.selD",
+       "degree": 258
       }
      ]
     }
@@ -115,6 +153,68 @@
   },
   {
    "index": 4,
+   "degree": 776,
+   "openingPoints": [
+    0
+   ],
+   "pols": [
+    "Permutation.selC",
+    "Permutation.d",
+    "Permutation.c"
+   ],
+   "stages": [
+    {
+     "stage": 1,
+     "pols": [
+      {
+       "name": "Permutation.selC",
+       "degree": 258
+      },
+      {
+       "name": "Permutation.d",
+       "degree": 258
+      },
+      {
+       "name": "Permutation.c",
+       "degree": 258
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "degree": 776,
+   "openingPoints": [
+    0
+   ],
+   "pols": [
+    "Connection.c",
+    "Connection.b",
+    "Connection.a"
+   ],
+   "stages": [
+    {
+     "stage": 1,
+     "pols": [
+      {
+       "name": "Connection.c",
+       "degree": 258
+      },
+      {
+       "name": "Connection.b",
+       "degree": 258
+      },
+      {
+       "name": "Connection.a",
+       "degree": 258
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "index": 6,
    "degree": 520,
    "openingPoints": [
     0,
@@ -141,36 +241,16 @@
    ]
   },
   {
-   "index": 5,
-   "degree": 260,
+   "index": 7,
+   "degree": 1040,
    "openingPoints": [
     0,
     1
    ],
    "pols": [
-    "Im11"
-   ],
-   "stages": [
-    {
-     "stage": 3,
-     "pols": [
-      {
-       "name": "Im11",
-       "degree": 260
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "index": 6,
-   "degree": 520,
-   "openingPoints": [
-    0,
-    1
-   ],
-   "pols": [
-    "Im9",
+    "Im28",
+    "Connection.Z0",
+    "Permutation.Z0",
     "Plookup.Z0"
    ],
    "stages": [
@@ -178,8 +258,16 @@
      "stage": 3,
      "pols": [
       {
-       "name": "Im9",
+       "name": "Im28",
        "degree": 260
+      },
+      {
+       "name": "Connection.Z0",
+       "degree": 259
+      },
+      {
+       "name": "Permutation.Z0",
+       "degree": 259
       },
       {
        "name": "Plookup.Z0",
@@ -190,8 +278,8 @@
    ]
   },
   {
-   "index": 7,
-   "degree": 768,
+   "index": 8,
+   "degree": 1024,
    "openingPoints": [
     0
    ],
@@ -204,7 +292,7 @@
      "pols": [
       {
        "name": "Q",
-       "degree": 768
+       "degree": 1024
       }
      ]
     }
@@ -229,36 +317,58 @@
   ]
  ],
  "w1": "1",
- "w1_1d1": "3478517300119284901893091970156912948790432420133812234316178878452092729974",
  "w2": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
  "w2_1d2": "6837567842312086091520287814181175430087169027974246751610506942214842701774",
+ "w3": "4407920970296243842393367215006156084916469457145843978461",
+ "w3_1d3": "7893008526474614989282376550582713669440542763891908783290097886313069160279",
+ "w4": "21888242871839275217838484774961031246007050428528088939761107053157389710902",
+ "w4_1d4": "3161067157621608152362653341354432744960400845131437947728257924963983317266",
+ "w6": "4407920970296243842393367215006156084916469457145843978462",
+ "w1_1d1": "3478517300119284901893091970156912948790432420133812234316178878452092729974",
  "f0_0": [
-  "3371540595104899287638586094416473950890718182354741700450401598580364480085",
-  "15836456267622198387050249880924015033308545041955583984516740975166701790469",
+  "13670340619389575973532278510163400231690216690368938387851759304712128961698",
+  "7011517446220040486904710922771833565280330288451750559303576192469542112826",
   "1"
  ],
  "f1_0": [
-  "4997946152343114393140936867853509039199012640503803290324603629156753580847",
-  "306550742448290244401534111063665624755904588381680081817217852966632272229",
+  "15940924245195807686934555975775366255429860084153148505199676706569894429036",
+  "1160094044816815284956091097230088787853732921225717802025735199704023944253",
   "1"
  ],
  "polsMap": {
   "cm": {
-   "0": "Plookup.sel",
-   "1": "Plookup.a",
-   "2": "Plookup.b",
-   "3": "Plookup.cc",
-   "4": "Plookup.H1_0",
-   "5": "Plookup.H2_0",
-   "6": "Plookup.Z0",
-   "7": "Im9",
-   "8": "Im11"
+   "0": "Fibonacci.l1",
+   "1": "Fibonacci.l2",
+   "2": "Connection.a",
+   "3": "Connection.b",
+   "4": "Connection.c",
+   "5": "Permutation.a",
+   "6": "Permutation.b",
+   "7": "Permutation.c",
+   "8": "Permutation.d",
+   "9": "Permutation.selC",
+   "10": "Permutation.selD",
+   "11": "Plookup.sel",
+   "12": "Plookup.a",
+   "13": "Plookup.b",
+   "14": "Plookup.cc",
+   "15": "Plookup.H1_0",
+   "16": "Plookup.H2_0",
+   "17": "Plookup.Z0",
+   "18": "Permutation.Z0",
+   "19": "Connection.Z0",
+   "20": "Im28"
   },
   "const": {
    "0": "Global.L1",
-   "1": "Plookup.SEL",
-   "2": "Plookup.A",
-   "3": "Plookup.B"
+   "1": "Fibonacci.L1",
+   "2": "Fibonacci.LLAST",
+   "3": "Connection.S1",
+   "4": "Connection.S2",
+   "5": "Connection.S3",
+   "6": "Plookup.SEL",
+   "7": "Plookup.A",
+   "8": "Plookup.B"
   }
  }
 }

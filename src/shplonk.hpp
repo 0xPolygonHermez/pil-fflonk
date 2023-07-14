@@ -41,6 +41,8 @@ namespace ShPlonk {
 
         std::map<std::string, Polynomial<AltBn128::Engine> *> polynomialsShPlonk;
 
+        std::map <std::string, AltBn128::G1Point> polynomialCommitments;
+
         std::map<std::string, AltBn128::FrElement> evaluationCommitments;
         
         std::vector<u_int32_t> openingPoints;
@@ -48,7 +50,9 @@ namespace ShPlonk {
         std::vector<FrElement> inverseElements;
 
     public:
-        std::map <std::string, AltBn128::G1Point> polynomialCommitments;
+        void addPolynomialCommitment(const std::string &key, AltBn128::G1Point commit);
+
+        AltBn128::G1Point getPolynomialCommitment(const std::string &key);
 
         void addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine>* pol);
         
@@ -62,7 +66,7 @@ namespace ShPlonk {
 
         void commit(u_int32_t stage, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp);
 
-        json open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement challengeXiSeed);
+        json open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement challengeXiSeed, std::vector<std::string> nonCommittedPols, bool prepCommits);
 
         json toJson();
 
@@ -82,7 +86,7 @@ namespace ShPlonk {
 
         void computeChallengeXiSeed(FrElement previousChallenge);
 
-        void computeChallengeAlpha();
+        void computeChallengeAlpha(std::vector<std::string> nonCommittedPols);
         
         void computeChallengeY(G1Point W);
 

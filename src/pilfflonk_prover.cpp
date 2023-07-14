@@ -186,16 +186,11 @@ namespace PilFflonk
                 }
             }
 
-            mapBufferShPlonk["Q"] = (fflonkInfo->qDeg + 1) * N * factorZK;
+            mapBufferShPlonk["Q"] = (fflonkInfo->qDeg + 1) * NExt * factorZK;
 
             for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
                 u_int64_t lengthStage = std::pow(2, ((u_int64_t)log2(zkey->f[i]->degree - 1)) + 1);
                 mapBufferShPlonk["f" + std::to_string(zkey->f[i]->index)] = lengthStage;
-
-                for(u_int32_t k = 0; k < zkey->f[i]->nStages; ++k) {
-                    std::string stage = "f" + std::to_string(zkey->f[i]->index) + "_" + std::to_string(zkey->f[i]->stages[k].stage);
-                    mapBufferShPlonk[stage] = lengthStage;
-                }
 
                 maxDegree = std::max(maxDegree, zkey->f[i]->degree);
             }
@@ -406,7 +401,7 @@ namespace PilFflonk
 
             for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
                 if(zkey->f[i]->stages[0].stage == 4) {
-                    G1Point commit = shPlonkProver->polynomialCommitments["f" + std::to_string(zkey->f[i]->index) + "_4"]; 
+                    G1Point commit = shPlonkProver->getPolynomialCommitment("f" + std::to_string(zkey->f[i]->index)); 
                     transcript->addPolCommitment(commit);
                 }
             }
@@ -415,7 +410,7 @@ namespace PilFflonk
 
             zklog.info("Challenge xi seed: " + E.fr.toString(challengeXiSeed));
 
-            json pilFflonkProof = shPlonkProver->open((G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, challengeXiSeed);
+            json pilFflonkProof = shPlonkProver->open((G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, challengeXiSeed, {"Q"}, false);
 
             FrElement challengeXi = shPlonkProver->getChallengeXi();
 
@@ -485,7 +480,11 @@ namespace PilFflonk
         {
             G1Point C;
             E.g1.copy(C, *((G1PointAffine *)commit));
-            zklog.info("Commitment " + key + ": " + E.g1.toString(C));
+            std::istringstream iss(key);
+            std::string name;
+            std::getline(iss, name, '_');
+            zklog.info("Commitment " + name + ": " + E.g1.toString(C));
+            shPlonkProver->addPolynomialCommitment(name, C);
             transcript->addPolCommitment(C);
         }
 
@@ -497,7 +496,7 @@ namespace PilFflonk
 
         for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
             if(zkey->f[i]->stages[0].stage == 1) {
-                G1Point commit = shPlonkProver->polynomialCommitments["f" + std::to_string(zkey->f[i]->index) + "_1"]; 
+                G1Point commit = shPlonkProver->getPolynomialCommitment("f" + std::to_string(zkey->f[i]->index)); 
                 transcript->addPolCommitment(commit);
             }
         }
@@ -570,7 +569,7 @@ namespace PilFflonk
 
         for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
             if(zkey->f[i]->stages[0].stage == 2) {
-                G1Point commit = shPlonkProver->polynomialCommitments["f" + std::to_string(zkey->f[i]->index) + "_2"]; 
+                G1Point commit = shPlonkProver->getPolynomialCommitment("f" + std::to_string(zkey->f[i]->index)); 
                 transcript->addPolCommitment(commit);
             }
         }
@@ -667,7 +666,7 @@ namespace PilFflonk
 
         for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
             if(zkey->f[i]->stages[0].stage == 3) {
-                G1Point commit = shPlonkProver->polynomialCommitments["f" + std::to_string(zkey->f[i]->index) + "_3"]; 
+                G1Point commit = shPlonkProver->getPolynomialCommitment("f" + std::to_string(zkey->f[i]->index)); 
                 transcript->addPolCommitment(commit);
             }
         }
