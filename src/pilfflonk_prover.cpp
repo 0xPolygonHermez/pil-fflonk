@@ -180,7 +180,7 @@ namespace PilFflonk
             u_int64_t maxDegree = 0;  
             for(u_int32_t i = 0; i < zkey->polsNamesStage.size(); ++i) {
                 for(u_int32_t j = 0; j < zkey->polsNamesStage[i]->size(); ++j) {
-                    std::string name = (*zkey->polsNamesStage[i])[j].name;
+                    std::string name = (*zkey->polsNamesStage[i])[j];
                     u_int64_t length = i == 0 ? N : N * factorZK;
                     mapBufferShPlonk[name] = length;
                 }
@@ -189,7 +189,7 @@ namespace PilFflonk
             mapBufferShPlonk["Q"] = (fflonkInfo->qDeg + 1) * NExt * factorZK;
 
             for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
-                u_int64_t lengthStage = std::pow(2, ((u_int64_t)log2(zkey->f[i]->degree - 1)) + 1);
+                u_int64_t lengthStage = std::pow(2, ((u_int64_t)log2(zkey->f[i]->degree)) + 1);
                 mapBufferShPlonk["f" + std::to_string(zkey->f[i]->index)] = lengthStage;
 
                 maxDegree = std::max(maxDegree, zkey->f[i]->degree);
@@ -716,13 +716,12 @@ namespace PilFflonk
 
         for (u_int32_t i = 0; i < nPols; i++)
         {
-            std::string name = (*zkey->polsNamesStage[stage])[i].name;
-            u_int32_t openings = (*zkey->polsNamesStage[stage])[i].openings;
+            std::string name = (*zkey->polsNamesStage[stage])[i];
+            u_int32_t openings = findNumberOpenings(name, stage);
             for (u_int32_t j = 0; j < openings; ++j)
             {
                 AltBn128::FrElement b;
-                // randombytes_buf((void *)&(b), sizeof(FrElement)-1);
-                b = E.fr.one();
+                randombytes_buf((void *)&(b), sizeof(FrElement)-1);
 
                 buffCoefs[j * nPols + i] = E.fr.add(buffCoefs[j * nPols + i], E.fr.neg(b));
                 buffCoefs[(j + N) * nPols + i] = E.fr.add(buffCoefs[(j + N) * nPols + i], b);
@@ -744,7 +743,7 @@ namespace PilFflonk
         // Store coefs to context 
         for (u_int32_t i = 0; i < nPols; i++)
         {
-            std::string name = (*zkey->polsNamesStage[stage])[i].name;
+            std::string name = (*zkey->polsNamesStage[stage])[i];
             Polynomial<AltBn128::Engine> *pol = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], domainSize);
             for (u_int32_t j = 0; j < domainSize; j++)
             {
@@ -813,6 +812,16 @@ namespace PilFflonk
         delete[] tmp;
 
         return denI;
+    }
+
+    u_int32_t PilFflonkProver::findNumberOpenings(std::string name, u_int32_t stage) {
+        for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
+            if(zkey->f[i]->stages[0].stage != stage) continue;
+            for(u_int32_t j = 0; j < zkey->f[i]->nPols; ++j) {
+                if(zkey->f[i]->pols[j] == name) return zkey->f[i]->nOpeningPoints + 1;
+            }
+        }
+        return 0;
     }
 
     void PilFflonkProver::calculateH1H2(AltBn128::FrElement *fPol, AltBn128::FrElement *tPol, uint64_t h1Id, uint64_t h2Id)

@@ -85,7 +85,7 @@
   },
   {
    "index": 2,
-   "degree": 1040,
+   "degree": 1039,
    "openingPoints": [
     0,
     1
@@ -102,7 +102,7 @@
      "pols": [
       {
        "name": "Plookup.b",
-       "degree": 260
+       "degree": 259
       },
       {
        "name": "Plookup.cc",
@@ -215,7 +215,7 @@
   },
   {
    "index": 6,
-   "degree": 520,
+   "degree": 519,
    "openingPoints": [
     0,
     1
@@ -230,7 +230,7 @@
      "pols": [
       {
        "name": "Plookup.H2_0",
-       "degree": 260
+       "degree": 259
       },
       {
        "name": "Plookup.H1_0",
@@ -242,7 +242,7 @@
   },
   {
    "index": 7,
-   "degree": 1040,
+   "degree": 1039,
    "openingPoints": [
     0,
     1
@@ -259,7 +259,7 @@
      "pols": [
       {
        "name": "Im28",
-       "degree": 260
+       "degree": 259
       },
       {
        "name": "Connection.Z0",

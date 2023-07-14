@@ -126,14 +126,13 @@ namespace PilFflonkZkey
         {
             u_int32_t stage = fdZKey->readU32LE();
 
-            pilFflonkZkey->polsNamesStage[stage] = new std::map<u_int32_t, PolsNames>();
+            pilFflonkZkey->polsNamesStage[stage] = new std::map<u_int32_t, std::string>();
 
             u_int32_t lenPolsStage = fdZKey->readU32LE();
 
             for (u_int32_t j = 0; j < lenPolsStage; ++j)
             {
-                (*(pilFflonkZkey->polsNamesStage[stage]))[j].name = fdZKey->readString();
-                (*(pilFflonkZkey->polsNamesStage[stage]))[j].openings = fdZKey->readU32LE();
+                (*(pilFflonkZkey->polsNamesStage[stage]))[j] = fdZKey->readString();
             }
         }
 

@@ -130,6 +130,8 @@ namespace PilFflonk
 
         AltBn128::FrElement *batchInverse(AltBn128::FrElement *pol, uint64_t N);
 
+        u_int32_t findNumberOpenings(std::string name, u_int32_t stage);
+
         void calculateH1H2(AltBn128::FrElement *fPol, AltBn128::FrElement *tPol, uint64_t h1Id, uint64_t h2Id);
     };
 }

@@ -44,12 +44,6 @@ namespace PilFflonkZkey
         ShPlonkStage *stages;
     };
 
-    struct PolsNames 
-    {
-        std::string name;
-        uint32_t openings;
-    };
-
     class PilFflonkZkey
     {
     public:
@@ -69,7 +63,7 @@ namespace PilFflonkZkey
 
         std::map<std::string, void *> committedConstants;
 
-        std::map<u_int32_t, std::map<u_int32_t, PolsNames>*> polsNamesStage;
+        std::map<u_int32_t, std::map<u_int32_t, std::string>*> polsNamesStage;
 
         std::map<std::string, AltBn128::FrElement> omegas;
 
