@@ -68,3 +68,7 @@ tmp
 
 # Workspace files are user-specific
 *.sublime-workspace
+
+# Runtime
+runtime/*
+!runtime/README.md

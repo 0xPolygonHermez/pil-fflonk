@@ -43,20 +43,15 @@ int main(int argc, char **argv)
         }
     }
 
-    if (argc != 8) {
-        cerr << "Invalid number of parameters: " << argc << endl;
-        cerr << "Usage: " << argv[0] << " <pil.zkey> <fflonkInfo.json> <polynomials.cnst> <polynomials.zkey.cnst> <polynomials.cmtd> <proof.json> <public.json>" << endl;
-        return -1;
-    }
 
     // Get the input arguments
-    string zkeyFilename = argv[1];
-    string fflonkInfoFileName = argv[2];
-    string cnstFilename = argv[3];
-    string precomputedFilename = argv[4];
-    string cmtdFilename = argv[5];
-    string proofFilename = argv[6];
-    string publicFilename = argv[7];
+    string zkeyFilename = "config/pilfflonk.zkey";
+    string fflonkInfoFileName = "config/pilfflonk.fflonkinfo.json";
+    string cnstFilename =  "config/pilfflonk.cnst";
+    string precomputedFilename = "config/pilfflonk.ext.cnst";
+    string cmtdFilename =  "config/pilfflonk.cmmt";
+    string proofFilename =  "runtime/proof.json";
+    string publicFilename = "runtime/public.json";
 
     TimerStart(WHOLE_PROCESS);
 
