@@ -63,11 +63,6 @@ u_int64_t Keccak256Transcript::toRprBE(G1Point &point, uint8_t *data, int64_t se
 
     E.g1.copy(p, point);
 
-    if (E.g1.isZero(p))
-    {
-        memset(data, 0, bytes);
-        return 0;
-    }
     bytes = E.g1.F.toRprBE(p.x, data + seek, size);
     bytes += E.g1.F.toRprBE(p.y, data + seek + bytes, size);
     return bytes;
