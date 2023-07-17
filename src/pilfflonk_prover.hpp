@@ -122,7 +122,7 @@ namespace PilFflonk
 
         void extend(u_int32_t stage, u_int32_t nPols);
 
-        void addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs, u_int32_t domainSize);
+        // void addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs, u_int32_t domainSize);
 
         AltBn128::FrElement *getPolynomial(uint64_t polId, uint64_t offset);
 

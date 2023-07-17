@@ -5,7 +5,7 @@ WORKING_DIR=${1:-../pil-stark/tmp}
 
 # Array of arguments
 args=("simple1" "simple2"  "simple2p"  "simple3"  "simple4" "simple4p", 
-    "fibonacci" "simple_plookup" "simple_connection"  "simple_permutation" 
+    "fibonacci" "simple_plookup" "simple_permutation" "simple_connection"
     "permutation" "connection" "plookup" "all")
 
 for arg in "${args[@]}"; do
@@ -26,6 +26,8 @@ for arg in "${args[@]}"; do
     if echo "$verification" | grep -q "FAIL!"; then
         echo "Verification failed for $arg. Stopping the script."
         exit 1
+    else
+        echo "Verification succeeded for $arg."
     fi
 
 done

@@ -64,9 +64,9 @@ namespace ShPlonk {
 
         void reset();
 
-        void commit(u_int32_t stage, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp);
+        void commit(u_int32_t stage, FrElement* buffCoefs, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp);
 
-        json open(G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement challengeXiSeed, std::vector<std::string> nonCommittedPols, bool prepCommits);
+        json open(G1PointAffine *PTau, AltBn128::FrElement * buffCoefsConstant, std::map<std::string, AltBn128::FrElement *> ptrCommitted, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement xiSeed, std::vector<std::string> nonCommittedPols);
 
         json toJson();
 
@@ -102,13 +102,19 @@ namespace ShPlonk {
 
         void computeLiTwoOpeningPoints(u_int32_t i);
 
-        void calculateEvaluations();
+        void calculateEvaluations(FrElement* buffConstantCoefs, std::map<std::string, AltBn128::FrElement *> ptrCommitted);
 
-        void prepareCommits(std::map<std::string, AltBn128::FrElement *> ptrShPlonk);
+        AltBn128::FrElement fastEvaluate(FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, FrElement openingPoint);
 
-        void sumCommits(u_int32_t nCommits, std::string* polynomialsNames, std::string dstName);
+        u_int32_t findDegree(u_int32_t fIndex, std::string name);
 
-        void sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, std::string dstName);
+        u_int32_t findPolId(u_int32_t stage, std::string name);
+
+        // void prepareCommits(std::map<std::string, AltBn128::FrElement *> ptrShPlonk);
+
+        // void sumCommits(u_int32_t nCommits, std::string* polynomialsNames, std::string dstName);
+
+        // void sumPolynomials(u_int32_t nPols, std::string* polynomialsNames, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, std::string dstName);
 
         int find(std::string* arr, u_int32_t n, std::string x);
         int find(u_int32_t* arr, u_int32_t n, u_int32_t x);
@@ -116,6 +122,8 @@ namespace ShPlonk {
         AltBn128::G1Point multiExponentiation(G1PointAffine *PTau, Polynomial<AltBn128::Engine> *polynomial, u_int32_t nx, u_int64_t x[]);
         
         FrElement *polynomialFromMontgomery(Polynomial<AltBn128::Engine> *polynomial);
+
+        void getCommittedPolynomial(FrElement* buffCoefs, FrElement* reservedBuffer, std::string name, u_int32_t n, u_int32_t polDegree, u_int64_t* degrees, u_int64_t* polsIds, u_int32_t nPolsStage);
 
     };
 }
