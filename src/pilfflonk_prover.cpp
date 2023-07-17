@@ -229,11 +229,7 @@ namespace PilFflonk
                 auto pConstPolsAddress = copyFile(constPolsFilename, constPolsBytes);
                 zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsBytes) + " bytes from constant file " + constPolsFilename);
 
-#pragma omp parallel for
-                for (u_int64_t i = 0; i < mapBufferConstant["const_n"]; i++)
-                {
-                    E.fr.fromRprLE(ptrConstant["const_n"][i], reinterpret_cast<uint8_t *>(pConstPolsAddress) + i * 32, 32);
-                }
+                ThreadUtils::parcpy(ptrConstant["const_n"], (FrElement *)pConstPolsAddress, constPolsBytes, omp_get_num_threads() / 2);
             }
 
             TimerStopAndLog(LOAD_CONST_POLS_TO_MEMORY);
@@ -263,6 +259,17 @@ namespace PilFflonk
         {
             zklog.info("");
             zklog.info("PIL-FFLONK PROVER STARTED");
+
+            TimerStart(LOAD_COMMITTED_POLS_TO_MEMORY);
+
+            u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
+
+            auto pCommittedPolsAddress = copyFile(committedPolsFilename, cmtdPolsSize);
+            zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(cmtdPolsSize) + " bytes from constant file " + committedPolsFilename);
+
+            ThreadUtils::parcpy(ptrCommitted["cm1_n"], (FrElement *)pCommittedPolsAddress, cmtdPolsSize, omp_get_num_threads() / 2);
+
+            TimerStopAndLog(LOAD_COMMITTED_POLS_TO_MEMORY);
 
             TimerStart(PIL_FFLONK_PROVE);
 
@@ -322,25 +329,6 @@ namespace PilFflonk
             zklog.info("-----------------------------");
 
             transcript->reset();
-
-            TimerStart(LOAD_COMMITTED_POLS_TO_MEMORY);
-
-            u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
-
-            auto pCommittedPolsAddress = copyFile(committedPolsFilename, cmtdPolsSize);
-            zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(cmtdPolsSize) + " bytes from constant file " + committedPolsFilename);
-
-            TimerStart(CONVERT_COMMITTED_POLS_TO_FR);
-
-#pragma omp parallel for
-            for (u_int64_t i = 0; i < fflonkInfo->mapSectionsN.section[cm1_n] * N; i++)
-            {
-                E.fr.fromRprLE(ptrCommitted["cm1_n"][i], reinterpret_cast<uint8_t *>(pCommittedPolsAddress) + i * 32, 32);
-            }
-
-            TimerStopAndLog(CONVERT_COMMITTED_POLS_TO_FR);
-
-            TimerStopAndLog(LOAD_COMMITTED_POLS_TO_MEMORY);
 
             // STAGE 0. Calculate publics
             // STEP 0.1 - Prepare public inputs

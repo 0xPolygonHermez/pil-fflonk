@@ -81,13 +81,7 @@ AltBn128::FrElement *ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFil
 
     AltBn128::FrElement *buffer = new AltBn128::FrElement[nElements];
 
-    ThreadUtils::parcpy(&buffer[0], fd->getSectionData(idSection), size, nThreads);
-
-#pragma omp parallel for
-    for (u_int64_t i = 0; i < nElements; i++)
-    {
-        E.fr.fromRprLE(buffer[i], (uint8_t *)&(buffer[i]), 32);
-    }
+    ThreadUtils::parcpy(&buffer[0], (FrElement *)fd->getSectionData(idSection), size, nThreads);
 
     return &buffer[0];
 }
@@ -95,16 +89,9 @@ AltBn128::FrElement *ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFil
 void ConstPolsSerializer::readBuffer(AltBn128::Engine &E, BinFileUtils::BinFile *fd, int idSection, AltBn128::FrElement *ptrDst)
 {
     uint64_t size = fd->getSectionSize(idSection);
-    uint64_t nElements = size / sizeof(AltBn128::FrElement);
     int nThreads = omp_get_num_threads() / 2;
 
     AltBn128::FrElement *buffer = ptrDst;
 
-    ThreadUtils::parcpy(&buffer[0], fd->getSectionData(idSection), size, nThreads);
-
-#pragma omp parallel for
-    for (u_int64_t i = 0; i < nElements; i++)
-    {
-        E.fr.fromRprLE(buffer[i], (uint8_t *)&(buffer[i]), 32);
-    }
+    ThreadUtils::parcpy(&buffer[0], (FrElement *)fd->getSectionData(idSection), size, nThreads);
 }
