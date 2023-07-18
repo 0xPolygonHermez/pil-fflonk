@@ -70,22 +70,22 @@ namespace PilFflonk
 
             shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, zkey);
 
-            N = 1 << zkey->power;
-            nBits = zkey->power;
             extendBits = ceil(log2(fflonkInfo->qDeg + 1));
-            nBitsExt = nBits + extendBits;
+
+            nBits = zkey->power;
+            nBitsCoefs = nBits + fflonkInfo->nBitsZK;
+            nBitsExt = nBits + fflonkInfo->nBitsZK + extendBits;
+
+            extendBitsTotal = nBitsExt - nBits;
+
+            N = 1 << nBits;
+            NCoefs = 1 << nBitsCoefs;
             NExt = 1 << nBitsExt;
 
-            // ZK data
-            extendBitsZK = zkey->powerZK - zkey->power;
-            factorZK = (1 << extendBitsZK);
-            extendBitsTotal = extendBits + extendBitsZK;
-            nBitsExtZK = nBits + extendBitsTotal;
-
-            fft = new FFT<AltBn128::Engine::Fr>(NExt * factorZK);
+            fft = new FFT<AltBn128::Engine::Fr>(NExt);
 
             ntt = new NTT_AltBn128(E, N);
-            nttExtended = new NTT_AltBn128(E, NExt * factorZK);
+            nttExtended = new NTT_AltBn128(E, NExt);
 
             transcript = new Keccak256Transcript(E);
 
@@ -109,10 +109,10 @@ namespace PilFflonk
 
             // Polynomial evaluations
             mapBufferConstant["const_n"] = N * fflonkInfo->nConstants;
-            mapBufferConstant["const_2ns"] = NExt * factorZK * fflonkInfo->nConstants;
+            mapBufferConstant["const_2ns"] = NExt * fflonkInfo->nConstants;
             mapBufferConstant["const_coefs"] = N * fflonkInfo->nConstants;
             mapBufferConstant["x_n"] = N;
-            mapBufferConstant["x_2ns"] = NExt * factorZK;
+            mapBufferConstant["x_2ns"] = NExt;
             mapBufferConstant["PTau"] = maxFiDegree * sizeof(G1PointAffine) / sizeof(FrElement);
 
             lengthBufferConstant = 0;
@@ -138,15 +138,15 @@ namespace PilFflonk
             mapBufferCommitted["cm3_n"] = N * fflonkInfo->mapSectionsN.section[cm3_n];
             mapBufferCommitted["tmpExp_n"] = N * fflonkInfo->mapSectionsN.section[tmpExp_n];
 
-            mapBufferCommitted["cm1_2ns"] = NExt * factorZK * fflonkInfo->mapSectionsN.section[cm1_2ns];
-            mapBufferCommitted["cm2_2ns"] = NExt * factorZK * fflonkInfo->mapSectionsN.section[cm2_2ns];
-            mapBufferCommitted["cm3_2ns"] = NExt * factorZK * fflonkInfo->mapSectionsN.section[cm3_2ns];
-            mapBufferCommitted["q_2ns"] = NExt * factorZK * fflonkInfo->qDim;
+            mapBufferCommitted["cm1_2ns"] = NExt * fflonkInfo->mapSectionsN.section[cm1_2ns];
+            mapBufferCommitted["cm2_2ns"] = NExt * fflonkInfo->mapSectionsN.section[cm2_2ns];
+            mapBufferCommitted["cm3_2ns"] = NExt * fflonkInfo->mapSectionsN.section[cm3_2ns];
+            mapBufferCommitted["q_2ns"] = NExt * fflonkInfo->qDim;
             mapBufferCommitted["publics"] = fflonkInfo->nPublics;
-            mapBufferCommitted["cm1_coefs"] = N * factorZK * fflonkInfo->mapSectionsN.section[cm1_n];
-            mapBufferCommitted["cm2_coefs"] = N * factorZK * fflonkInfo->mapSectionsN.section[cm2_n];
-            mapBufferCommitted["cm3_coefs"] = N * factorZK * fflonkInfo->mapSectionsN.section[cm3_n];
-            mapBufferCommitted["cm4_coefs"] = NExt * factorZK;
+            mapBufferCommitted["cm1_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm1_n];
+            mapBufferCommitted["cm2_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm2_n];
+            mapBufferCommitted["cm3_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm3_n];
+            mapBufferCommitted["cm4_coefs"] = NExt;
 
             lengthBufferCommitted = 0;
             for (auto const &[key, value] : mapBufferCommitted) {
@@ -192,7 +192,7 @@ namespace PilFflonk
             
             // Add tmp buffer
             u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[cm1_n], max(fflonkInfo->mapSectionsN.section[cm2_n], fflonkInfo->mapSectionsN.section[cm3_n]));
-            u_int64_t tmpLength = max(NExt * factorZK * maxNPols, lengthW);
+            u_int64_t tmpLength = max(NExt * maxNPols, lengthW);
             mapBufferShPlonk["tmp"] = tmpLength;
 
             lengthBufferShPlonk = 0;
@@ -655,7 +655,7 @@ namespace PilFflonk
 
         TimerStart(PIL_FFLONK_STAGE_4_CALCULATE_EXPS);
 #pragma omp parallel for
-        for (uint64_t i = 0; i < NExt * factorZK; i++)
+        for (uint64_t i = 0; i < NExt; i++)
         {
             pilFflonkSteps.step42ns_first(E, params, i);
         }
@@ -663,7 +663,7 @@ namespace PilFflonk
         
         TimerStart(PIL_FFLONK_STAGE_4_CALCULATE_Q);
 
-        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], ptrCommitted["cm4_coefs"], NExt * factorZK);
+        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], ptrCommitted["cm4_coefs"], NExt);
         polQ->divZh(N, 1 << extendBitsTotal);
         shPlonkProver->addPolynomialShPlonk("Q", polQ);
         TimerStopAndLog(PIL_FFLONK_STAGE_4_CALCULATE_Q);
@@ -679,13 +679,13 @@ namespace PilFflonk
     {
 
         AltBn128::FrElement *buffSrc = ptrCommitted["cm" + std::to_string(stage) + "_n"];       // N
-        AltBn128::FrElement *buffDst = ptrCommitted["cm" + std::to_string(stage) + "_2ns"];     // NEXT * FACTORZK
-        AltBn128::FrElement *buffCoefs = ptrCommitted["cm" + std::to_string(stage) + "_coefs"]; // N * FACTORZK
+        AltBn128::FrElement *buffDst = ptrCommitted["cm" + std::to_string(stage) + "_2ns"];     // NExt
+        AltBn128::FrElement *buffCoefs = ptrCommitted["cm" + std::to_string(stage) + "_coefs"]; // NCoefs
 
 
         int nThreads = omp_get_max_threads() / 2;
 
-        ThreadUtils::parset(buffCoefs, 0, N * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
+        ThreadUtils::parset(buffCoefs, 0, NCoefs * nPols * sizeof(AltBn128::FrElement), nThreads);
 
         TimerStart(EXTEND_INTT);
         ntt->INTT(buffCoefs, buffSrc, N, nPols, ptrShPlonk["tmp"]);
@@ -699,18 +699,18 @@ namespace PilFflonk
             {
                 AltBn128::FrElement b;
                 // randombytes_buf((void *)&(b), sizeof(FrElement)-1);
-                b = E.fr.one();
+                b = E.fr.set(2);
 
                 buffCoefs[j * nPols + i] = E.fr.add(buffCoefs[j * nPols + i], E.fr.neg(b));
                 buffCoefs[(j + N) * nPols + i] = E.fr.add(buffCoefs[(j + N) * nPols + i], b);
             }
         }
                 
-        ThreadUtils::parset(buffDst, 0, NExt * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
-        ThreadUtils::parcpy(buffDst, buffCoefs, N * factorZK * nPols * sizeof(AltBn128::FrElement), nThreads);
+        ThreadUtils::parset(buffDst, 0, NExt * nPols * sizeof(AltBn128::FrElement), nThreads);
+        ThreadUtils::parcpy(buffDst, buffCoefs, NCoefs * nPols * sizeof(AltBn128::FrElement), nThreads);
                
         TimerStart(EXTEND_NTT);
-        nttExtended->NTT(buffDst, buffDst, 1 << nBitsExtZK, nPols, ptrShPlonk["tmp"]);
+        nttExtended->NTT(buffDst, buffDst, 1 << nBitsExt, nPols, ptrShPlonk["tmp"]);
         TimerStopAndLog(EXTEND_NTT);
     }
 

@@ -35,7 +35,6 @@ namespace PilFflonkZkey
         mpz_import(pilFflonkZkey->rPrime, pilFflonkZkey->n8r, -1, 1, -1, 0, fdZKey->read(pilFflonkZkey->n8r));
 
         pilFflonkZkey->power = fdZKey->readU32LE();
-        pilFflonkZkey->powerZK = fdZKey->readU32LE();
         pilFflonkZkey->powerW = fdZKey->readU32LE();
         pilFflonkZkey->nPublics = fdZKey->readU32LE();
 

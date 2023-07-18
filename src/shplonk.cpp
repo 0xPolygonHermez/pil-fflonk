@@ -394,6 +394,7 @@ namespace ShPlonk {
         for (auto const &x : omegasMap) {
             delete[] x.second;
         }
+        omegasMap.clear();
 
         TimerStopAndLog(SHPLONK_CALCULATE_ROOTS);
     }
@@ -807,15 +808,15 @@ namespace ShPlonk {
 
         challengeXiSeed = xiSeed;
 
-        // Calculate roots
-        calculateRoots();
-
         challengeXi = E.fr.one();
         for(u_int32_t i = 0; i < zkeyPilFflonk->powerW; ++i) {
             challengeXi = E.fr.mul(challengeXi, challengeXiSeed);
         }
 
         zklog.info("Challenge xi: " + E.fr.toString(challengeXi));
+
+        // Calculate roots
+        calculateRoots();
 
         calculateEvaluations(buffCoefsConstant, ptrCommitted);        
 

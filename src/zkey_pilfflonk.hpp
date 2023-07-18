@@ -53,7 +53,6 @@ namespace PilFflonkZkey
         mpz_t rPrime;
 
         u_int32_t power;
-        u_int32_t powerZK;
         u_int32_t powerW;
         u_int32_t nPublics;
 

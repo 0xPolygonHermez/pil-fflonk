@@ -55,19 +55,17 @@ namespace PilFflonk
 
         PilFflonkZkey::PilFflonkZkey *zkey;
 
-        u_int32_t n8r;
         u_int64_t N;
+        u_int64_t NCoefs;
         u_int64_t NExt;
-        u_int32_t nBits;
-        u_int32_t nBitsExt;
-        u_int32_t extendBits;
-        u_int64_t sDomain;
-        u_int64_t sDomainExt;
 
-        u_int32_t extendBitsZK;
-        u_int32_t factorZK;
+        u_int32_t nBits;
+        u_int32_t nBitsCoefs;
+        u_int32_t nBitsExt;
+
+        u_int32_t extendBits;
+
         u_int32_t extendBitsTotal;
-        u_int32_t nBitsExtZK;
 
         FrElement challenges[5];
 
