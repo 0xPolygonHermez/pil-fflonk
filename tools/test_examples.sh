@@ -3,10 +3,21 @@
 # Define working dir
 WORKING_DIR=${1:-../pil-stark/tmp}
 
+GENERATE_TESTS=${2:-false}
+
+generate_basic_tests() {
+    mocha ../pil-stark/test/cfiles/fflonk_gen_all_files.js 
+    mocha ../pil-stark/test/cfiles/fflonk_gen_simple_files.js 
+    mocha ../pil-stark/test/cfiles/fflonk_gen_arguments_files.js 
+}
+
+if $GENERATE_TESTS; then
+    # Generate files
+    generate_basic_tests
+fi
+
 # Array of arguments
-args=("simple1" "simple2"  "simple2p"  "simple3"  "simple4" "simple4p", 
-    "fibonacci" "simple_plookup" "simple_permutation" "simple_connection"
-    "permutation" "connection" "plookup" "all")
+args=("simple1" "simple2"  "simple2p"  "simple3"  "simple4" "simple4p" "fibonacci" "simple_plookup" "simple_permutation" "simple_connection" "permutation" "connection" "plookup" "all")
 
 for arg in "${args[@]}"; do
     # Copy generated files
