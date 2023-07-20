@@ -5,19 +5,25 @@
 #include <map>
 #include <gmp.h>
 #include <binfile_utils.hpp>
+#include <thread_utils.hpp>
 #include "zkey.hpp"
 #include <alt_bn128.hpp>
 
 namespace PilFflonkZkey
 {
-    const int ZKEY_PF_NSECTIONS = 7;
+    const int ZKEY_PF_NSECTIONS = 12;
 
     const int ZKEY_PF_HEADER_SECTION = 2;
     const int ZKEY_PF_F_SECTION = 3;
     const int ZKEY_PF_F_COMMITMENTS_SECTION = 4;
     const int ZKEY_PF_POLSNAMESSTAGE_SECTION = 5;
-    const int ZKEY_PF_OMEGAS_SECTION = 6;
-    const int ZKEY_PF_PTAU_SECTION = 7;
+    const int ZKEY_PF_CONST_POLS_EVALS_SECTION = 6;
+    const int ZKEY_PF_CONST_POLS_COEFS_SECTION = 7;
+    const int ZKEY_PF_CONST_POLS_EVALS_EXT_SECTION = 8;
+    const int ZKEY_PF_X_N_SECTION = 9;
+    const int ZKEY_PF_X_EXT_SECTION = 10;
+    const int ZKEY_PF_OMEGAS_SECTION = 11;
+    const int ZKEY_PF_PTAU_SECTION = 12;
 
     struct ShPlonkStagePol
     {
@@ -60,8 +66,6 @@ namespace PilFflonkZkey
 
         std::map<u_int32_t, ShPlonkPol *> f;
 
-        std::map<std::string, void *> committedConstants;
-
         std::map<u_int32_t, std::map<u_int32_t, std::string>*> polsNamesStage;
 
         std::map<std::string, AltBn128::FrElement> omegas;
@@ -69,15 +73,28 @@ namespace PilFflonkZkey
         ~PilFflonkZkey();
     };
 
-    PilFflonkZkey *loadPilFflonkZkey(BinFileUtils::BinFile *f);
+    PilFflonkZkey *loadPilFflonkZkey(BinFileUtils::BinFile *fdZKey);
 
     void readFSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
-
-    void readFCommitmentsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 
     void readPolsNamesStageSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 
     void readOmegasSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
+
+    void readConstPols(BinFileUtils::BinFile *fdZKey, AltBn128::FrElement *evals, AltBn128::FrElement *coefs, AltBn128::FrElement *evalsExt, AltBn128::FrElement *x_n, AltBn128::FrElement *x_2ns);
+
+    void readConstPolsEvalsSection(BinFileUtils::BinFile *fdZKey, AltBn128::FrElement *evals);
+
+    void readConstPolsCoefsSection(BinFileUtils::BinFile *fdZKey, AltBn128::FrElement *coefs);
+
+    void readConstPolsEvalsExtSection(BinFileUtils::BinFile *fdZKey, AltBn128::FrElement *evalsExt);
+
+    void readXnSection(BinFileUtils::BinFile *fdZKey, AltBn128::FrElement *x_n);
+
+    void readX2nsSection(BinFileUtils::BinFile *fdZKey, AltBn128::FrElement *x_2ns);
+
+    void readBuffer(BinFileUtils::BinFile *fdZKey, int idSection, AltBn128::FrElement *ptrDst);
+   
 }
 
 #endif

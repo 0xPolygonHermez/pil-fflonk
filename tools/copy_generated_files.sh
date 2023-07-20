@@ -38,12 +38,6 @@ cp ${WORKING_DIR}/${NAME}.zkey ./config/pilfflonk.zkey
 if ! fileExists "${WORKING_DIR}/${NAME}.fflonkinfo.json"; then echo "FflonkInfo file not found."; exit 1; fi
 cp ${WORKING_DIR}/${NAME}.fflonkinfo.json ./config/pilfflonk.fflonkinfo.json
 
-if ! fileExists "${WORKING_DIR}/${NAME}.cnst"; then echo "Const file not found."; exit 1; fi
-cp ${WORKING_DIR}/${NAME}.cnst ./config/pilfflonk.cnst
-
-if ! fileExists "${WORKING_DIR}/${NAME}.ext.cnst"; then echo "Ext Const file not found."; exit 1; fi
-cp ${WORKING_DIR}/${NAME}.ext.cnst ./config/pilfflonk.ext.cnst
-
 if ! fileExists "${WORKING_DIR}/${NAME}.cmmt"; then echo "Commit file not found."; exit 1; fi
 cp ${WORKING_DIR}/${NAME}.cmmt ./config/pilfflonk.cmmt
 

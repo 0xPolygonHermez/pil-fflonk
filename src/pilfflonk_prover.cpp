@@ -3,13 +3,11 @@
 #include <stdio.h>
 #include "zkey.hpp"
 #include <math.h>
-#include "const_pols_serializer.hpp"
 
 namespace PilFflonk
 {
     PilFflonkProver::PilFflonkProver(AltBn128::Engine &_E,
                                      std::string zkeyFilename, std::string fflonkInfoFilename,
-                                     std::string constPolsFilename, std::string precomputedFilename,
                                      void *reservedMemoryPtr, uint64_t reservedMemorySize) : E(_E)
     {
         this->reservedMemoryPtr = (FrElement *)reservedMemoryPtr;
@@ -17,7 +15,7 @@ namespace PilFflonk
 
         curveName = "bn128";
 
-        setConstantData(zkeyFilename, fflonkInfoFilename, constPolsFilename, precomputedFilename);
+        setConstantData(zkeyFilename, fflonkInfoFilename);
     }
 
     PilFflonkProver::~PilFflonkProver()
@@ -44,8 +42,7 @@ namespace PilFflonk
         delete fflonkInfo;
     }
 
-    void PilFflonkProver::setConstantData(std::string zkeyFilename, std::string fflonkInfoFile,
-                                          std::string constPolsFilename, std::string precomputedFilename)
+    void PilFflonkProver::setConstantData(std::string zkeyFilename, std::string fflonkInfoFile)
     {
         try
         {
@@ -54,10 +51,6 @@ namespace PilFflonk
             zklog.info("> Opening zkey data file");
             zkeyBinFile = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
             auto fdZkey = zkeyBinFile.get();
-
-            zklog.info("> Opening precomputed data file");
-            precomputedBinFile = BinFileUtils::openExisting(precomputedFilename, "pols", 1);
-            auto fdPrecomputed = precomputedBinFile.get();
 
             if (Zkey::getProtocolIdFromZkey(fdZkey) != Zkey::PILFFLONK_PROTOCOL_ID)
             {
@@ -180,13 +173,12 @@ namespace PilFflonk
             // //////////////////////////////////////////////////
             u_int64_t maxDegree = 0;  
             for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
-                u_int64_t lengthStage = std::pow(2, ((u_int64_t)log2(zkey->f[i]->degree)) + 1);
-                mapBufferShPlonk["f" + std::to_string(zkey->f[i]->index)] = lengthStage;
+                mapBufferShPlonk["f" + std::to_string(zkey->f[i]->index)] = zkey->f[i]->degree + 1;
 
                 maxDegree = std::max(maxDegree, zkey->f[i]->degree);
             }
 
-            u_int64_t lengthW = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
+            u_int64_t lengthW = maxDegree + 1;
             mapBufferShPlonk["W"] = lengthW;
             mapBufferShPlonk["Wp"] = lengthW;
             
@@ -222,25 +214,40 @@ namespace PilFflonk
                                 PTauBytes, nThreads);
 
             TimerStopAndLog(LOAD_PTAU_TO_MEMORY);
-            TimerStart(LOAD_CONST_POLS_TO_MEMORY);
-
-            u_int64_t constPolsBytes = mapBufferConstant["const_n"] * sizeof(FrElement);
-
-            if (constPolsBytes > 0)
-            {
-                auto pConstPolsAddress = copyFile(constPolsFilename, constPolsBytes);
-                zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(constPolsBytes) + " bytes from constant file " + constPolsFilename);
-
-                ThreadUtils::parcpy(ptrConstant["const_n"], (FrElement *)pConstPolsAddress, constPolsBytes, omp_get_num_threads() / 2);
-            }
-
-            TimerStopAndLog(LOAD_CONST_POLS_TO_MEMORY);
-
+        
             TimerStart(LOAD_CONST_POLS_ZKEY_TO_MEMORY);
 
-            ConstPolsSerializer::readConstPolsFile(E, fdPrecomputed, ptrConstant["const_coefs"], ptrConstant["const_2ns"], ptrConstant["x_n"], ptrConstant["x_2ns"]);
+            PilFflonkZkey::readConstPols(fdZkey, ptrConstant["const_n"], ptrConstant["const_coefs"], ptrConstant["const_2ns"], ptrConstant["x_n"], ptrConstant["x_2ns"]);
 
             TimerStopAndLog(LOAD_CONST_POLS_ZKEY_TO_MEMORY);
+
+            TimerStart(LOAD_F_COMMITMENTS_ZKEY_TO_MEMORY);
+            
+            fdZkey->startReadSection(PilFflonkZkey::ZKEY_PF_F_COMMITMENTS_SECTION);
+            u_int32_t len = fdZkey->readU32LE();
+
+            for (u_int32_t i = 0; i < len; i++)
+            {
+                std::string name = fdZkey->readString();
+                void *C = fdZkey->read(zkey->n8q * 2);
+                
+                G1Point commit;
+                E.g1.copy(commit, *((G1PointAffine *)C));
+
+                shPlonkProver->addPolynomialCommitment(name, commit);
+                u_int32_t lenPol = fdZkey->readU32LE();
+                Polynomial<AltBn128::Engine> *polFi = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], lenPol / zkey->n8q);
+
+                ThreadUtils::parcpy(ptrShPlonk[name], (FrElement *)fdZkey->read(lenPol), lenPol, omp_get_num_threads() / 2);
+
+                polFi->fixDegree();
+
+                shPlonkProver->addPolynomialShPlonk(name, polFi);
+            }
+
+            fdZkey->endReadSection();
+
+            TimerStopAndLog(LOAD_F_COMMITMENTS_ZKEY_TO_MEMORY);
 
             TimerStopAndLog(LOAD_ZKEY_TO_MEMORY);
         }
@@ -331,41 +338,10 @@ namespace PilFflonk
             zklog.info("-----------------------------");
 
             transcript->reset();
-
-            // STAGE 0. Calculate publics
-            // STEP 0.1 - Prepare public inputs
-
-            TimerStart(PIL_FFLONK_CALCULATE_EXPS_PUBLICS);
-            json publicSignals(nullptr);
-            for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
-            {
-                Publics publicPol = fflonkInfo->publics[i];
-                if ("cmP" == publicPol.polType)
-                {
-                    u_int64_t offset = (fflonkInfo->publics[i].idx * fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->publics[i].polId);
-                    ptrCommitted["publics"][i] = ptrCommitted["cm1_n"][offset];
-                }
-                else if ("imP" == publicPol.polType)
-                {
-                    pilFflonkSteps.publics_first(E, params, fflonkInfo->publics[i].polId, i);
-                }
-                else
-                {
-                    throw std::runtime_error("Invalid public input type");
-                }
-                publicSignals.push_back(E.fr.toString(ptrCommitted["publics"][i]).c_str());
-            }
-
-            TimerStopAndLog(PIL_FFLONK_CALCULATE_EXPS_PUBLICS);
-
-
-            // STEP 1.2 - Compute constant polynomials (coefficients + evaluations) and commit them
-            if (fflonkInfo->nConstants > 0)
-            {
-                TimerStart(PIL_FFLONK_ADD_CONSTANT_POLS_FI);
-                shPlonkProver->commit(0, ptrConstant["const_coefs"], (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, false);
-                TimerStopAndLog(PIL_FFLONK_ADD_CONSTANT_POLS_FI);
-            }
+                        
+            // STAGE 0. Compute Publics and Store Constants
+            zklog.info("STAGE 0. Compute Publics and Store Constants");
+            stage0(params);
 
             // STAGE 1. Compute Trace Column Polynomials
             zklog.info("STAGE 1. Compute Trace Column Polynomials");
@@ -402,6 +378,13 @@ namespace PilFflonk
 
             json pilFflonkProof = shPlonkProver->open((G1PointAffine *)ptrConstant["PTau"], ptrConstant["const_coefs"], ptrCommitted, ptrShPlonk, challengeXiSeed, {"Q"});
 
+            json publicSignals(nullptr);
+            
+            for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
+            {
+                publicSignals.push_back(E.fr.toString(ptrCommitted["publics"][i]).c_str());
+            }
+            
             FrElement challengeXi = shPlonkProver->getChallengeXi();
 
             FrElement xN = E.fr.one();
@@ -429,6 +412,50 @@ namespace PilFflonk
         }
     }
 
+    void PilFflonkProver::stage0(StepsParams &params) 
+    {
+        if (fflonkInfo->nConstants > 0)
+        {
+            TimerStart(PIL_FFLONK_ADD_CONSTANT_POLS_FI_COMMITMENTS);
+
+            for(u_int32_t i = 0; i < zkey->f.size(); ++i) {
+                if(zkey->f[i]->stages[0].stage == 0) {
+                    G1Point commit = shPlonkProver->getPolynomialCommitment("f" + std::to_string(zkey->f[i]->index)); 
+                    transcript->addPolCommitment(commit);
+                }
+            }
+
+            TimerStopAndLog(PIL_FFLONK_ADD_CONSTANT_POLS_FI_COMMITMENTS);
+        }
+
+        TimerStart(PIL_FFLONK_CALCULATE_EXPS_PUBLICS);
+        for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
+        {
+            Publics publicPol = fflonkInfo->publics[i];
+            if ("cmP" == publicPol.polType)
+            {
+                u_int64_t offset = (fflonkInfo->publics[i].idx * fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->publics[i].polId);
+                ptrCommitted["publics"][i] = ptrCommitted["cm1_n"][offset];
+            }
+            else if ("imP" == publicPol.polType)
+            {
+                pilFflonkSteps.publics_first(E, params, fflonkInfo->publics[i].polId, i);
+            }
+            else
+            {
+                throw std::runtime_error("Invalid public input type");
+            }
+        }
+
+        // Add all the publics to the transcript
+        for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
+        {
+            transcript->addScalar(ptrCommitted["publics"][i]);
+        }
+
+        TimerStopAndLog(PIL_FFLONK_CALCULATE_EXPS_PUBLICS);
+    }
+
     void PilFflonkProver::stage1(StepsParams &params)
     {
         TimerStart(PIL_FFLONK_STAGE_1);
@@ -444,24 +471,6 @@ namespace PilFflonk
             TimerStart(PIL_FFLONK_STAGE_1_COMMIT);
             shPlonkProver->commit(1, ptrCommitted["cm1_coefs"], (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk, true);
             TimerStopAndLog(PIL_FFLONK_STAGE_1_COMMIT);
-        }
-
-        for (auto const &[key, commit] : zkey->committedConstants)
-        {
-            G1Point C;
-            E.g1.copy(C, *((G1PointAffine *)commit));
-            std::istringstream iss(key);
-            std::string name;
-            std::getline(iss, name, '_');
-            zklog.info("Commitment " + name + ": " + E.g1.toString(C));
-            shPlonkProver->addPolynomialCommitment(name, C);
-            transcript->addPolCommitment(C);
-        }
-
-        // Add all the publics to the transcript
-        for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
-        {
-            transcript->addScalar(ptrCommitted["publics"][i]);
         }
 
         for(u_int32_t i = 0; i < zkey->f.size(); ++i) {

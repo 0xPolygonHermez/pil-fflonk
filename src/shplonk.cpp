@@ -133,7 +133,7 @@ namespace ShPlonk {
             }
         }
 
-        u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
+        u_int64_t lengthBuffer = maxDegree + 1;
 
         // COMPUTE L(X)
         polynomialsShPlonk["Wp"] = new Polynomial<AltBn128::Engine>(E, reservedBuffer, lengthBuffer);
@@ -204,10 +204,10 @@ namespace ShPlonk {
             }
         }
 
-        u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(maxDegree - 1)) + 1);
+        u_int64_t lengthBuffer = maxDegree + 1;
 
         Polynomial<AltBn128::Engine> * polynomialW = new Polynomial<AltBn128::Engine>(E, reservedBuffer, lengthBuffer);
-              
+  
         FrElement* initialOpenValues = new FrElement[openingPoints.size()];
         for(u_int32_t i = 0; i < openingPoints.size(); ++i) {
             initialOpenValues[i] = challengeXi;
@@ -678,7 +678,7 @@ namespace ShPlonk {
     //         }
     //     }
 
-    //     u_int64_t lengthBuffer = std::pow(2, (u_int64_t)log2(maxDegree - 1) + 1);
+    //     u_int64_t lengthBuffer = maxDegree + 1;
         
     //     polynomialsShPlonk[dstName] = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[dstName], lengthBuffer);
 
@@ -781,7 +781,7 @@ namespace ShPlonk {
 
     void ShPlonkProver::getCommittedPolynomial(FrElement* buffCoefs, FrElement* reservedBuffer, std::string name, u_int32_t n, u_int32_t polDegree, u_int64_t* degrees, u_int64_t* polsIds, u_int32_t nPolsStage) {
         
-        u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(polDegree)) + 1);
+        u_int64_t lengthBuffer = polDegree + 1;
 
         polynomialsShPlonk[name] = new Polynomial<AltBn128::Engine>(E, reservedBuffer, lengthBuffer);
 

@@ -98,18 +98,18 @@ namespace PilFflonk
     public:
         PilFflonkProver(AltBn128::Engine &E,
                         std::string zkeyFilename, std::string fflonkInfoFilename,
-                        std::string constPolsFilename, std::string precomputedFilename,
                         void *reservedMemoryPtr = NULL, uint64_t reservedMemorySize = 0);
 
         ~PilFflonkProver();
 
         // Set the configuration data that is required once per prover
-        void setConstantData(std::string zkeyFilename, std::string fflonkInfoFilename,
-                             std::string constPolsFilename, std::string precomputedFilename);
+        void setConstantData(std::string zkeyFilename, std::string fflonkInfoFilename);
 
         std::tuple<json, json> prove(std::string committedPolsFilename);
 
     protected:
+        void stage0(StepsParams &params);
+
         void stage1(StepsParams &params);
 
         void stage2(StepsParams &params);

@@ -49,7 +49,7 @@ Polynomial<Engine> *CPolynomial<Engine>::getPolynomial() const {
     }
 
     u_int64_t maxDegree = this->getDegree();
-    u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(maxDegree)) + 1);
+    u_int64_t lengthBuffer = maxDegree + 1;
 
     Polynomial<Engine> *polynomial = new Polynomial<Engine>(E, lengthBuffer);
 
@@ -76,7 +76,7 @@ Polynomial<Engine> *CPolynomial<Engine>::getPolynomial(FrElement *reservedBuffer
     }
 
     u_int64_t maxDegree = this->getDegree();
-    u_int64_t lengthBuffer = std::pow(2, ((u_int64_t)log2(maxDegree)) + 1);
+    u_int64_t lengthBuffer = maxDegree + 1;
 
     Polynomial<Engine> *polynomial = new Polynomial<Engine>(E, reservedBuffer, lengthBuffer);
 
