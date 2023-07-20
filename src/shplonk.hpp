@@ -64,7 +64,7 @@ namespace ShPlonk {
 
         void reset();
 
-        void commit(u_int32_t stage, FrElement* buffCoefs, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp);
+        void commit(u_int32_t stage, FrElement* buffCoefs, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk);
 
         json open(G1PointAffine *PTau, AltBn128::FrElement * buffCoefsConstant, std::map<std::string, AltBn128::FrElement *> ptrCommitted, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, FrElement xiSeed, std::vector<std::string> nonCommittedPols);
 
@@ -104,7 +104,7 @@ namespace ShPlonk {
 
         void calculateEvaluations(FrElement* buffConstantCoefs, std::map<std::string, AltBn128::FrElement *> ptrCommitted);
 
-        AltBn128::FrElement fastEvaluate(FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, FrElement openingPoint);
+        AltBn128::FrElement fastEvaluate(u_int32_t stage, FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, FrElement openingPoint);
 
         u_int32_t findDegree(u_int32_t fIndex, std::string name);
 
@@ -123,7 +123,7 @@ namespace ShPlonk {
         
         FrElement *polynomialFromMontgomery(Polynomial<AltBn128::Engine> *polynomial);
 
-        void getCommittedPolynomial(FrElement* buffCoefs, FrElement* reservedBuffer, std::string name, u_int32_t n, u_int32_t polDegree, u_int64_t* degrees, u_int64_t* polsIds, u_int32_t nPolsStage);
+        void getCommittedPolynomial(u_int32_t stage, FrElement* buffCoefs, FrElement* reservedBuffer, PilFflonkZkey::ShPlonkPol* pol, u_int64_t* degrees, u_int64_t* polsIds);
 
     };
 }

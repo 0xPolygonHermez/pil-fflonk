@@ -95,6 +95,8 @@ namespace PilFflonk
         std::map<std::string, AltBn128::FrElement *> ptrConstant;
         std::map<std::string, AltBn128::FrElement *> ptrShPlonk;
 
+        std::vector<std::string> nonCommittedPols;
+
     public:
         PilFflonkProver(AltBn128::Engine &E,
                         std::string zkeyFilename, std::string fflonkInfoFilename,
@@ -119,8 +121,6 @@ namespace PilFflonk
         void stage4(StepsParams &params);
 
         void extend(u_int32_t stage, u_int32_t nPols);
-
-        // void addCoefsToContext(u_int32_t stage, u_int32_t nPols, AltBn128::FrElement *buffCoefs, u_int32_t domainSize);
 
         AltBn128::FrElement *getPolynomial(uint64_t polId, uint64_t offset);
 

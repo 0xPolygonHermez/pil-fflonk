@@ -18,6 +18,7 @@ void FflonkShKey::load(json j)
 {
     power = j["power"];
     powerW = j["powerW"];
+    maxQDegree = j["maxQDegree"];
     nPublics = j["nPublics"];
 
     for(u_int32_t i = 0; i <  j["roots"].size(); ++i) {

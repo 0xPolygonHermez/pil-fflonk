@@ -60,6 +60,7 @@ namespace PilFflonkZkey
 
         u_int32_t power;
         u_int32_t powerW;
+        u_int32_t maxQDegree;
         u_int32_t nPublics;
 
         void *X2;

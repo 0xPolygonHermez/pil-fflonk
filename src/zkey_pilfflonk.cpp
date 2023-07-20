@@ -36,6 +36,7 @@ namespace PilFflonkZkey
         pilFflonkZkey->power = fdZKey->readU32LE();
         pilFflonkZkey->powerW = fdZKey->readU32LE();
         pilFflonkZkey->nPublics = fdZKey->readU32LE();
+        pilFflonkZkey->maxQDegree = fdZKey->readU32LE();
 
         pilFflonkZkey->X2 = fdZKey->read(pilFflonkZkey->n8q * 4);
 

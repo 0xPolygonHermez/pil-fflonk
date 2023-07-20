@@ -591,11 +591,11 @@ namespace ShPlonk {
                         ? buffConstantCoefs 
                         : ptrCommitted["cm" + std::to_string(stage) + "_coefs"];
 
-                    u_int32_t polId = stage < 4 ? findPolId(stage, polName) : 0;
+                    u_int32_t polId = findPolId(stage, polName);
 
-                    u_int32_t nPols = stage == 4 ? 1 : zkeyPilFflonk->polsNamesStage[stage]->size();
+                    u_int32_t nPols = zkeyPilFflonk->polsNamesStage[stage]->size();
                     
-                    evaluationCommitments[polName + wPower] = fastEvaluate(buffCoefs, nPols, polDegree, polId, openValue);
+                    evaluationCommitments[polName + wPower] = fastEvaluate(stage, buffCoefs, nPols, polDegree, polId, openValue);
                 }
             }
         }
@@ -621,7 +621,7 @@ namespace ShPlonk {
         throw std::runtime_error("Polynomial name not found");
     }
 
-    AltBn128::FrElement ShPlonkProver::fastEvaluate(FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, FrElement openingPoint) {
+    AltBn128::FrElement ShPlonkProver::fastEvaluate(u_int32_t stage, FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, FrElement openingPoint) {
         int nThreads = omp_get_max_threads();
 
         uint64_t nCoefs = degree;
@@ -639,7 +639,11 @@ namespace ShPlonk {
 
             uint64_t nCoefs = i == (nThreads - 1) ? coefsThread + residualCoefs : coefsThread;
             for (u_int64_t j = nCoefs; j > 0; j--) {
-                res[i*4] = E.fr.add(buffCoefs[((i * coefsThread) + j - 1) * nPols + id], E.fr.mul(res[i*4], openingPoint));
+                if(stage != 4) {
+                    res[i*4] = E.fr.add(buffCoefs[((i * coefsThread) + j - 1) * nPols + id], E.fr.mul(res[i*4], openingPoint));
+                } else {
+                    res[i*4] = E.fr.add(buffCoefs[((i * coefsThread) + j - 1) + id * zkeyPilFflonk->maxQDegree * (1 << zkeyPilFflonk->power)], E.fr.mul(res[i*4], openingPoint));
+                }
                 if (i == 0) xN[0] = E.fr.mul(xN[0], openingPoint);
             }
         }
@@ -721,7 +725,7 @@ namespace ShPlonk {
     //     }
     // }
 
-    void ShPlonkProver::commit(u_int32_t stage, FrElement* buffCoefs, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk, bool multiExp) {
+    void ShPlonkProver::commit(u_int32_t stage, FrElement* buffCoefs, G1PointAffine *PTau, std::map<std::string, AltBn128::FrElement *> ptrShPlonk) {
         
         if(NULL == zkeyPilFflonk) {
             throw std::runtime_error("Zkey data not set");
@@ -750,15 +754,13 @@ namespace ShPlonk {
                             throw std::runtime_error("Polynomial " + std::string(name) + " missing");
                     }
                     
-                    polsIds[j] = stage == 4 ? 0 : findPolId(stage, name);
+                    polsIds[j] = findPolId(stage, name);
                     lengths[index] = findDegree(it->first, name);
                 }
 
                 std::string index = "f" + std::to_string(pol->index);
 
-                u_int32_t nPolsStage = stage == 4 ? 1 : zkeyPilFflonk->polsNamesStage[stage]->size();
-
-                getCommittedPolynomial(buffCoefs, ptrShPlonk[index], index, pol->nPols, pol->degree, lengths, polsIds, nPolsStage);        
+                getCommittedPolynomial(stage, buffCoefs, ptrShPlonk[index], pol, lengths, polsIds);        
 
                 // Check degree
                 if (polynomialsShPlonk[index]->getDegree() > pol->degree) 
@@ -766,11 +768,10 @@ namespace ShPlonk {
                     throw std::runtime_error("Committed Polynomial is not well calculated");
                 }
 
-                if(multiExp) {
-                    G1Point Fi = multiExponentiation(PTau, polynomialsShPlonk[index], pol->nPols, lengths);
-                    zklog.info("Commit " + index + ": " + E.g1.toString(Fi));
-                    polynomialCommitments[index] = Fi;
-                }
+                G1Point Fi = multiExponentiation(PTau, polynomialsShPlonk[index], pol->nPols, lengths);
+                zklog.info("Commit " + index + ": " + E.g1.toString(Fi));
+                polynomialCommitments[index] = Fi;
+                
                 delete[] lengths;
                 delete[] polsIds;
             }
@@ -779,16 +780,28 @@ namespace ShPlonk {
         }
     }
 
-    void ShPlonkProver::getCommittedPolynomial(FrElement* buffCoefs, FrElement* reservedBuffer, std::string name, u_int32_t n, u_int32_t polDegree, u_int64_t* degrees, u_int64_t* polsIds, u_int32_t nPolsStage) {
+    void ShPlonkProver::getCommittedPolynomial(u_int32_t stage, FrElement* buffCoefs, FrElement* reservedBuffer, PilFflonkZkey::ShPlonkPol* pol, u_int64_t* degrees, u_int64_t* polsIds) {
         
-        u_int64_t lengthBuffer = polDegree + 1;
+        std::string name = "f" + std::to_string(pol->index);
 
-        polynomialsShPlonk[name] = new Polynomial<AltBn128::Engine>(E, reservedBuffer, lengthBuffer);
+        u_int32_t nPols = pol->nPols;
+        u_int32_t polDegree = pol->degree;
 
+        polynomialsShPlonk[name] = new Polynomial<AltBn128::Engine>(E, reservedBuffer, polDegree + 1);
+
+        u_int32_t nPolsStage = zkeyPilFflonk->polsNamesStage[stage]->size();
+            
         #pragma omp parallel for
         for (u_int64_t i = 0; i < polDegree; i++) {
-            for (u_int32_t j = 0; j < n; j++) {
-                if (degrees[j] >= 0 && i < degrees[j]) polynomialsShPlonk[name]->coef[i * n + j] = buffCoefs[polsIds[j] + nPolsStage * i];
+            for (u_int32_t j = 0; j < nPols; j++) {
+                if (degrees[j] >= 0 && i < degrees[j]) 
+                {
+                    if(stage == 4) {
+                        polynomialsShPlonk[name]->coef[i * nPols + j] = buffCoefs[polsIds[j] * zkeyPilFflonk->maxQDegree * (1 << zkeyPilFflonk->power) + i];
+                    } else {
+                        polynomialsShPlonk[name]->coef[i * nPols + j] = buffCoefs[polsIds[j] + nPolsStage * i];
+                    }
+                }
             }
         }
 

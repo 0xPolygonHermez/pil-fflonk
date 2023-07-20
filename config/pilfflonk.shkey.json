@@ -152,15 +152,12 @@
    "pols": [
     "Permutation.selC",
     "Permutation.d",
-    "Permutation.c",
-    "Connection.c",
-    "Connection.b",
-    "Connection.a"
+    "Permutation.c"
    ],
    "openingPoints": [
     0
    ],
-   "degree": 1553,
+   "degree": 776,
    "stages": [
     {
      "stage": 1,
@@ -176,7 +173,26 @@
       {
        "name": "Permutation.c",
        "degree": 258
-      },
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "pols": [
+    "Connection.c",
+    "Connection.b",
+    "Connection.a"
+   ],
+   "openingPoints": [
+    0
+   ],
+   "degree": 776,
+   "stages": [
+    {
+     "stage": 1,
+     "pols": [
       {
        "name": "Connection.c",
        "degree": 258
@@ -194,7 +210,7 @@
    ]
   },
   {
-   "index": 5,
+   "index": 6,
    "pols": [
     "Plookup.H2_0",
     "Plookup.H1_0"
@@ -221,16 +237,18 @@
    ]
   },
   {
-   "index": 6,
+   "index": 7,
    "pols": [
     "Im28",
-    "Connection.Z0"
+    "Connection.Z0",
+    "Permutation.Z0",
+    "Plookup.Z0"
    ],
    "openingPoints": [
     0,
     1
    ],
-   "degree": 519,
+   "degree": 1039,
    "stages": [
     {
      "stage": 3,
@@ -242,26 +260,7 @@
       {
        "name": "Connection.Z0",
        "degree": 259
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "index": 7,
-   "pols": [
-    "Permutation.Z0",
-    "Plookup.Z0"
-   ],
-   "openingPoints": [
-    0,
-    1
-   ],
-   "degree": 519,
-   "stages": [
-    {
-     "stage": 3,
-     "pols": [
+      },
       {
        "name": "Permutation.Z0",
        "degree": 259
@@ -282,14 +281,14 @@
    "openingPoints": [
     0
    ],
-   "degree": 2048,
+   "degree": 1024,
    "stages": [
     {
      "stage": 4,
      "pols": [
       {
        "name": "Q",
-       "degree": 2048
+       "degree": 1024
       }
      ]
     }
@@ -358,7 +357,11 @@
    "Permutation.Z0",
    "Connection.Z0",
    "Im28"
+  ],
+  "4": [
+   "Q"
   ]
  },
- "nPublics": 3
+ "nPublics": 3,
+ "maxQDegree": 0
 }

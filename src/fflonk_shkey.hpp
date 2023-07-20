@@ -50,6 +50,7 @@ public:
     uint64_t power;
     uint64_t powerW;
     uint64_t nPublics;
+    uint64_t maxQDegree;
 
     // G2Point X_2;
 
