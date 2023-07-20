@@ -46,6 +46,7 @@ int main(int argc, char **argv)
 
     // Get the input arguments
     string zkeyFilename = "config/pilfflonk.zkey";
+    string shkeyFilename = "config/pilfflonk.shkey.json";
     string fflonkInfoFileName = "config/pilfflonk.fflonkinfo.json";
     string cmtdFilename =  "config/pilfflonk.cmmt";
     string proofFilename =  "runtime/proof.json";
@@ -64,6 +65,12 @@ int main(int argc, char **argv)
     if (!fileExists(fflonkInfoFileName))
     {
         cerr << "Error: fflonk info file '" << fflonkInfoFileName << "' does not exist" << endl;
+        bError = true;
+    }
+
+     if (!fileExists(shkeyFilename))
+    {
+        cerr << "Error: shkey file '" << shkeyFilename << "' does not exist" << endl;
         bError = true;
     }
 

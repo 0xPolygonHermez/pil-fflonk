@@ -35,6 +35,9 @@ cp ${WORKING_DIR}/${NAME}.chelpers.step42ns.cpp ./src/chelpers/pilfflonk.chelper
 if ! fileExists "${WORKING_DIR}/${NAME}.zkey"; then echo "Zkey file not found."; exit 1; fi
 cp ${WORKING_DIR}/${NAME}.zkey ./config/pilfflonk.zkey
 
+if ! fileExists "${WORKING_DIR}/${NAME}.shkey.json"; then echo "Shkey file not found."; exit 1; fi
+cp ${WORKING_DIR}/${NAME}.shkey.json ./config/pilfflonk.shkey.json
+
 if ! fileExists "${WORKING_DIR}/${NAME}.fflonkinfo.json"; then echo "FflonkInfo file not found."; exit 1; fi
 cp ${WORKING_DIR}/${NAME}.fflonkinfo.json ./config/pilfflonk.fflonkinfo.json
 
