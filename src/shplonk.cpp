@@ -28,6 +28,11 @@ namespace ShPlonk {
         this->polynomialCommitments.clear();
         this->openingPoints.clear();
         this->inverseElements.clear();
+
+        for (auto& x : this->randomCoefs) {
+            x.second.clear();
+        }
+        this->randomCoefs.clear();
     }
 
     void ShPlonkProver::addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine> *pol) {
@@ -37,6 +42,10 @@ namespace ShPlonk {
     Polynomial<AltBn128::Engine> * ShPlonkProver::getPolynomialShPlonk(const std::string &key) {
         return this->polynomialsShPlonk[key];
     }
+
+    void ShPlonkProver::addRandomCoef(const std::string &key, u_int32_t pos, FrElement coef) {
+        this->randomCoefs[key][pos] = coef;
+    };
 
     void ShPlonkProver::addPolynomialCommitment(const std::string &key, AltBn128::G1Point commit) {
         polynomialCommitments[key] = commit;
@@ -595,7 +604,7 @@ namespace ShPlonk {
 
                     u_int32_t nPols = zkeyPilFflonk->polsNamesStage[stage]->size();
                     
-                    evaluationCommitments[polName + wPower] = fastEvaluate(stage, buffCoefs, nPols, polDegree, polId, openValue);
+                    evaluationCommitments[polName + wPower] = fastEvaluate(stage, buffCoefs, nPols, polDegree, polId, polName, openValue);
                 }
             }
         }
@@ -621,7 +630,7 @@ namespace ShPlonk {
         throw std::runtime_error("Polynomial name not found");
     }
 
-    AltBn128::FrElement ShPlonkProver::fastEvaluate(u_int32_t stage, FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, FrElement openingPoint) {
+    AltBn128::FrElement ShPlonkProver::fastEvaluate(u_int32_t stage, FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, std::string polName, FrElement openingPoint) {
         int nThreads = omp_get_max_threads();
 
         uint64_t nCoefs = degree;
@@ -639,10 +648,18 @@ namespace ShPlonk {
 
             uint64_t nCoefs = i == (nThreads - 1) ? coefsThread + residualCoefs : coefsThread;
             for (u_int64_t j = nCoefs; j > 0; j--) {
-                if(stage != 4) {
-                    res[i*4] = E.fr.add(buffCoefs[((i * coefsThread) + j - 1) * nPols + id], E.fr.mul(res[i*4], openingPoint));
+                if(stage == 4) {
+                    u_int32_t index = (i * coefsThread) + j - 1;
+                    u_int32_t pos = (index) + id * zkeyPilFflonk->maxQDegree * (1 << zkeyPilFflonk->power);
+                    FrElement coef;
+                    if(zkeyPilFflonk->maxQDegree > 0 && index >= zkeyPilFflonk->maxQDegree * (1 << zkeyPilFflonk->power)) {
+                        coef = this->randomCoefs[polName][index];
+                    } else {
+                        coef = buffCoefs[pos];
+                    }
+                    res[i*4] = E.fr.add(coef, E.fr.mul(res[i*4], openingPoint));
                 } else {
-                    res[i*4] = E.fr.add(buffCoefs[((i * coefsThread) + j - 1) + id * zkeyPilFflonk->maxQDegree * (1 << zkeyPilFflonk->power)], E.fr.mul(res[i*4], openingPoint));
+                    res[i*4] = E.fr.add(buffCoefs[((i * coefsThread) + j - 1) * nPols + id], E.fr.mul(res[i*4], openingPoint));
                 }
                 if (i == 0) xN[0] = E.fr.mul(xN[0], openingPoint);
             }
@@ -797,7 +814,12 @@ namespace ShPlonk {
                 if (degrees[j] >= 0 && i < degrees[j]) 
                 {
                     if(stage == 4) {
-                        polynomialsShPlonk[name]->coef[i * nPols + j] = buffCoefs[polsIds[j] * zkeyPilFflonk->maxQDegree * (1 << zkeyPilFflonk->power) + i];
+                        u_int32_t pos = polsIds[j] * zkeyPilFflonk->maxQDegree * (1 << zkeyPilFflonk->power) + i;
+                        if(zkeyPilFflonk->maxQDegree > 0 && i >= zkeyPilFflonk->maxQDegree * (1 << zkeyPilFflonk->power)) {
+                            polynomialsShPlonk[name]->coef[i * nPols + j] = this->randomCoefs[pol->pols[j]][i];
+                        } else {
+                            polynomialsShPlonk[name]->coef[i * nPols + j] = buffCoefs[pos];
+                        }
                     } else {
                         polynomialsShPlonk[name]->coef[i * nPols + j] = buffCoefs[polsIds[j] + nPolsStage * i];
                     }

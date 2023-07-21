@@ -44,6 +44,8 @@ namespace ShPlonk {
         std::map <std::string, AltBn128::G1Point> polynomialCommitments;
 
         std::map<std::string, AltBn128::FrElement> evaluationCommitments;
+
+        std::map<std::string, std::map<u_int32_t, FrElement>> randomCoefs;
         
         std::vector<u_int32_t> openingPoints;
 
@@ -55,6 +57,8 @@ namespace ShPlonk {
         AltBn128::G1Point getPolynomialCommitment(const std::string &key);
 
         void addPolynomialShPlonk(const std::string &key, Polynomial<AltBn128::Engine>* pol);
+
+        void addRandomCoef(const std::string &key, u_int32_t pos, FrElement coef);
         
         Polynomial<AltBn128::Engine> * getPolynomialShPlonk(const std::string &key);
 
@@ -104,7 +108,7 @@ namespace ShPlonk {
 
         void calculateEvaluations(FrElement* buffConstantCoefs, std::map<std::string, AltBn128::FrElement *> ptrCommitted);
 
-        AltBn128::FrElement fastEvaluate(u_int32_t stage, FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, FrElement openingPoint);
+        AltBn128::FrElement fastEvaluate(u_int32_t stage, FrElement* buffCoefs, u_int32_t nPols, u_int32_t degree, u_int32_t id, std::string polName, FrElement openingPoint);
 
         u_int32_t findDegree(u_int32_t fIndex, std::string name);
 

@@ -674,6 +674,40 @@ namespace PilFflonk
         Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], ptrCommitted["cm4_coefs"], NExt);
         polQ->divZh(N, 1 << extendBitsTotal);
 
+        if(zkey->maxQDegree) {
+            FrElement rand1 = E.fr.set(2);
+            FrElement rand2 = E.fr.set(3);
+            // FrElement rand1;
+            // FrElement rand2;
+            // randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
+            // randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
+
+            u_int64_t nQ = std::ceil(NExt / (2 * zkey->maxQDegree * N));
+            for(u_int32_t i = 0; i < nQ; ++i) {
+                u_int64_t pos = i * zkey->maxQDegree * N;
+
+                if(i > 0) {
+                    polQ->coef[pos] = E.fr.sub(polQ->coef[pos], rand1);
+                    polQ->coef[pos + 1] = E.fr.sub(polQ->coef[pos + 1], rand2);
+                }
+
+                if(i < nQ - 1) {
+                    u_int64_t len = zkey->maxQDegree * N;
+
+                    rand1 = E.fr.set(2);
+                    rand2 = E.fr.set(3);
+
+                    // randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
+                    // randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
+
+                    shPlonkProver->addRandomCoef("Q" + std::to_string(i), len, rand1);
+                    shPlonkProver->addRandomCoef("Q" + std::to_string(i), len + 1, rand2);
+
+                }
+            }
+        }
+
+
         TimerStopAndLog(PIL_FFLONK_STAGE_4_CALCULATE_Q);
 
         TimerStart(PIL_FFLONK_STAGE_4_COMMIT);
@@ -705,7 +739,7 @@ namespace PilFflonk
             u_int32_t openings = findNumberOpenings(name, stage);
             for (u_int32_t j = 0; j < openings; ++j)
             {
-                AltBn128::FrElement b;
+                FrElement b;
                 // randombytes_buf((void *)&(b), sizeof(FrElement)-1);
                 b = E.fr.set(2);
 
