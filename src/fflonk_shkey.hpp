@@ -52,8 +52,6 @@ public:
     uint64_t nPublics;
     uint64_t maxQDegree;
 
-    // G2Point X_2;
-
     std::map<std::string,FrElement> omegas;
 
     std::map<uint64_t,std::vector<std::string>> polsNamesStage;
