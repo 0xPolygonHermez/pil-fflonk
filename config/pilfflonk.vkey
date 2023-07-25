@@ -280,7 +280,7 @@
   },
   {
    "index": 8,
-   "degree": 1024,
+   "degree": 774,
    "openingPoints": [
     0
    ],
@@ -293,7 +293,7 @@
      "pols": [
       {
        "name": "Q",
-       "degree": 1024
+       "degree": 774
       }
      ]
     }

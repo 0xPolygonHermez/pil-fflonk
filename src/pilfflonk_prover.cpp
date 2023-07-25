@@ -236,6 +236,7 @@ namespace PilFflonk
                 G1Point commit;
                 E.g1.copy(commit, *((G1PointAffine *)C));
 
+                cout << name << " " << E.g1.toString(commit) << endl;
                 shPlonkProver->addPolynomialCommitment(name, commit);
                 u_int32_t lenPol = fdZkey->readU32LE();
                 Polynomial<AltBn128::Engine> *polFi = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], lenPol / zkey->n8q);
@@ -682,7 +683,10 @@ namespace PilFflonk
             // randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
             // randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
 
-            u_int64_t nQ = std::ceil(NExt / (2 * zkey->maxQDegree * N));
+            u_int64_t domainSizeQ = fflonkInfo->qDeg * N + fflonkInfo->maxPolsOpenings * 2;
+
+            u_int64_t nQ = std::ceil(domainSizeQ / (zkey->maxQDegree * N));
+
             for(u_int32_t i = 0; i < nQ; ++i) {
                 u_int64_t pos = i * zkey->maxQDegree * N;
 
@@ -702,7 +706,6 @@ namespace PilFflonk
 
                     shPlonkProver->addRandomCoef("Q" + std::to_string(i), len, rand1);
                     shPlonkProver->addRandomCoef("Q" + std::to_string(i), len + 1, rand2);
-
                 }
             }
         }

@@ -25,6 +25,8 @@ void FflonkInfo::load(json j)
     qDim = j["qDim"];
     qDeg = j["qDeg"];
 
+    maxPolsOpenings = j["maxPolsOpenings"];
+
     mapDeg.section[cm1_n] = j["mapDeg"]["cm1_n"];
     mapDeg.section[cm2_n] = j["mapDeg"]["cm2_n"];
     mapDeg.section[cm3_n] = j["mapDeg"]["cm3_n"];

@@ -232,6 +232,8 @@ public:
     uint64_t qDeg;
     uint64_t qDim;
 
+    uint64_t maxPolsOpenings;
+
     PolsSections mapDeg;
     PolsSectionsVector mapSections;
     PolsSections mapSectionsN;
