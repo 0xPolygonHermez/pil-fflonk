@@ -685,6 +685,13 @@ namespace PilFflonk
         Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], ptrCommitted["cm4_coefs"], NExt);
         polQ->divZh(N, 1 << extendBitsTotal);
 
+        u_int64_t domainSizeQ = fflonkInfo->qDeg * N + fflonkInfo->maxPolsOpenings * 2 + 1;
+
+        if (polQ->getDegree() > domainSizeQ)
+        {
+            throw std::runtime_error("Q Polynomial is not well calculated");
+        }
+
         if(zkey->maxQDegree) {
             FrElement rand1 = E.fr.set(2);
             FrElement rand2 = E.fr.set(3);
@@ -692,8 +699,6 @@ namespace PilFflonk
             // FrElement rand2;
             // randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
             // randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
-
-            u_int64_t domainSizeQ = fflonkInfo->qDeg * N + fflonkInfo->maxPolsOpenings * 2 + 1;
 
             u_int64_t nQ = std::ceil(domainSizeQ - (fflonkInfo->maxPolsOpenings * 2 + 1) / (zkey->maxQDegree * N));
 
