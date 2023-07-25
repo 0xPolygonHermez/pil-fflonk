@@ -54,19 +54,12 @@ public:
     uint64_t sectionPos;
 };
 
-class PolInfo
-{
+class PolInfo {
 public:
-    VarPolMap map;
-    uint64_t N;
-    uint64_t offset;
-    uint64_t size;
-    AltBn128::FrElement * pAddress;
-    AltBn128::FrElement * get(uint64_t step, uint64_t shift)
-    {
-        return pAddress + step*size + shift;
-    }
-};
+    std::string sectionName;
+    u_int64_t id    ;
+    u_int64_t nPols;
+};  
 
 class PeCtx
 {
@@ -267,6 +260,8 @@ public:
     void load (json j);
 
     std::string getSectionName(eSection section);
+
+    PolInfo getPolInfo(u_int64_t polId);
 };
 
 #endif

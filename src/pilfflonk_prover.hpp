@@ -124,9 +124,9 @@ namespace PilFflonk
 
         AltBn128::FrElement *getPolynomial(uint64_t polId, uint64_t offset);
 
-        void calculateZ(AltBn128::FrElement *pNum, AltBn128::FrElement *pDen, uint64_t id);
+        void calculateZ(u_int64_t numId, u_int64_t denId, u_int64_t zId);
 
-        AltBn128::FrElement *batchInverse(AltBn128::FrElement *pol, uint64_t N);
+        void batchInverse(u_int64_t denId);
 
         u_int32_t findNumberOpenings(std::string name, u_int32_t stage);
 

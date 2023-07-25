@@ -416,3 +416,16 @@ std::string FflonkInfo::getSectionName(eSection section) {
             exit(-1);
     }
 }
+
+PolInfo FflonkInfo::getPolInfo(u_int64_t polId) {
+    eSection section = varPolMap[polId].section;
+
+    PolInfo polInfo;
+
+    polInfo.sectionName = getSectionName(section);
+    polInfo.id = varPolMap[polId].sectionPos;
+    polInfo.nPols = mapSections.section[section].size();
+
+    return polInfo;
+}
+
