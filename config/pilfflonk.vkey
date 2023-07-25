@@ -4,15 +4,18 @@
  "nPublics": 3,
  "maxQDegree": 0,
  "power": 8,
- "powerW": 12,
+ "powerW": 72,
  "f": [
   {
    "index": 0,
-   "degree": 1541,
+   "degree": 2312,
    "openingPoints": [
     0
    ],
    "pols": [
+    "Plookup.B",
+    "Plookup.A",
+    "Plookup.SEL",
     "Connection.S3",
     "Connection.S2",
     "Connection.S1",
@@ -24,6 +27,18 @@
     {
      "stage": 0,
      "pols": [
+      {
+       "name": "Plookup.B",
+       "degree": 256
+      },
+      {
+       "name": "Plookup.A",
+       "degree": 256
+      },
+      {
+       "name": "Plookup.SEL",
+       "degree": 256
+      },
       {
        "name": "Connection.S3",
        "degree": 256
@@ -54,46 +69,13 @@
   },
   {
    "index": 1,
-   "degree": 770,
-   "openingPoints": [
-    0,
-    1
-   ],
-   "pols": [
-    "Plookup.B",
-    "Plookup.A",
-    "Plookup.SEL"
-   ],
-   "stages": [
-    {
-     "stage": 0,
-     "pols": [
-      {
-       "name": "Plookup.B",
-       "degree": 256
-      },
-      {
-       "name": "Plookup.A",
-       "degree": 256
-      },
-      {
-       "name": "Plookup.SEL",
-       "degree": 256
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "index": 2,
-   "degree": 1039,
+   "degree": 779,
    "openingPoints": [
     0,
     1
    ],
    "pols": [
     "Plookup.b",
-    "Plookup.cc",
     "Fibonacci.l2",
     "Fibonacci.l1"
    ],
@@ -103,10 +85,6 @@
      "pols": [
       {
        "name": "Plookup.b",
-       "degree": 259
-      },
-      {
-       "name": "Plookup.cc",
        "degree": 259
       },
       {
@@ -122,12 +100,13 @@
    ]
   },
   {
-   "index": 3,
-   "degree": 776,
+   "index": 2,
+   "degree": 1035,
    "openingPoints": [
     0
    ],
    "pols": [
+    "Plookup.cc",
     "Plookup.a",
     "Plookup.sel",
     "Permutation.selD"
@@ -136,6 +115,10 @@
     {
      "stage": 1,
      "pols": [
+      {
+       "name": "Plookup.cc",
+       "degree": 258
+      },
       {
        "name": "Plookup.a",
        "degree": 258
@@ -153,15 +136,18 @@
    ]
   },
   {
-   "index": 4,
-   "degree": 776,
+   "index": 3,
+   "degree": 1553,
    "openingPoints": [
     0
    ],
    "pols": [
     "Permutation.selC",
     "Permutation.d",
-    "Permutation.c"
+    "Permutation.c",
+    "Connection.c",
+    "Connection.b",
+    "Connection.a"
    ],
    "stages": [
     {
@@ -178,26 +164,7 @@
       {
        "name": "Permutation.c",
        "degree": 258
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "index": 5,
-   "degree": 776,
-   "openingPoints": [
-    0
-   ],
-   "pols": [
-    "Connection.c",
-    "Connection.b",
-    "Connection.a"
-   ],
-   "stages": [
-    {
-     "stage": 1,
-     "pols": [
+      },
       {
        "name": "Connection.c",
        "degree": 258
@@ -215,7 +182,7 @@
    ]
   },
   {
-   "index": 6,
+   "index": 4,
    "degree": 519,
    "openingPoints": [
     0,
@@ -242,14 +209,14 @@
    ]
   },
   {
-   "index": 7,
+   "index": 5,
    "degree": 1039,
    "openingPoints": [
     0,
     1
    ],
    "pols": [
-    "Im28",
+    "Im27",
     "Connection.Z0",
     "Permutation.Z0",
     "Plookup.Z0"
@@ -259,7 +226,7 @@
      "stage": 3,
      "pols": [
       {
-       "name": "Im28",
+       "name": "Im27",
        "degree": 259
       },
       {
@@ -279,8 +246,95 @@
    ]
   },
   {
+   "index": 6,
+   "degree": 776,
+   "openingPoints": [
+    0
+   ],
+   "pols": [
+    "Im44",
+    "Im43",
+    "Im42"
+   ],
+   "stages": [
+    {
+     "stage": 3,
+     "pols": [
+      {
+       "name": "Im44",
+       "degree": 258
+      },
+      {
+       "name": "Im43",
+       "degree": 258
+      },
+      {
+       "name": "Im42",
+       "degree": 258
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "index": 7,
+   "degree": 2071,
+   "openingPoints": [
+    0
+   ],
+   "pols": [
+    "Im41",
+    "Im37",
+    "Im36",
+    "Im33",
+    "Im32",
+    "Im28",
+    "Im21",
+    "Im2"
+   ],
+   "stages": [
+    {
+     "stage": 3,
+     "pols": [
+      {
+       "name": "Im41",
+       "degree": 258
+      },
+      {
+       "name": "Im37",
+       "degree": 258
+      },
+      {
+       "name": "Im36",
+       "degree": 258
+      },
+      {
+       "name": "Im33",
+       "degree": 258
+      },
+      {
+       "name": "Im32",
+       "degree": 258
+      },
+      {
+       "name": "Im28",
+       "degree": 258
+      },
+      {
+       "name": "Im21",
+       "degree": 258
+      },
+      {
+       "name": "Im2",
+       "degree": 258
+      }
+     ]
+    }
+   ]
+  },
+  {
    "index": 8,
-   "degree": 775,
+   "degree": 262,
    "openingPoints": [
     0
    ],
@@ -293,7 +347,7 @@
      "pols": [
       {
        "name": "Q",
-       "degree": 775
+       "degree": 262
       }
      ]
     }
@@ -323,15 +377,12 @@
  "w4": "21888242871839275217838484774961031246007050428528088939761107053157389710902",
  "w4_1d4": "3161067157621608152362653341354432744960400845131437947728257924963983317266",
  "w6": "4407920970296243842393367215006156084916469457145843978462",
+ "w8": "19540430494807482326159819597004422086093766032135589407132600596362845576832",
+ "w9": "10554227419405138618431485612251721899630472540388880516808389341053941263017",
  "w1_1d1": "3478517300119284901893091970156912948790432420133812234316178878452092729974",
  "f0": [
-  "13670340619389575973532278510163400231690216690368938387851759304712128961698",
-  "7011517446220040486904710922771833565280330288451750559303576192469542112826",
-  "1"
- ],
- "f1": [
-  "15940924245195807686934555975775366255429860084153148505199676706569894429036",
-  "1160094044816815284956091097230088787853732921225717802025735199704023944253",
+  "1780844627279689915452843371647562935185336870739546831408350745818198488927",
+  "5821414653370135897902854848754389083335821383428094877371545288812670949430",
   "1"
  ],
  "polsMap": {
@@ -356,8 +407,19 @@
    "17": "Plookup.Z0",
    "18": "Permutation.Z0",
    "19": "Connection.Z0",
-   "20": "Im28",
-   "21": "Q"
+   "20": "Im2",
+   "21": "Im21",
+   "22": "Im27",
+   "23": "Im28",
+   "24": "Im32",
+   "25": "Im33",
+   "26": "Im36",
+   "27": "Im37",
+   "28": "Im41",
+   "29": "Im42",
+   "30": "Im43",
+   "31": "Im44",
+   "32": "Q"
   },
   "const": {
    "0": "Global.L1",

@@ -685,7 +685,7 @@ namespace PilFflonk
         Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], ptrCommitted["cm4_coefs"], NExt);
         polQ->divZh(N, 1 << extendBitsTotal);
 
-        u_int64_t domainSizeQ = fflonkInfo->qDeg * N + fflonkInfo->maxPolsOpenings * 2 + 1;
+        u_int64_t domainSizeQ = fflonkInfo->qDeg * N + fflonkInfo->maxPolsOpenings * (fflonkInfo->qDeg + 1);
 
         if (polQ->getDegree() > domainSizeQ)
         {
@@ -700,7 +700,7 @@ namespace PilFflonk
             // randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
             // randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
 
-            u_int64_t nQ = std::ceil(domainSizeQ - (fflonkInfo->maxPolsOpenings * 2 + 1) / (zkey->maxQDegree * N));
+            u_int64_t nQ = std::ceil(domainSizeQ - (fflonkInfo->maxPolsOpenings * (fflonkInfo->qDeg + 1)) / (zkey->maxQDegree * N));
 
             for(u_int32_t i = 0; i < nQ; ++i) {
                 u_int64_t pos = i * zkey->maxQDegree * N;
