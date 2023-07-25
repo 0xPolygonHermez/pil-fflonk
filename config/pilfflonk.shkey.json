@@ -281,14 +281,14 @@
    "openingPoints": [
     0
    ],
-   "degree": 774,
+   "degree": 775,
    "stages": [
     {
      "stage": 4,
      "pols": [
       {
        "name": "Q",
-       "degree": 774
+       "degree": 775
       }
      ]
     }

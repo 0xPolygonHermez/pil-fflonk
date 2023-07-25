@@ -12,6 +12,11 @@ fileExists () {
 NAME=${1:-all}
 WORKING_DIR=${2:-../pil-stark/tmp}
 
+CIRCOM_VERIFIER=${3:-false}
+CIRCOM_NAME=${4:-plonktest.bn128}
+
+CIRCOM_HEADER="#pragma GCC diagnostic push\n#pragma GCC diagnostic ignored \"-Wunused-variable\"\n#pragma GCC push_options\n#pragma GCC optimize (\"O0\")\n#include <stdio.h>\n#include <iostream>\n#include <assert.h>\n#include <cassert>\n"
+
 # Copy the chelpers files
 if ! fileExists "${WORKING_DIR}/${NAME}.chelpers.constValues.cpp"; then echo "Const Values file chelpers not found."; exit 1; fi
 cp ${WORKING_DIR}/${NAME}.chelpers.constValues.cpp ./src/chelpers/pilfflonk.chelpers.constantValues.cpp
@@ -47,6 +52,16 @@ cp ${WORKING_DIR}/${NAME}.cmmt ./config/pilfflonk.cmmt
 if ! fileExists "${WORKING_DIR}/${NAME}.vkey"; then echo "Verification Key file not found."; exit 1; fi
 cp ${WORKING_DIR}/${NAME}.vkey ./config/pilfflonk.vkey
 
+if ${CIRCOM_VERIFIER}; then 
+    if ! fileExists "${WORKING_DIR}/${CIRCOM_NAME}_cpp/${CIRCOM_NAME}.cpp"; then echo "Circom verifier file not found."; exit 1; fi
+    cp ${WORKING_DIR}/${CIRCOM_NAME}_cpp/${CIRCOM_NAME}.cpp src/witness/verifier.cpp
+    sed -i '1d;2d;3d;4d;5d' src/witness/verifier.cpp
+    sed -i "1s/^/#include \"circom.pilfflonk.hpp\"\n#include \"calcwit.pilfflonk.hpp\"\nnamespace CircomPilFflonk\n{\n/" src/witness/verifier.cpp
+    sed -i "1s/^/$CIRCOM_HEADER/" src/witness/verifier.cpp
+    echo -e "}\n#pragma GCC diagnostic pop" >> src/witness/verifier.cpp
+
+    cp ${WORKING_DIR}/${CIRCOM_NAME}_cpp/${CIRCOM_NAME}.dat ./config/verifier.dat
+fi
 
 #make file
 make -j

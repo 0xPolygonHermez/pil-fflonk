@@ -3,12 +3,12 @@
 # Define working dir
 WORKING_DIR=${1:-../pil-stark/tmp}
 
-GENERATE_TESTS=${2:-false}
+GENERATE_TESTS=${2:-true}
 
 generate_basic_tests() {
-    mocha ../pil-stark/test/cfiles/fflonk_gen_all_files.js 
-    mocha ../pil-stark/test/cfiles/fflonk_gen_simple_files.js 
-    mocha ../pil-stark/test/cfiles/fflonk_gen_arguments_files.js 
+    mocha ${WORKING_DIR}/../test/cfiles/fflonk_gen_all_files.js 
+    mocha ${WORKING_DIR}/../test/cfiles/fflonk_gen_simple_files.js 
+    mocha ${WORKING_DIR}/../test/cfiles/fflonk_gen_arguments_files.js 
 }
 
 if $GENERATE_TESTS; then

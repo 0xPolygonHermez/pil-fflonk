@@ -18,6 +18,7 @@
 #include <alt_bn128.hpp>
 #include "fft.hpp"
 #include "utils.hpp"
+#include "witness/main.pilfflonk.hpp"
 
 using json = nlohmann::json;
 
@@ -109,7 +110,10 @@ namespace PilFflonk
 
         std::tuple<json, json> prove(std::string committedPolsFilename);
 
+        std::tuple<json, json> prove(std::string execFilename, std::string circomVerifier, nlohmann::json &zkin); 
     protected:
+        std::tuple<json, json> prove();
+
         void stage0(StepsParams &params);
 
         void stage1(StepsParams &params);

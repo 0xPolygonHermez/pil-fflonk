@@ -262,7 +262,28 @@ namespace PilFflonk
         }
     }
 
-    std::tuple<json, json> PilFflonkProver::prove(std::string committedPolsFilename)
+    std::tuple<json, json> PilFflonkProver::prove(std::string committedPolsFilename) {
+        TimerStart(LOAD_COMMITTED_POLS_TO_MEMORY);
+
+        u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
+
+        auto pCommittedPolsAddress = copyFile(committedPolsFilename, cmtdPolsSize);
+        zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(cmtdPolsSize) + " bytes from constant file " + committedPolsFilename);
+
+        ThreadUtils::parcpy(ptrCommitted["cm1_n"], (FrElement *)pCommittedPolsAddress, cmtdPolsSize, omp_get_num_threads() / 2);
+
+        TimerStopAndLog(LOAD_COMMITTED_POLS_TO_MEMORY);
+
+        return this->prove();
+    }
+
+    std::tuple<json, json> PilFflonkProver::prove(std::string execFilename, std::string circomVerifier,  nlohmann::json &zkin) {
+       
+        // CircomPilFflonk::getCommittedPols(E, ptrCommitted["cm1_n"], circomVerifier, execFilename, zkin, N);
+        return this->prove();
+    }
+
+    std::tuple<json, json> PilFflonkProver::prove()
     {
         if (NULL == zkey)
             throw std::runtime_error("Zkey data not set");
@@ -271,17 +292,6 @@ namespace PilFflonk
         {
             zklog.info("");
             zklog.info("PIL-FFLONK PROVER STARTED");
-
-            TimerStart(LOAD_COMMITTED_POLS_TO_MEMORY);
-
-            u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
-
-            auto pCommittedPolsAddress = copyFile(committedPolsFilename, cmtdPolsSize);
-            zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(cmtdPolsSize) + " bytes from constant file " + committedPolsFilename);
-
-            ThreadUtils::parcpy(ptrCommitted["cm1_n"], (FrElement *)pCommittedPolsAddress, cmtdPolsSize, omp_get_num_threads() / 2);
-
-            TimerStopAndLog(LOAD_COMMITTED_POLS_TO_MEMORY);
 
             TimerStart(PIL_FFLONK_PROVE);
 
@@ -683,14 +693,14 @@ namespace PilFflonk
             // randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
             // randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
 
-            u_int64_t domainSizeQ = fflonkInfo->qDeg * N + fflonkInfo->maxPolsOpenings * 2;
+            u_int64_t domainSizeQ = fflonkInfo->qDeg * N + fflonkInfo->maxPolsOpenings * 2 + 1;
 
-            u_int64_t nQ = std::ceil(domainSizeQ / (zkey->maxQDegree * N));
+            u_int64_t nQ = std::ceil(domainSizeQ - (fflonkInfo->maxPolsOpenings * 2 + 1) / (zkey->maxQDegree * N));
 
             for(u_int32_t i = 0; i < nQ; ++i) {
                 u_int64_t pos = i * zkey->maxQDegree * N;
 
-                if(i > 0) {
+            if(i > 0) {
                     polQ->coef[pos] = E.fr.sub(polQ->coef[pos], rand1);
                     polQ->coef[pos + 1] = E.fr.sub(polQ->coef[pos + 1], rand2);
                 }
