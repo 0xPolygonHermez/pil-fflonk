@@ -778,55 +778,66 @@ namespace PilFflonk
         PolInfo num = fflonkInfo->getPolInfo(numId);
         PolInfo z = fflonkInfo->getPolInfo(zId);
 
+        TimerStart(BATCH_INVERSE);
         batchInverse(denId);
+        TimerStopAndLog(BATCH_INVERSE);
 
-        ptrCommitted[z.sectionName][z.id] = E.fr.one();
+        const AltBn128::FrElement* polDenI = ptrShPlonk["tmp"];
+        const AltBn128::FrElement* polNum = ptrCommitted[num.sectionName];
+        AltBn128::FrElement* polZ = ptrCommitted[z.sectionName];
+
+
+        polZ[z.id] = E.fr.one();
 
         for (uint64_t i = 1; i < N; i++)
         {
-            AltBn128::FrElement z_i = ptrCommitted[z.sectionName][(i - 1) * z.nPols + z.id];
-            AltBn128::FrElement num_i =  ptrCommitted[num.sectionName][(i - 1) * num.nPols + num.id];
-            AltBn128::FrElement denI_i = ptrShPlonk["tmp"][i - 1];
+            AltBn128::FrElement z_i = polZ[(i - 1) * z.nPols + z.id];
+            AltBn128::FrElement num_i = polNum[(i - 1) * num.nPols + num.id];
+            AltBn128::FrElement denI_i = polDenI[i - 1];
 
-            ptrCommitted[z.sectionName][i * z.nPols + z.id] = E.fr.mul(z_i, E.fr.mul(num_i, denI_i));
+            polZ[i * z.nPols + z.id] = E.fr.mul(z_i, E.fr.mul(num_i, denI_i));
         }
 
         // Check that z * num * denI = 1
         zkassert(E.fr.eq(
             E.fr.one(), 
             E.fr.mul(
-                ptrCommitted[z.sectionName][(N - 1) * z.nPols + z.id], 
+                polZ[(N - 1) * z.nPols + z.id], 
                 E.fr.mul(
-                    ptrCommitted[num.sectionName][(N - 1) * num.nPols + num.id], 
-                    ptrShPlonk["tmp"][N - 1]
+                    polNum[(N - 1) * num.nPols + num.id], 
+                    polDenI[N - 1]
                 )
             )
         ));
     }
 
-    void PilFflonkProver::batchInverse(u_int64_t denId)
+    void PilFflonkProver::batchInverse(const u_int64_t denId)
     {
-        PolInfo den = fflonkInfo->getPolInfo(denId);
+        const PolInfo& den = fflonkInfo->getPolInfo(denId);
 
-        ptrShPlonk["tmp"][N] = ptrCommitted[den.sectionName][den.id];
+        AltBn128::FrElement* tmp = ptrShPlonk["tmp"];
+        
+        const AltBn128::FrElement* polDen = ptrCommitted[den.sectionName];
+
+        tmp[N] = polDen[den.id];
 
         for (uint64_t i = 1; i < N; i++)
         {
-            ptrShPlonk["tmp"][N + i] = E.fr.mul(ptrShPlonk["tmp"][N + i - 1], ptrCommitted[den.sectionName][i * den.nPols + den.id]);
+            tmp[N + i] = E.fr.mul(tmp[N + i - 1], polDen[i * den.nPols + den.id]);
         }
 
         AltBn128::FrElement z0;
         AltBn128::FrElement z1;
-        E.fr.inv(z0, ptrShPlonk["tmp"][2*N - 1]);
+        E.fr.inv(z0, tmp[2*N - 1]);
 
         for (uint64_t i = N - 1; i > 0; i--)
         {
-            z1 = E.fr.mul(z0, ptrCommitted[den.sectionName][i * den.nPols + den.id]);
-            ptrShPlonk["tmp"][i] = E.fr.mul(z0, ptrShPlonk["tmp"][N + i - 1]);
+            z1 = E.fr.mul(z0, polDen[i * den.nPols + den.id]);
+            tmp[i] = E.fr.mul(z0, tmp[N + i - 1]);
             z0 = z1;
         }
 
-        ptrShPlonk["tmp"][0] = z0;
+        tmp[0] = z0;
     }
 
     u_int32_t PilFflonkProver::findNumberOpenings(std::string name, u_int32_t stage) {
