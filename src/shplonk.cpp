@@ -198,8 +198,6 @@ namespace ShPlonk {
 
         TimerStart(SHPLONK_COMPUTE_W_POLYNOMIAL);
 
-        FrElement alpha = E.fr.one();
-
         u_int64_t nTotalRoots = 0;
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
             nTotalRoots += zkeyPilFflonk->f[i]->nPols * zkeyPilFflonk->f[i]->nOpeningPoints;
@@ -225,11 +223,16 @@ namespace ShPlonk {
             }
         } 
 
+        FrElement* alphas = new FrElement[zkeyPilFflonk->f.size()];
+        alphas[0] = E.fr.one();
+        for(u_int32_t i = 1; i < zkeyPilFflonk->f.size(); ++i) {
+            alphas[i] = E.fr.mul(alphas[i - 1], challengeAlpha);
+        }
+
         for(u_int32_t i = 0; i < zkeyPilFflonk->f.size(); ++i) {
- 
             auto fTmp = Polynomial<AltBn128::Engine>::fromPolynomial(E, *polynomialsShPlonk["f" + std::to_string(i)], tmpBuffer);
             fTmp->sub(*polynomialsShPlonk["R" + std::to_string(i)]);
-            fTmp->mulScalar(alpha);
+            fTmp->mulScalar(alphas[i]);
 
             for(u_int32_t j = 0; j < zkeyPilFflonk->f[i]->nOpeningPoints; ++j) {
                 u_int32_t openingPoint = zkeyPilFflonk->f[i]->openingPoints[j];
@@ -240,10 +243,7 @@ namespace ShPlonk {
                 fTmp->divByZerofier(zkeyPilFflonk->f[i]->nPols, openValue);
             }
            
-            polynomialW->add(*fTmp);
-
-            alpha = E.fr.mul(alpha, challengeAlpha);
-           
+            polynomialW->add(*fTmp);           
         }
 
         if (polynomialW->getDegree() > maxDegree - nTotalRoots)

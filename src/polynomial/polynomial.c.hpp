@@ -461,7 +461,7 @@ void Polynomial<Engine>::divByZerofier(u_int64_t n, FrElement beta) {
     nThreads = std::min(n, (u_int64_t)nThreads);
 
     uint64_t nElementsThread = n / nThreads;
-    uint64_t nChunks = (this->length + n - 1) / n;
+    uint64_t nChunks = ((this->degree + 1) + n - 1) / n;
 
     isOne = E.fr.eq(E.fr.one(), invBeta);
     isNegOne = E.fr.eq(negOne, invBeta);
@@ -480,7 +480,7 @@ void Polynomial<Engine>::divByZerofier(u_int64_t n, FrElement beta) {
                     u_int64_t idx1 = idxBase + (i + 1) * n;
 
                     if(idx1 > this->degree) {
-                        if (idx1 < this->length && !E.fr.isZero(coef[idx1])) {
+                        if (idx1 < (this->degree + 1) && !E.fr.isZero(coef[idx1])) {
                             throw std::runtime_error("Polynomial is not divisible");
                         }
                         break;
