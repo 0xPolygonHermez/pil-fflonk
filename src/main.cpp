@@ -52,6 +52,10 @@ int main(int argc, char **argv)
     string proofFilename =  "runtime/proof.json";
     string publicFilename = "runtime/public.json";
 
+    string execFilename = "config/pilfflonk.exec";
+    string circomVerifier = "config/verifier.dat";
+    string zkinFilename = "config/verifier.zkin.proof.json";
+
     TimerStart(WHOLE_PROCESS);
 
     // Check required files presence

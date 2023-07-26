@@ -108,6 +108,8 @@ namespace PilFflonk
 
         std::tuple<json, json> prove(std::string committedPolsFilename);
 
+        std::tuple<json, json> prove(std::string execFilename, std::string circomVerifier, std::string zkinFilename); 
+
         std::tuple<json, json> prove(std::string execFilename, std::string circomVerifier, nlohmann::json &zkin); 
     protected:
         std::tuple<json, json> prove();

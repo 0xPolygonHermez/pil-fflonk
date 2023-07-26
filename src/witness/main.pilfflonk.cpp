@@ -336,74 +336,104 @@ namespace CircomPilFflonk
     loadJsonImpl(ctx, j);
   }
 
-    void* getCommittedPols(const std::string circomVerifier, const std::string execFile, nlohmann::json &zkin, uint64_t nCols) {
-        //-------------------------------------------
-        // Verifier stark proof
-        //-------------------------------------------
-        TimerStart(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
-        Circom_Circuit *circuit = loadCircuit(circomVerifier);
-        TimerStopAndLog(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
-        TimerStart(CIRCOM_LOAD_JSON_BATCH_PROOF);
-        Circom_CalcWit *ctx = new Circom_CalcWit(circuit);
+  void computeWitnessAndCmPols(FrElement* committedPols, const std::string execFile, Circom_CalcWit *ctx, uint64_t nPols, uint64_t N) {
+      //-------------------------------------------
+      // Compute witness and commited pols
+      //-------------------------------------------
+      TimerStart(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
+  
+      ExecFile exec(execFile, nPols);
 
-        loadJsonImpl(ctx, zkin);
-        if (ctx->getRemaingInputsToBeSet() != 0) {
-            zklog.error("Prover::finalProof() Not all inputs have been set. Only " + to_string(get_main_input_signal_no() - ctx->getRemaingInputsToBeSet()) + " out of " + to_string(get_main_input_signal_no()));
-            exitProcess();
-        }
-        TimerStopAndLog(CIRCOM_LOAD_JSON_BATCH_PROOF);
+      if(N != exec.nSMap) throw std::runtime_error("Invalid exec"); 
 
-        //-------------------------------------------
-        // Compute witness and commited pols
-        //-------------------------------------------
-        TimerStart(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
-    
-        ExecFile exec(execFile, nCols);
+      uint64_t sizeWitness = get_size_of_witness();
+      FrElement *tmp = new FrElement[exec.nAdds + sizeWitness];
+      for (uint64_t i = 0; i < sizeWitness; i++) {
+          FrElement aux;
+          ctx->getWitness(i, &aux);
+          Fr_toLongNormal(&aux, &aux);
+          tmp[i] = aux;
+      }
+      delete ctx;
+      for (uint64_t i = 0; i < exec.nAdds; i++){
+          FrElement aux1;
+          FrElement aux2;
 
-        uint64_t sizeWitness = get_size_of_witness();
-        FrElement *tmp = new FrElement[exec.nAdds + sizeWitness];
-        for (uint64_t i = 0; i < sizeWitness; i++) {
-            FrElement aux;
-            ctx->getWitness(i, &aux);
-            Fr_toLongNormal(&aux, &aux);
-            tmp[i] = aux;
-        }
-        delete ctx;
-        for (uint64_t i = 0; i < exec.nAdds; i++){
-            FrElement aux1;
-            FrElement aux2;
+          Fr_toLongNormal(&aux1, &exec.p_adds[i * 4]);
+          Fr_toLongNormal(&aux2, &exec.p_adds[i * 4 + 1]);
 
-            Fr_toLongNormal(&aux1, &exec.p_adds[i * 4]);
-            Fr_toLongNormal(&aux2, &exec.p_adds[i * 4 + 1]);
+          FrElement tmp1;
+          FrElement tmp2;
 
-            FrElement tmp1;
-            FrElement tmp2;
+          Fr_mul(&tmp1, &tmp[aux1.longVal[0]], &exec.p_adds[i * 4 + 2]);
+          Fr_mul(&tmp2, &tmp[aux2.longVal[0]], &exec.p_adds[i * 4 + 3]);
 
-            Fr_mul(&tmp1, &tmp[aux1.longVal[0]], &exec.p_adds[i * 4 + 2]);
-            Fr_mul(&tmp2, &tmp[aux2.longVal[0]], &exec.p_adds[i * 4 + 3]);
+          Fr_add(&tmp[sizeWitness + i], &tmp1, &tmp2);
+      }
 
-            Fr_add(&tmp[sizeWitness + i], &tmp1, &tmp2);
-        }
+      // #pragma omp parallel for
+      for (uint i = 0; i < exec.nSMap; i++) {
+          for (uint j = 0; j < nPols; j++)
+          {
+              FrElement aux;
+              Fr_toLongNormal(&aux, &exec.p_sMap[i*nPols + j]);
+              uint64_t idx_1 = aux.longVal[0];
+              if (idx_1 != 0) {
+                committedPols[i*nPols + j] = tmp[idx_1];
+              }
+          }
+      }
 
-        FrElement *committedPols = new FrElement[exec.nSMap*nCols];
-        // #pragma omp parallel for
-        for (uint i = 0; i < exec.nSMap; i++) {
-            for (uint j = 0; j < nCols; j++)
-            {
-                FrElement aux;
-                Fr_toLongNormal(&aux, &exec.p_sMap[nCols * i + j]);
-                uint64_t idx_1 = aux.longVal[0];
-                if (idx_1 != 0) {
-                  committedPols[nCols * i + j] = tmp[idx_1];
-                }
-            }
-        }
+      delete[] tmp;
 
-        delete[] tmp;
-        freeCircuit(circuit);
-        TimerStopAndLog(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
-        
-        return static_cast<void*>(committedPols);
-    }
+      TimerStopAndLog(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
+  }
 
+  void* getCommittedPols(const std::string circomVerifier, const std::string execFile, nlohmann::json &zkin, uint64_t nPols, uint64_t N) {
+      // Verifier stark proof
+      //-------------------------------------------
+      TimerStart(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
+      Circom_Circuit *circuit = loadCircuit(circomVerifier);
+      TimerStopAndLog(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
+      TimerStart(CIRCOM_LOAD_JSON_BATCH_PROOF);
+      Circom_CalcWit *ctx = new Circom_CalcWit(circuit);
+
+      loadJsonImpl(ctx, zkin);
+
+      if (ctx->getRemaingInputsToBeSet() != 0) {
+          zklog.error("Prover::finalProof() Not all inputs have been set. Only " + to_string(get_main_input_signal_no() - ctx->getRemaingInputsToBeSet()) + " out of " + to_string(get_main_input_signal_no()));
+          exitProcess();
+      }
+      TimerStopAndLog(CIRCOM_LOAD_JSON_BATCH_PROOF);
+
+      FrElement *committedPols = new FrElement[nPols*N];
+      computeWitnessAndCmPols(committedPols, execFile, ctx, nPols, N);
+      freeCircuit(circuit);
+
+      return static_cast<void*>(committedPols);
+  }
+
+  void* getCommittedPols(const std::string circomVerifier, const std::string execFile, const std::string zkinFile, uint64_t nPols, uint64_t N) {
+      // Verifier stark proof
+      //-------------------------------------------
+      TimerStart(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
+      Circom_Circuit *circuit = loadCircuit(circomVerifier);
+      TimerStopAndLog(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
+      TimerStart(CIRCOM_LOAD_JSON_BATCH_PROOF);
+      Circom_CalcWit *ctx = new Circom_CalcWit(circuit);
+
+      loadJson(ctx, zkinFile);
+
+      if (ctx->getRemaingInputsToBeSet() != 0) {
+          zklog.error("Prover::finalProof() Not all inputs have been set. Only " + to_string(get_main_input_signal_no() - ctx->getRemaingInputsToBeSet()) + " out of " + to_string(get_main_input_signal_no()));
+          exitProcess();
+      }
+      TimerStopAndLog(CIRCOM_LOAD_JSON_BATCH_PROOF);
+
+      FrElement *committedPols = new FrElement[nPols*N];
+      computeWitnessAndCmPols(committedPols, execFile, ctx, nPols, N);
+      freeCircuit(circuit);
+
+      return static_cast<void*>(committedPols);
+  }
 }

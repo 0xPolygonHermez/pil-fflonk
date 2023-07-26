@@ -272,11 +272,22 @@ namespace PilFflonk
         return this->prove();
     }
 
-    std::tuple<json, json> PilFflonkProver::prove(std::string execFilename, std::string circomVerifier,  nlohmann::json &zkin) {
+    std::tuple<json, json> PilFflonkProver::prove(std::string execFilename, std::string circomVerifier, std::string zkinFilename) {
+        
+        u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
+
+        auto pCommittedPolsAddress = CircomPilFflonk::getCommittedPols(circomVerifier, execFilename, zkinFilename, fflonkInfo->mapSectionsN.section[cm1_n], N);
+
+        ThreadUtils::parcpy(ptrCommitted["cm1_n"], (FrElement *)pCommittedPolsAddress, cmtdPolsSize, omp_get_num_threads() / 2);
+
+        return this->prove();
+    }
+
+    std::tuple<json, json> PilFflonkProver::prove(std::string execFilename, std::string circomVerifier, nlohmann::json &zkin) {
        
         u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
 
-        auto pCommittedPolsAddress = CircomPilFflonk::getCommittedPols(circomVerifier, execFilename, zkin, N);
+        auto pCommittedPolsAddress = CircomPilFflonk::getCommittedPols(circomVerifier, execFilename, zkin, fflonkInfo->mapSectionsN.section[cm1_n], N);
 
         ThreadUtils::parcpy(ptrCommitted["cm1_n"], (FrElement *)pCommittedPolsAddress, cmtdPolsSize, omp_get_num_threads() / 2);
 
