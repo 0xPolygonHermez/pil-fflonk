@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
     string execFilename = "config/pilfflonk.exec";
     string circomVerifier = "config/verifier.dat";
-    string zkinFilename = "config/verifier.zkin.proof.json";
+    string zkinFilename = "config/verifier.proof.zkin.json";
 
     TimerStart(WHOLE_PROCESS);
 
@@ -97,7 +97,8 @@ int main(int argc, char **argv)
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine,
                                                  zkeyFilename, fflonkInfoFileName);
 
-    auto [proofJson, publicSignalsJson] = prover->prove(cmtdFilename);
+    // auto [proofJson, publicSignalsJson] = prover->prove(cmtdFilename);
+    auto [proofJson, publicSignalsJson] = prover->prove(execFilename, circomVerifier, zkinFilename);
 
     std::ofstream file;
     file.open(proofFilename);

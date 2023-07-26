@@ -336,50 +336,42 @@ namespace CircomPilFflonk
     loadJsonImpl(ctx, j);
   }
 
-  void computeWitnessAndCmPols(FrElement* committedPols, const std::string execFile, Circom_CalcWit *ctx, uint64_t nPols, uint64_t N) {
+  void computeWitnessAndCmPols(AltBn128::Engine &E, AltBn128::FrElement* committedPols, const std::string execFile, Circom_CalcWit *ctx, uint64_t nPols, uint64_t N) {
       //-------------------------------------------
       // Compute witness and commited pols
       //-------------------------------------------
       TimerStart(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
   
-      ExecFile exec(execFile, nPols);
+      ExecFile exec(E, execFile, nPols);
 
       if(N != exec.nSMap) throw std::runtime_error("Invalid exec"); 
 
       uint64_t sizeWitness = get_size_of_witness();
-      FrElement *tmp = new FrElement[exec.nAdds + sizeWitness];
+      AltBn128::FrElement *tmp = new AltBn128::FrElement[exec.nAdds + sizeWitness];
       for (uint64_t i = 0; i < sizeWitness; i++) {
           FrElement aux;
           ctx->getWitness(i, &aux);
-          Fr_toLongNormal(&aux, &aux);
-          tmp[i] = aux;
+          tmp[i] = aux; //HOW ARE WE SUPPOSED TO DO THAT ??
       }
       delete ctx;
+
       for (uint64_t i = 0; i < exec.nAdds; i++){
-          FrElement aux1;
-          FrElement aux2;
+          u_int64_t idx1 = std::stoull(E.fr.toString(exec.p_adds[i * 4]));
+          u_int64_t idx2 = std::stoull(E.fr.toString(exec.p_adds[i * 4 + 1]));
 
-          Fr_toLongNormal(&aux1, &exec.p_adds[i * 4]);
-          Fr_toLongNormal(&aux2, &exec.p_adds[i * 4 + 1]);
+          AltBn128::FrElement tmp1 = E.fr.mul(tmp[idx1], exec.p_adds[i * 4 + 2]);
+          AltBn128::FrElement tmp2 = E.fr.mul(tmp[idx2], exec.p_adds[i * 4 + 2]);
 
-          FrElement tmp1;
-          FrElement tmp2;
-
-          Fr_mul(&tmp1, &tmp[aux1.longVal[0]], &exec.p_adds[i * 4 + 2]);
-          Fr_mul(&tmp2, &tmp[aux2.longVal[0]], &exec.p_adds[i * 4 + 3]);
-
-          Fr_add(&tmp[sizeWitness + i], &tmp1, &tmp2);
+          tmp[sizeWitness + i] = E.fr.add(tmp1, tmp2);
       }
 
       // #pragma omp parallel for
       for (uint i = 0; i < exec.nSMap; i++) {
           for (uint j = 0; j < nPols; j++)
           {
-              FrElement aux;
-              Fr_toLongNormal(&aux, &exec.p_sMap[i*nPols + j]);
-              uint64_t idx_1 = aux.longVal[0];
-              if (idx_1 != 0) {
-                committedPols[i*nPols + j] = tmp[idx_1];
+              u_int64_t idx1 = std::stoull(E.fr.toString(exec.p_sMap[i*nPols + j]));
+              if (idx1 != 0) {
+                committedPols[i*nPols + j] = tmp[idx1];
               }
           }
       }
@@ -389,13 +381,13 @@ namespace CircomPilFflonk
       TimerStopAndLog(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
   }
 
-  void* getCommittedPols(const std::string circomVerifier, const std::string execFile, nlohmann::json &zkin, uint64_t nPols, uint64_t N) {
+  void getCommittedPols(AltBn128::Engine &E, AltBn128::FrElement* committedPols, const std::string circomVerifier, const std::string execFile, nlohmann::json &zkin, uint64_t nPols, uint64_t N) {
       // Verifier stark proof
       //-------------------------------------------
       TimerStart(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
       Circom_Circuit *circuit = loadCircuit(circomVerifier);
       TimerStopAndLog(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
-      TimerStart(CIRCOM_LOAD_JSON_BATCH_PROOF);
+      TimerStart(CIRCOM_LOAD_JSON_FINAL_PROOF);
       Circom_CalcWit *ctx = new Circom_CalcWit(circuit);
 
       loadJsonImpl(ctx, zkin);
@@ -404,16 +396,13 @@ namespace CircomPilFflonk
           zklog.error("Prover::finalProof() Not all inputs have been set. Only " + to_string(get_main_input_signal_no() - ctx->getRemaingInputsToBeSet()) + " out of " + to_string(get_main_input_signal_no()));
           exitProcess();
       }
-      TimerStopAndLog(CIRCOM_LOAD_JSON_BATCH_PROOF);
+      TimerStopAndLog(CIRCOM_LOAD_JSON_FINAL_PROOF);
 
-      FrElement *committedPols = new FrElement[nPols*N];
-      computeWitnessAndCmPols(committedPols, execFile, ctx, nPols, N);
+      computeWitnessAndCmPols(E, committedPols, execFile, ctx, nPols, N);
       freeCircuit(circuit);
-
-      return static_cast<void*>(committedPols);
   }
 
-  void* getCommittedPols(const std::string circomVerifier, const std::string execFile, const std::string zkinFile, uint64_t nPols, uint64_t N) {
+  void getCommittedPols(AltBn128::Engine &E, AltBn128::FrElement* committedPols, const std::string circomVerifier, const std::string execFile, const std::string zkinFile, uint64_t nPols, uint64_t N) {
       // Verifier stark proof
       //-------------------------------------------
       TimerStart(CIRCOM_LOAD_CIRCUIT_FINAL_PROOF);
@@ -430,10 +419,7 @@ namespace CircomPilFflonk
       }
       TimerStopAndLog(CIRCOM_LOAD_JSON_BATCH_PROOF);
 
-      FrElement *committedPols = new FrElement[nPols*N];
-      computeWitnessAndCmPols(committedPols, execFile, ctx, nPols, N);
+      computeWitnessAndCmPols(E, committedPols, execFile, ctx, nPols, N);
       freeCircuit(circuit);
-
-      return static_cast<void*>(committedPols);
   }
 }

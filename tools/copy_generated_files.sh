@@ -12,10 +12,11 @@ fileExists () {
 NAME=${1:-all}
 WORKING_DIR=${2:-../pil-stark/tmp}
 
-CIRCOM_NAME=${3:-plonktest.bn128}
+CIRCOM_NAME=${3:-fibonacci.c12.custom.verifier}
+CIRCOM_NAME_ZKIN=${4:-fibonacci.c12}
 
-CIRCOM_VERIFIER=${4:-false}
-CIRCOM_VERIFIER_ZKIN=${5:-false}
+CIRCOM_VERIFIER=${5:-true}
+CIRCOM_VERIFIER_ZKIN=${6:-true}
 
 CIRCOM_HEADER="#pragma GCC diagnostic push\n#pragma GCC diagnostic ignored \"-Wunused-variable\"\n#pragma GCC push_options\n#pragma GCC optimize (\"O0\")\n#include <stdio.h>\n#include <iostream>\n#include <assert.h>\n#include <cassert>\n"
 
@@ -48,8 +49,8 @@ cp ${WORKING_DIR}/${NAME}.shkey.json ./config/pilfflonk.shkey.json
 if ! fileExists "${WORKING_DIR}/${NAME}.fflonkinfo.json"; then echo "FflonkInfo file not found."; exit 1; fi
 cp ${WORKING_DIR}/${NAME}.fflonkinfo.json ./config/pilfflonk.fflonkinfo.json
 
-if ! fileExists "${WORKING_DIR}/${NAME}.cmmt"; then echo "Commit file not found."; exit 1; fi
-cp ${WORKING_DIR}/${NAME}.cmmt ./config/pilfflonk.cmmt
+if ! fileExists "${WORKING_DIR}/${NAME}.commit"; then echo "Commit file not found."; exit 1; fi
+cp ${WORKING_DIR}/${NAME}.commit ./config/pilfflonk.cmmt
 
 if ! fileExists "${WORKING_DIR}/${NAME}.vkey"; then echo "Verification Key file not found."; exit 1; fi
 cp ${WORKING_DIR}/${NAME}.vkey ./config/pilfflonk.vkey
@@ -69,8 +70,8 @@ if ${CIRCOM_VERIFIER}; then
     cp ${WORKING_DIR}/${NAME}.exec ./config/pilfflonk.exec
 
     if ${CIRCOM_VERIFIER_ZKIN}; then
-        if ! fileExists "${WORKING_DIR}/${CIRCOM_NAME}.zkin.proof.json"; then echo "Zkin proof file not found."; exit 1; fi
-        cp ${WORKING_DIR}/${CIRCOM_NAME}.zkin.proof.json ./config/verifier.zkin.proof.json
+        if ! fileExists "${WORKING_DIR}/${CIRCOM_NAME_ZKIN}.proof.zkin.json"; then echo "Zkin proof file not found."; exit 1; fi
+        cp ${WORKING_DIR}/${CIRCOM_NAME_ZKIN}.proof.zkin.json ./config/verifier.proof.zkin.json
     fi
 fi
 

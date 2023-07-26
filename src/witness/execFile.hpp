@@ -11,29 +11,45 @@
 
 class ExecFile
 {
+    const int EXEC_PF_NSECTIONS = 3;
+
+    const int EXEC_ADDS_SECTION = 2;
+    const int EXEC_SMAP_SECTION = 3;
+
 public:
     uint64_t nAdds;
     uint64_t nSMap;
 
     std::unique_ptr<BinFileUtils::BinFile> execFile;
 
-    FrElement *p_adds;
-    FrElement *p_sMap;
+    AltBn128::FrElement *p_adds;
+    AltBn128::FrElement *p_sMap;
 
-    ExecFile(std::string execFileName, uint64_t nCommittedPols)
+    ExecFile(AltBn128::Engine &E, std::string execFileName, uint64_t nCommittedPols)
     {
         execFile = BinFileUtils::openExisting(execFileName, "exec", 1);
+
         auto fdExec = execFile.get();
 
-        nAdds = fdExec->readU32LE();
-        nSMap = fdExec->readU32LE();
+        fdExec->startReadSection(EXEC_ADDS_SECTION);
 
-        uint64_t lenAdds = nAdds * 4 * sizeof(FrElement);
-        uint64_t lenSMap = nSMap * nCommittedPols * sizeof(FrElement);
+        nAdds = fdExec->readU64LE();
+        uint64_t lenAdds = nAdds * 4 * sizeof(AltBn128::FrElement);
+        p_adds = new AltBn128::FrElement[nAdds * 4];
+    
+        ThreadUtils::parcpy(p_adds, (void *)fdExec->read(lenAdds), lenAdds, omp_get_num_threads() / 2);
 
-        ThreadUtils::parcpy(p_adds, (FrElement *)fdExec->read(lenAdds), lenAdds, omp_get_num_threads() / 2);
+        fdExec->endReadSection();
 
-        ThreadUtils::parcpy(p_sMap, (FrElement *)fdExec->read(lenSMap), lenSMap, omp_get_num_threads() / 2);
+        fdExec->startReadSection(EXEC_SMAP_SECTION);
+
+        nSMap = fdExec->readU64LE();
+        uint64_t lenSMap = nSMap * nCommittedPols * sizeof(AltBn128::FrElement);
+        p_sMap = new AltBn128::FrElement[nSMap * nCommittedPols];
+
+        ThreadUtils::parcpy(p_sMap, (AltBn128::FrElement *)fdExec->read(lenSMap), lenSMap, omp_get_num_threads() / 2);
+
+        fdExec->endReadSection();
     }
     ~ExecFile()
     {
