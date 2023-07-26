@@ -336,7 +336,7 @@ namespace CircomPilFflonk
     loadJsonImpl(ctx, j);
   }
 
-    void getCommittedPols(AltBn128::Engine &E, FrElement *buffDst, const std::string circomVerifier, const std::string execFile, nlohmann::json &zkin, uint64_t nCols) {
+    void* getCommittedPols(const std::string circomVerifier, const std::string execFile, nlohmann::json &zkin, uint64_t nCols) {
         //-------------------------------------------
         // Verifier stark proof
         //-------------------------------------------
@@ -358,7 +358,7 @@ namespace CircomPilFflonk
         //-------------------------------------------
         TimerStart(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
     
-        ExecFile exec(E, execFile, nCols);
+        ExecFile exec(execFile, nCols);
 
         uint64_t sizeWitness = get_size_of_witness();
         FrElement *tmp = new FrElement[exec.nAdds + sizeWitness];
@@ -385,6 +385,7 @@ namespace CircomPilFflonk
             Fr_add(&tmp[sizeWitness + i], &tmp1, &tmp2);
         }
 
+        FrElement *committedPols = new FrElement[exec.nSMap*nCols];
         // #pragma omp parallel for
         for (uint i = 0; i < exec.nSMap; i++) {
             for (uint j = 0; j < nCols; j++)
@@ -393,7 +394,7 @@ namespace CircomPilFflonk
                 Fr_toLongNormal(&aux, &exec.p_sMap[nCols * i + j]);
                 uint64_t idx_1 = aux.longVal[0];
                 if (idx_1 != 0) {
-                   buffDst[nCols * i + j] = tmp[idx_1];
+                  committedPols[nCols * i + j] = tmp[idx_1];
                 }
             }
         }
@@ -401,6 +402,8 @@ namespace CircomPilFflonk
         delete[] tmp;
         freeCircuit(circuit);
         TimerStopAndLog(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
+        
+        return static_cast<void*>(committedPols);
     }
 
 }

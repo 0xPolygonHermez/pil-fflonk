@@ -20,7 +20,7 @@ public:
     FrElement *p_adds;
     FrElement *p_sMap;
 
-    ExecFile(AltBn128::Engine &E, std::string execFileName, uint64_t nCommittedPols)
+    ExecFile(std::string execFileName, uint64_t nCommittedPols)
     {
         execFile = BinFileUtils::openExisting(execFileName, "exec", 1);
         auto fdExec = execFile.get();

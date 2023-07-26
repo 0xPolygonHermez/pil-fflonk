@@ -18,6 +18,6 @@ namespace CircomPilFflonk
     void writeBinWitness(Circom_CalcWit *ctx, std::string wtnsFileName);
     void getBinWitness(Circom_CalcWit *ctx, RawFr::Element *&pWitness, uint64_t &witnessSize);
     bool check_valid_number(std::string &s, uint base);
-    void getCommittedPols(AltBn128::Engine &E, FrElement *buffDst, const std::string circomVerifier, const std::string execFile, nlohmann::json &zkin, uint64_t nCols);
+    void * getCommittedPols(const std::string circomVerifier, const std::string execFile, nlohmann::json &zkin, uint64_t nCols);
 }
 #endif

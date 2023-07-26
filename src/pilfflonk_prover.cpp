@@ -279,7 +279,12 @@ namespace PilFflonk
 
     std::tuple<json, json> PilFflonkProver::prove(std::string execFilename, std::string circomVerifier,  nlohmann::json &zkin) {
        
-        // CircomPilFflonk::getCommittedPols(E, ptrCommitted["cm1_n"], circomVerifier, execFilename, zkin, N);
+        u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
+
+        auto pCommittedPolsAddress = CircomPilFflonk::getCommittedPols(circomVerifier, execFilename, zkin, N);
+
+        ThreadUtils::parcpy(ptrCommitted["cm1_n"], (FrElement *)pCommittedPolsAddress, cmtdPolsSize, omp_get_num_threads() / 2);
+
         return this->prove();
     }
 
