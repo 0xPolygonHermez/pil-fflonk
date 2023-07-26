@@ -25,9 +25,14 @@ Polynomial<Engine>::Polynomial(Engine &_E, u_int64_t length, u_int64_t blindLeng
 }
 
 template<typename Engine>
-Polynomial<Engine>::Polynomial(Engine &_E, FrElement *reservedBuffer, u_int64_t length, u_int64_t blindLength) : E(_E) {
+Polynomial<Engine>::Polynomial(Engine &_E, FrElement *reservedBuffer, u_int64_t length, u_int64_t blindLength, bool initialize) : E(_E) {
     this->coef = reservedBuffer;
-    this->initialize(length, blindLength, false);
+    if(initialize) {
+        this->initialize(length, blindLength, false);
+    } else {
+        this->length = length + blindLength;
+        this->fixDegree();
+    }
 }
 
 template<typename Engine>

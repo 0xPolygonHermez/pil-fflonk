@@ -49,8 +49,6 @@ namespace PilFflonk
         FrElement *reservedMemoryPtr;
         uint64_t reservedMemorySize;
 
-        FFT<AltBn128::Engine::Fr> *fft = NULL;
-
         NTT_AltBn128 *ntt;
         NTT_AltBn128 *nttExtended;
 

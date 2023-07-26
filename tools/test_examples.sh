@@ -3,7 +3,7 @@
 # Define working dir
 WORKING_DIR=${1:-../pil-stark/tmp}
 
-GENERATE_TESTS=${2:-true}
+GENERATE_TESTS=${2:-false}
 
 generate_basic_tests() {
     mocha ${WORKING_DIR}/../test/cfiles/fflonk_gen_all_files.js 

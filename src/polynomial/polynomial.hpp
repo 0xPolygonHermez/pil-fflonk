@@ -27,7 +27,7 @@ public:
 
     Polynomial(Engine &_E, u_int64_t length, u_int64_t blindLength = 0);
 
-    Polynomial(Engine &_E, FrElement *reservedBuffer, u_int64_t length, u_int64_t blindLength = 0);
+    Polynomial(Engine &_E, FrElement *reservedBuffer, u_int64_t length, u_int64_t blindLength = 0, bool initialize = true);
 
     // From coefficients
     static Polynomial<Engine>* fromPolynomial(Engine &_E, Polynomial<Engine> &polynomial, u_int64_t blindLength = 0);

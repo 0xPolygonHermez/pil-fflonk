@@ -35,7 +35,6 @@ namespace PilFflonk
 
         nonCommittedPols.clear();
 
-        delete fft;
         delete ntt;
         delete nttExtended;
         delete zkey;
@@ -76,8 +75,6 @@ namespace PilFflonk
             N = 1 << nBits;
             NCoefs = 1 << nBitsCoefs;
             NExt = 1 << nBitsExt;
-
-            fft = new FFT<AltBn128::Engine::Fr>(NExt);
 
             ntt = new NTT_AltBn128(E, N);
             nttExtended = new NTT_AltBn128(E, NExt);
@@ -141,7 +138,6 @@ namespace PilFflonk
             mapBufferCommitted["cm1_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm1_n];
             mapBufferCommitted["cm2_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm2_n];
             mapBufferCommitted["cm3_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm3_n];
-            mapBufferCommitted["cm4_coefs"] = NExt;
 
             lengthBufferCommitted = 0;
             for (auto const &[key, value] : mapBufferCommitted) {
@@ -239,11 +235,10 @@ namespace PilFflonk
                 cout << name << " " << E.g1.toString(commit) << endl;
                 shPlonkProver->addPolynomialCommitment(name, commit);
                 u_int32_t lenPol = fdZkey->readU32LE();
-                Polynomial<AltBn128::Engine> *polFi = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], lenPol / zkey->n8q);
 
                 ThreadUtils::parcpy(ptrShPlonk[name], (FrElement *)fdZkey->read(lenPol), lenPol, omp_get_num_threads() / 2);
 
-                polFi->fixDegree();
+                Polynomial<AltBn128::Engine> *polFi = new Polynomial<AltBn128::Engine>(E, ptrShPlonk[name], lenPol / zkey->n8q, 0, false);
 
                 shPlonkProver->addPolynomialShPlonk(name, polFi);
             }
@@ -687,7 +682,8 @@ namespace PilFflonk
         
         TimerStart(PIL_FFLONK_STAGE_4_CALCULATE_Q);
 
-        Polynomial<AltBn128::Engine> *polQ = Polynomial<AltBn128::Engine>::fromEvaluations(E, fft, ptrCommitted["q_2ns"], ptrCommitted["cm4_coefs"], NExt);
+        nttExtended->INTT(ptrCommitted["q_2ns"], ptrCommitted["q_2ns"], NExt, 1, ptrShPlonk["tmp"]);
+        Polynomial<AltBn128::Engine> *polQ = new Polynomial<AltBn128::Engine>(E, ptrCommitted["q_2ns"], NExt, 0, false);
         polQ->divZh(N, 1 << extendBitsTotal);
 
         u_int64_t domainSizeQ = fflonkInfo->qDeg * N + fflonkInfo->maxPolsOpenings * (fflonkInfo->qDeg + 1);
@@ -734,7 +730,7 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_4_CALCULATE_Q);
 
         TimerStart(PIL_FFLONK_STAGE_4_COMMIT);
-        shPlonkProver->commit(4, ptrCommitted["cm4_coefs"], (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk);
+        shPlonkProver->commit(4, ptrCommitted["q_2ns"], (G1PointAffine *)ptrConstant["PTau"], ptrShPlonk);
         TimerStopAndLog(PIL_FFLONK_STAGE_4_COMMIT);
 
         TimerStopAndLog(PIL_FFLONK_STAGE_4);

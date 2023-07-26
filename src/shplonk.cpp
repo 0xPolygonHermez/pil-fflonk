@@ -598,7 +598,9 @@ namespace ShPlonk {
 
                     FrElement* buffCoefs = stage == 0 
                         ? buffConstantCoefs 
-                        : ptrCommitted["cm" + std::to_string(stage) + "_coefs"];
+                        : stage == 4 
+                            ? ptrCommitted["q_2ns"]
+                            : ptrCommitted["cm" + std::to_string(stage) + "_coefs"];
 
                     u_int32_t polId = findPolId(stage, polName);
 
