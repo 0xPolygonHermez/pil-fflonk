@@ -127,34 +127,85 @@ namespace PilFflonk
 
             nttExtended->NTT(constPolsEvalsExt, constPolsEvalsExt, domainSizeExt, fflonkInfo->nConstants);
 
-            // // Store coefs to context
-            for (uint64_t i = 0; i < fflonkInfo->nConstants; i++) {
-                 auto polynomial = getPolFromBuffer(constPolsCoefs, fflonkInfo->nConstants, domainSize, i);
+            int stage = 0;
+            std::map <std::string, CommitmentAndPolynomial*> polynomialCommitments;
+            for (auto it = zkey->f.begin(); it != zkey->f.end(); ++it)
+            {
+                PilFflonkZkey::ShPlonkPol *pol = it->second;
 
-                 G1Point commit = multiExponentiation(polynomial);
+                u_int32_t *stages = new u_int32_t[pol->nStages];
+                for (u_int32_t i = 0; i < pol->nStages; ++i)
+                {
+                    stages[i] = pol->stages[i].stage;
+                }
+
+                int stagePos = find(stages, pol->nStages, 0);
+
+                if (stagePos != -1)
+                {
+                    PilFflonkZkey::ShPlonkStage *stagePol = &pol->stages[stagePos];
+
+                    u_int64_t *lengths = new u_int64_t[pol->nPols]{};
+                    u_int64_t *polsIds = new u_int64_t[pol->nPols]{};
+
+                    for (u_int32_t j = 0; j < stagePol->nPols; ++j)
+                    {
+                        std::string name = stagePol->pols[j].name;
+                        int index = find(pol->pols, pol->nPols, name);
+                        if (index == -1)
+                        {
+                            throw std::runtime_error("Polynomial " + std::string(name) + " missing");
+                        }
+
+                        polsIds[j] = findPolId(zkey, stage, name);
+                        lengths[index] = findDegree(zkey, it->first, name);
+                    }
+
+                    std::string index = "f" + std::to_string(pol->index);
+
+                    auto cPol = new CPolynomial<AltBn128::Engine>(E, fflonkInfo->nConstants);
+
+                    for (uint64_t i = 0; i < fflonkInfo->nConstants; i++) {
+                        std::string name = (*zkey->polsNamesStage[0])[i];
+                        auto polynomial = getPolFromBuffer(constPolsCoefs, fflonkInfo->nConstants, domainSize, i);
+                        cPol->addPolynomial(polsIds[i], polynomial);
+
+                    }
+
+                    auto polynomial = cPol->getPolynomial();
+                    G1PointAffine commitAffine;
+                    G1Point commit = multiExponentiation(polynomial);
+                    E.g1.copy(commitAffine, commit);
+
+                    polynomialCommitments[index] = new CommitmentAndPolynomial{ commitAffine, polynomial };
+
+                    delete[] lengths;
+                    delete[] polsIds;
+                }
+
+                delete[] stages;
             }
-            //     auto index = commits[j].index.split("_")[0];
-            //     auto commit = commits[j].commit;
-            //     auto pol = commits[j].pol.coef.slice(0, (commits[j].pol.degree() + 1)*curve.Fr.n8);
-            //     zkey[index] = {commit, pol};
-            // }
 
-            // std::map<std::string, Polynomial<AltBn128::Engine>*> ctx;
+            for (auto it = polynomialCommitments.begin(); it != polynomialCommitments.end(); ++it)
+            {
+                auto index = it->first;
+                auto commit = it->second->commitment;
+                auto pol = it->second->polynomial;
 
-            // // Store coefs to context
-            // for (uint64_t i = 0; i < fflonkInfo->nConstants; i++) {
-            //     auto coefs = getPolFromBuffer(zkey_constPolsCoefs, fflonkInfo->nConstants, domainSizeCoefs, i, curve.Fr);
-            //     ctx[zkey->polsNamesStage[0][i]] = new Polynomial(coefs, curve, logger);
-            // }
+                auto pos = index.find("_");
+                if (pos != std::string::npos)
+                {
+                    index = index.substr(0, pos);
+                }
 
-            // const commits = await commit(0, zkey, ctx, PTau, curve, {multiExp: true, logger});
-
-            // for(uint32_t j = 0; j < commits.length; ++j) {
-            //     auto index = commits[j].index.split("_")[0];
-            //     auto commit = commits[j].commit;
-            //     auto pol = commits[j].pol.coef.slice(0, (commits[j].pol.degree() + 1)*curve.Fr.n8);
-            //     zkey[index] = {commit, pol};
-            // }
+                auto shPlonkCommitment = new PilFflonkZkey::ShPlonkCommitment{
+                    index,
+                    commit,
+                    pol->getDegree() + 1,
+                    pol->coef
+                };
+                zkey->fCommitments[index] = shPlonkCommitment;
+            }
         }
 
         // Precalculate x_n and x_2ns
@@ -281,7 +332,6 @@ namespace PilFflonk
             if (key.find("w") == 0)
             {
                 FrElement omega;
-                cout  << el.key() << el.value() << endl;
                 E.fr.fromString(omega, el.value());
                 zkey->omegas[key] = omega;
             }
@@ -346,5 +396,50 @@ namespace PilFflonk
 
         //TODO use new Polynomial from coefficients without copying two times the buffer!!!!
         return Polynomial<AltBn128::Engine>::fromCoefficients(E, polBuffer, N);
+    }
+
+    u_int32_t PilFflonkSetup::findPolId(PilFflonkZkey::PilFflonkZkey* zkey, u_int32_t stage, std::string polName) {
+        for (const auto& [index, name] : *zkey->polsNamesStage[stage]) {
+            if(name == polName) return index;
+        }
+        throw std::runtime_error("Polynomial name not found");
+    }
+
+    u_int32_t PilFflonkSetup::findDegree(PilFflonkZkey::PilFflonkZkey* zkey, u_int32_t fIndex, std::string name)
+    {
+        for (u_int32_t i = 0; i < zkey->f[fIndex]->stages[0].nPols; i++)
+        {
+            if (zkey->f[fIndex]->stages[0].pols[i].name == name)
+            {
+                return zkey->f[fIndex]->stages[0].pols[i].degree;
+            }
+        }
+        throw std::runtime_error("Polynomial name not found");
+    }
+
+    int PilFflonkSetup::find(std::string *arr, u_int32_t n, std::string x)
+    {
+        for (u_int32_t i = 0; i < n; ++i)
+        {
+            if (arr[i] == x)
+            {
+                return int(i);
+            }
+        }
+
+        return -1;
+    }
+
+    int PilFflonkSetup::find(u_int32_t *arr, u_int32_t n, u_int32_t x)
+    {
+        for (u_int32_t i = 0; i < n; ++i)
+        {
+            if (arr[i] == x)
+            {
+                return int(i);
+            }
+        }
+
+        return -1;
     }
 }

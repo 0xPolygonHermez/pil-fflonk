@@ -21,6 +21,7 @@
 #include "utils.hpp"
 #include "zkey_pilfflonk.hpp"
 #include "fflonk_info.hpp"
+#include "zkey_pilfflonk.hpp"
 
 using json = nlohmann::json;
 
@@ -28,6 +29,10 @@ using namespace std;
 
 namespace PilFflonk
 {
+    struct CommitmentAndPolynomial {
+        AltBn128::Engine::G1PointAffine commitment;
+        Polynomial<AltBn128::Engine>* polynomial;
+    };
     class PilFflonkSetup
     {
         using FrElement = typename AltBn128::Engine::FrElement;
@@ -70,6 +75,14 @@ namespace PilFflonk
         G1Point multiExponentiation(Polynomial<AltBn128::Engine> *polynomial);
 
         Polynomial<AltBn128::Engine>* getPolFromBuffer(FrElement* buff, uint32_t nPols, uint64_t N, int32_t id);
+
+        u_int32_t findDegree(PilFflonkZkey::PilFflonkZkey* zkey, u_int32_t fIndex, std::string name);
+
+        u_int32_t findPolId(PilFflonkZkey::PilFflonkZkey* zkey, u_int32_t stage, std::string name);
+
+        int find(std::string* arr, u_int32_t n, std::string x);
+
+        int find(u_int32_t* arr, u_int32_t n, u_int32_t x);
 
     public:
         PilFflonkSetup(AltBn128::Engine &_E) : E(_E) {};

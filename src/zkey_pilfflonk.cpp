@@ -29,29 +29,29 @@ namespace PilFflonkZkey
     {
         BinFileUtils::BinFileWriter* binFile = new BinFileUtils::BinFileWriter(zkeyFilename, "zkey", 1, ZKEY_PF_NSECTIONS);
 
-        // writeZkeyHeaderSection(binFile, zkey);
+        writeZkeyHeaderSection(binFile, zkey);
 
-        // writePilFflonkHeaderSection(binFile, zkey);
+        writePilFflonkHeaderSection(binFile, zkey);
 
-        // writeFSection(binFile, zkey);
+        writeFSection(binFile, zkey);
 
         writeFCommitmentsSection(binFile, zkey);
 
-        // writePolsNamesStageSection(binFile, zkey);
+        writePolsNamesStageSection(binFile, zkey);
 
-        // writeConstPolsEvalsSection(binFile, constPols, constPolsSize);
+        writeConstPolsEvalsSection(binFile, constPols, constPolsSize);
 
-        // writeConstPolsCoefsSection(binFile, constPolsCoefs, constPolsCoefsSize);
+        writeConstPolsCoefsSection(binFile, constPolsCoefs, constPolsCoefsSize);
 
-        // writeConstPolsEvalsExtSection(binFile, constPolsExt, constPolsExtSize);
+        writeConstPolsEvalsExtSection(binFile, constPolsExt, constPolsExtSize);
 
-        // writeXnSection(binFile, x_n, domainSize);
+        writeXnSection(binFile, x_n, domainSize);
 
-        // writeX2nsSection(binFile, x_2ns, domainSizeExt);
+        writeX2nsSection(binFile, x_2ns, domainSizeExt);
 
-        // writeOmegasSection(binFile, zkey);
+        writeOmegasSection(binFile, zkey);
 
-        // writePTauSection(binFile, PTau, pTauSize);  
+        writePTauSection(binFile, PTau, pTauSize);  
 
         binFile->close();
     }
@@ -138,20 +138,21 @@ namespace PilFflonkZkey
     {
         binFile->startWriteSection(ZKEY_PF_F_COMMITMENTS_SECTION);
 
-        // auto commitments = shKeyJson.items();
+        const u_int32_t lenF = pilFflonkZkey->fCommitments.size();
+        binFile->writeU32LE(lenF);
 
-        // for (auto &el : omegas)
-        // {
-        //     auto key = el.key();
-        //     if (key.find("w") == 0)
-        //     {
-        //         FrElement omega;;
-        //         E.fr.fromString(omega, el.value());
-        //         zkey->omegas[key] = omega;
-        //     }
-        // }
+        for (auto it = pilFflonkZkey->fCommitments.begin(); it != pilFflonkZkey->fCommitments.end(); ++it)
+        {
+            auto name = it->second->name;
+            auto commit = it->second->commit;
+            auto lenPol = it->second->lenPol;
+            auto pol = it->second->pol;
 
-
+            binFile->writeString(name);
+            binFile->write(&commit, 64);
+            binFile->writeU32LE(lenPol * sizeof(FrElement));
+            binFile->write(pol, lenPol * sizeof(FrElement));
+        }
 
         binFile->endWriteSection();        
     }

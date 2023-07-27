@@ -58,7 +58,7 @@ namespace PilFflonkZkey
     struct ShPlonkCommitment
     {
         std::string name;
-        G1Point commit;
+        G1PointAffine commit;
         uint64_t lenPol;
         FrElement *pol;
     };
