@@ -18,6 +18,8 @@ namespace PilFflonkZkey
         polsNamesStage.clear();
 
         omegas.clear();
+
+        delete (AltBn128::Engine::G2PointAffine*)X2;
     }
 
     void writePilFflonkZkey(PilFflonkZkey *zkey,

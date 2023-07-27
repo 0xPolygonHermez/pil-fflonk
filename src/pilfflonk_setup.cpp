@@ -4,23 +4,16 @@
 #include "zkey.hpp"
 #include <math.h>
 
-// Improve
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <system_error>
-#include <string>
-#include <memory.h>
-#include <stdexcept>
 
 #include "thread_utils.hpp"
 #include <omp.h>
 // /Improve
 
 #include "fft.hpp"
-
-
 
 namespace PilFflonk
 {
@@ -32,11 +25,16 @@ namespace PilFflonk
     {
         delete zkey;
         delete fflonkInfo;
+        delete fft;
+        delete ntt;
+        delete nttExtended;
+
+        delete[] constPolsCoefs;
         delete[] constPolsEvals;
         delete[] constPolsEvalsExt;
-        delete fft;
-
-        delete PTau;
+        delete[] PTau;
+        delete[] x_n;
+        delete[] x_2ns;
     }
 
     void PilFflonkSetup::generateZkey(std::string shKeyFilename, std::string fflonkInfoFileName,
@@ -76,7 +74,8 @@ namespace PilFflonk
 
         zklog.info("> Loading PTau data");
         int nThreads = omp_get_max_threads() / 2;
-        if((uint64_t)nThreads > maxFiDegree) nThreads = 1;
+        if ((uint64_t)nThreads > maxFiDegree)
+            nThreads = 1;
         ThreadUtils::parset(PTau, 0, maxFiDegree * sizeof(G1PointAffine), nThreads);
         ThreadUtils::parcpy(PTau, fdPtau->getSectionData(2), maxFiDegree * sizeof(G1PointAffine), nThreads);
 
@@ -86,7 +85,7 @@ namespace PilFflonk
             throw new runtime_error("Powers of Tau is not well prepared. Section 3 too small.");
         }
         zkey->X2 = new G2PointAffine;
-        memcpy(zkey->X2, (G2PointAffine*)fdPtau->getSectionData(3) + 1, sG2);
+        memcpy(zkey->X2, (G2PointAffine *)fdPtau->getSectionData(3) + 1, sG2);
 
         zklog.info("> Loading const polynomials file");
         const auto [constPolsEvals, constPolsEvalsSize] = loadFromFileFr(cnstPolsFilename);
@@ -131,30 +130,36 @@ namespace PilFflonk
         // Precalculate x_n and x_2ns
         x_n = new FrElement[domainSize];
         x_2ns = new FrElement[domainSizeExt];
-            
+
         zklog.info("> Computing roots");
-        for (uint64_t i = 0; i < domainSize; i++) {
+        
+#pragma omp parallel for
+        for (uint64_t i = 0; i < domainSize; i++)
+        {
             x_n[i] = fft->root(zkey->power, i);
         }
 
-        for (uint64_t i = 0; i < domainSizeExt; i++) {
+#pragma omp parallel for
+        for (uint64_t i = 0; i < domainSizeExt; i++)
+        {
             x_2ns[i] = fft->root(nBitsExt, i);
         }
 
         zklog.info("> Writing zkey file");
 
         PilFflonkZkey::writePilFflonkZkey(zkey,
-                                        constPolsEvals, this->constPolsEvalsSize,
-                                        constPolsEvalsExt, fflonkInfo->nConstants * domainSizeExt,
-                                        constPolsCoefs, fflonkInfo->nConstants * domainSize,
-                                        x_n, domainSize,
-                                        x_2ns, domainSizeExt,
-                                        zkeyFilename, PTau, maxFiDegree);
+                                          constPolsEvals, this->constPolsEvalsSize,
+                                          constPolsEvalsExt, fflonkInfo->nConstants * domainSizeExt,
+                                          constPolsCoefs, fflonkInfo->nConstants * domainSize,
+                                          x_n, domainSize,
+                                          x_2ns, domainSizeExt,
+                                          zkeyFilename, PTau, maxFiDegree);
 
         zklog.info("PILFFLONK SETUP FINISHED");
     }
 
-    void PilFflonkSetup::parseShKey(json shKeyJson) {
+    void PilFflonkSetup::parseShKey(json shKeyJson)
+    {
         zkey->power = shKeyJson["power"];
         zkey->powerW = shKeyJson["powerW"];
         zkey->maxQDegree = shKeyJson["maxQDegree"];
@@ -166,10 +171,9 @@ namespace PilFflonk
         std::string primeQStr = shKeyJson["primeQ"];
         mpz_set_str(zkey->qPrime, primeQStr.c_str(), 10);
 
-
         zkey->n8r = shKeyJson["n8r"];
         mpz_init(zkey->rPrime);
-            std::string primeRStr = shKeyJson["primeR"];
+        std::string primeRStr = shKeyJson["primeR"];
         mpz_set_str(zkey->rPrime, primeRStr.c_str(), 10);
 
         parseFShKey(shKeyJson);
@@ -179,7 +183,8 @@ namespace PilFflonk
         parseOmegasShKey(shKeyJson);
     }
 
-    void PilFflonkSetup::parseFShKey(json shKeyJson) {
+    void PilFflonkSetup::parseFShKey(json shKeyJson)
+    {
         auto f = shKeyJson["f"];
 
         for (uint32_t i = 0; i < f.size(); i++)
@@ -221,10 +226,11 @@ namespace PilFflonk
         }
     }
 
-    void PilFflonkSetup::parsePolsNamesStageShKey(json shKeyJson) {
+    void PilFflonkSetup::parsePolsNamesStageShKey(json shKeyJson)
+    {
         auto pns = shKeyJson["polsNamesStage"];
 
-        for (auto& el : pns.items())
+        for (auto &el : pns.items())
         {
             std::map<u_int32_t, std::string> *polsNamesStage = new std::map<u_int32_t, std::string>();
 
@@ -237,12 +243,12 @@ namespace PilFflonk
                 (*polsNamesStage)[j] = value[j];
             }
 
-
             zkey->polsNamesStage[stoi(el.key())] = polsNamesStage;
         }
     }
 
-    void PilFflonkSetup::parseOmegasShKey(json shKeyJson) {
+    void PilFflonkSetup::parseOmegasShKey(json shKeyJson)
+    {
         auto omegas = shKeyJson.items();
 
         for (auto &el : omegas)
@@ -257,7 +263,8 @@ namespace PilFflonk
         }
     }
 
-    std::tuple<FrElement*, uint64_t> PilFflonkSetup::loadFromFileFr(std::string filename) {
+    std::tuple<FrElement *, uint64_t> PilFflonkSetup::loadFromFileFr(std::string filename)
+    {
         struct stat sb;
 
         int fd = open(filename.c_str(), O_RDONLY);
@@ -268,7 +275,7 @@ namespace PilFflonk
             throw std::system_error(errno, std::generic_category(), "fstat");
 
         void *addrmm = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
-        FrElement* values = (FrElement*)(malloc(sb.st_size));
+        FrElement *values = (FrElement *)(malloc(sb.st_size));
 
         int nThreads = omp_get_max_threads() / 2;
         ThreadUtils::parcpy(values, addrmm, sb.st_size, nThreads);
@@ -279,26 +286,10 @@ namespace PilFflonk
         return {values, sb.st_size};
     }
 
-    FrElement* PilFflonkSetup::polynomialFromMontgomery(Polynomial<AltBn128::Engine> *polynomial)
+    void PilFflonkSetup::computeFCommitments(PilFflonkZkey::PilFflonkZkey *zkey, uint64_t domainSize)
     {
-        const u_int64_t length = polynomial->getLength();
-
-        FrElement *result = new FrElement[length];
-        int nThreads = omp_get_max_threads() / 2;
-        ThreadUtils::parset(result, 0, length * sizeof(FrElement), nThreads);
-
-#pragma omp parallel for
-        for (u_int32_t index = 0; index < length; ++index)
-        {
-            E.fr.fromMontgomery(result[index], polynomial->coef[index]);
-        }
-
-        return result;
-    }
-
-    void PilFflonkSetup::computeFCommitments(PilFflonkZkey::PilFflonkZkey* zkey, uint64_t domainSize){
         int stage = 0;
-        std::map <std::string, CommitmentAndPolynomial*> polynomialCommitments;
+        std::map<std::string, CommitmentAndPolynomial *> polynomialCommitments;
         for (auto it = zkey->f.begin(); it != zkey->f.end(); ++it)
         {
             PilFflonkZkey::ShPlonkPol *pol = it->second;
@@ -335,11 +326,11 @@ namespace PilFflonk
 
                 auto cPol = new CPolynomial<AltBn128::Engine>(E, fflonkInfo->nConstants);
 
-                for (uint64_t i = 0; i < fflonkInfo->nConstants; i++) {
+                for (uint64_t i = 0; i < fflonkInfo->nConstants; i++)
+                {
                     std::string name = (*zkey->polsNamesStage[0])[i];
                     auto polynomial = getPolFromBuffer(constPolsCoefs, fflonkInfo->nConstants, domainSize, i);
                     cPol->addPolynomial(polsIds[i], polynomial);
-
                 }
 
                 auto polynomial = cPol->getPolynomial();
@@ -347,7 +338,7 @@ namespace PilFflonk
                 G1Point commit = multiExponentiation(polynomial);
                 E.g1.copy(commitAffine, commit);
 
-                polynomialCommitments[index] = new CommitmentAndPolynomial{ commitAffine, polynomial };
+                polynomialCommitments[index] = new CommitmentAndPolynomial{commitAffine, polynomial};
 
                 delete[] lengths;
                 delete[] polsIds;
@@ -372,10 +363,26 @@ namespace PilFflonk
                 index,
                 commit,
                 pol->getDegree() + 1,
-                pol->coef
-            };
+                pol->coef};
             zkey->fCommitments[index] = shPlonkCommitment;
         }
+    }
+
+    FrElement *PilFflonkSetup::polynomialFromMontgomery(Polynomial<AltBn128::Engine> *polynomial)
+    {
+        const u_int64_t length = polynomial->getLength();
+
+        FrElement *result = new FrElement[length];
+        int nThreads = omp_get_max_threads() / 2;
+        ThreadUtils::parset(result, 0, length * sizeof(FrElement), nThreads);
+
+#pragma omp parallel for
+        for (u_int32_t index = 0; index < length; ++index)
+        {
+            E.fr.fromMontgomery(result[index], polynomial->coef[index]);
+        }
+
+        return result;
     }
 
     G1Point PilFflonkSetup::multiExponentiation(Polynomial<AltBn128::Engine> *polynomial)
@@ -388,25 +395,30 @@ namespace PilFflonk
         return value;
     }
 
-    Polynomial<AltBn128::Engine>* PilFflonkSetup::getPolFromBuffer(FrElement* buff, uint32_t nPols, uint64_t N, int32_t id) {
-        FrElement* polBuffer = new FrElement[N];
+    Polynomial<AltBn128::Engine> *PilFflonkSetup::getPolFromBuffer(FrElement *buff, uint32_t nPols, uint64_t N, int32_t id)
+    {
+        FrElement *polBuffer = new FrElement[N];
 
-        for (uint32_t j = 0; j < N; j++) {
+#pragma omp parallel for
+        for (uint32_t j = 0; j < N; j++)
+        {
             polBuffer[j] = buff[id + j * nPols];
         }
 
-        //TODO use new Polynomial from coefficients without copying two times the buffer!!!!
-        return Polynomial<AltBn128::Engine>::fromCoefficients(E, polBuffer, N);
+        return new Polynomial<AltBn128::Engine>(E, polBuffer, N, 0, false);
     }
 
-    u_int32_t PilFflonkSetup::findPolId(PilFflonkZkey::PilFflonkZkey* zkey, u_int32_t stage, std::string polName) {
-        for (const auto& [index, name] : *zkey->polsNamesStage[stage]) {
-            if(name == polName) return index;
+    u_int32_t PilFflonkSetup::findPolId(PilFflonkZkey::PilFflonkZkey *zkey, u_int32_t stage, std::string polName)
+    {
+        for (const auto &[index, name] : *zkey->polsNamesStage[stage])
+        {
+            if (name == polName)
+                return index;
         }
         throw std::runtime_error("Polynomial name not found");
     }
 
-    u_int32_t PilFflonkSetup::findDegree(PilFflonkZkey::PilFflonkZkey* zkey, u_int32_t fIndex, std::string name)
+    u_int32_t PilFflonkSetup::findDegree(PilFflonkZkey::PilFflonkZkey *zkey, u_int32_t fIndex, std::string name)
     {
         for (u_int32_t i = 0; i < zkey->f[fIndex]->stages[0].nPols; i++)
         {
