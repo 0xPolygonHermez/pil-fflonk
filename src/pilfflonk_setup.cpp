@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include "zkey.hpp"
 #include <math.h>
-//#include "const_pols_serializer.hpp"
-
 
 // Improve
 #include <sys/mman.h>
@@ -48,6 +46,8 @@ namespace PilFflonk
         // STEP 1. Read shKey JSON file
         zkey = new PilFflonkZkey::PilFflonkZkey();
 
+        zklog.info("PILFFLONK SETUP STARTED");
+
         zklog.info("> Reading shKey JSON file");
         json shKeyJson;
         file2json(shKeyFilename, shKeyJson);
@@ -72,18 +72,21 @@ namespace PilFflonk
             throw new runtime_error("Powers of Tau is not big enough for this circuit size. Section 2 too small.");
         }
 
-        uint64_t sG2 = zkey->n8q * 4;
-        if (fdPtau->getSectionSize(3) < sG2)
-        {
-            throw new runtime_error("Powers of Tau is not well prepared. Section 3 too small.");
-        }
-
         PTau = new G1PointAffine[maxFiDegree];
 
+        zklog.info("> Loading PTau data");
         int nThreads = omp_get_max_threads() / 2;
         if((uint64_t)nThreads > maxFiDegree) nThreads = 1;
         ThreadUtils::parset(PTau, 0, maxFiDegree * sizeof(G1PointAffine), nThreads);
         ThreadUtils::parcpy(PTau, fdPtau->getSectionData(2), maxFiDegree * sizeof(G1PointAffine), nThreads);
+
+        size_t sG2 = zkey->n8q * 4;
+        if (fdPtau->getSectionSize(3) < sG2)
+        {
+            throw new runtime_error("Powers of Tau is not well prepared. Section 3 too small.");
+        }
+        zkey->X2 = new G2PointAffine;
+        memcpy(zkey->X2, (G2PointAffine*)fdPtau->getSectionData(3) + 1, sG2);
 
         zklog.info("> Loading const polynomials file");
         const auto [constPolsEvals, constPolsEvalsSize] = loadFromFileFr(cnstPolsFilename);
@@ -95,10 +98,6 @@ namespace PilFflonk
         this->constPolsEvalsExt = constPolsEvalsExt;
         this->constPolsEvalsExtSize = constPolsEvalsExtSize / sizeof(FrElement);
 
-        zkey->X2 = new uint8_t[sG2];
-        
-        memcpy(zkey->X2, (G1PointAffine*)(fdPtau->getSectionData(3) + sG2), sG2);
-
         auto nBits = zkey->power;
         uint64_t domainSize = 1 << nBits;
 
@@ -106,123 +105,43 @@ namespace PilFflonk
 
         uint32_t extendBits = ceil(fft->log2(fflonkInfo->qDeg + 1));
 
-        auto nBitsCoefs = fflonkInfo->nBitsZK + zkey->power;
         auto nBitsExt = zkey->power + extendBits + fflonkInfo->nBitsZK;
 
-        uint64_t domainSizeCoefs = 1 << nBitsCoefs;
         uint64_t domainSizeExt = 1 << nBitsExt;
-
-        ntt = new NTT_AltBn128(E, domainSize);
-        nttExtended = new NTT_AltBn128(E, domainSizeExt);
 
         constPolsCoefs = new FrElement[fflonkInfo->nConstants * domainSize];
 
-
         if (fflonkInfo->nConstants > 0)
         {
+            ntt = new NTT_AltBn128(E, domainSize);
+            nttExtended = new NTT_AltBn128(E, domainSizeExt);
+
+            zklog.info("> Computing const polynomials ifft");
             ntt->INTT(constPolsCoefs, constPolsEvals, domainSize, fflonkInfo->nConstants);
 
             ThreadUtils::parset(constPolsEvalsExt, 0, domainSizeExt * fflonkInfo->nConstants * sizeof(AltBn128::FrElement), nThreads);
             ThreadUtils::parcpy(constPolsEvalsExt, constPolsCoefs, domainSize * fflonkInfo->nConstants * sizeof(AltBn128::FrElement), nThreads);
 
+            zklog.info("> Extending const polynomials fft");
             nttExtended->NTT(constPolsEvalsExt, constPolsEvalsExt, domainSizeExt, fflonkInfo->nConstants);
 
-            int stage = 0;
-            std::map <std::string, CommitmentAndPolynomial*> polynomialCommitments;
-            for (auto it = zkey->f.begin(); it != zkey->f.end(); ++it)
-            {
-                PilFflonkZkey::ShPlonkPol *pol = it->second;
-
-                u_int32_t *stages = new u_int32_t[pol->nStages];
-                for (u_int32_t i = 0; i < pol->nStages; ++i)
-                {
-                    stages[i] = pol->stages[i].stage;
-                }
-
-                int stagePos = find(stages, pol->nStages, 0);
-
-                if (stagePos != -1)
-                {
-                    PilFflonkZkey::ShPlonkStage *stagePol = &pol->stages[stagePos];
-
-                    u_int64_t *lengths = new u_int64_t[pol->nPols]{};
-                    u_int64_t *polsIds = new u_int64_t[pol->nPols]{};
-
-                    for (u_int32_t j = 0; j < stagePol->nPols; ++j)
-                    {
-                        std::string name = stagePol->pols[j].name;
-                        int index = find(pol->pols, pol->nPols, name);
-                        if (index == -1)
-                        {
-                            throw std::runtime_error("Polynomial " + std::string(name) + " missing");
-                        }
-
-                        polsIds[j] = findPolId(zkey, stage, name);
-                        lengths[index] = findDegree(zkey, it->first, name);
-                    }
-
-                    std::string index = "f" + std::to_string(pol->index);
-
-                    auto cPol = new CPolynomial<AltBn128::Engine>(E, fflonkInfo->nConstants);
-
-                    for (uint64_t i = 0; i < fflonkInfo->nConstants; i++) {
-                        std::string name = (*zkey->polsNamesStage[0])[i];
-                        auto polynomial = getPolFromBuffer(constPolsCoefs, fflonkInfo->nConstants, domainSize, i);
-                        cPol->addPolynomial(polsIds[i], polynomial);
-
-                    }
-
-                    auto polynomial = cPol->getPolynomial();
-                    G1PointAffine commitAffine;
-                    G1Point commit = multiExponentiation(polynomial);
-                    E.g1.copy(commitAffine, commit);
-
-                    polynomialCommitments[index] = new CommitmentAndPolynomial{ commitAffine, polynomial };
-
-                    delete[] lengths;
-                    delete[] polsIds;
-                }
-
-                delete[] stages;
-            }
-
-            for (auto it = polynomialCommitments.begin(); it != polynomialCommitments.end(); ++it)
-            {
-                auto index = it->first;
-                auto commit = it->second->commitment;
-                auto pol = it->second->polynomial;
-
-                auto pos = index.find("_");
-                if (pos != std::string::npos)
-                {
-                    index = index.substr(0, pos);
-                }
-
-                auto shPlonkCommitment = new PilFflonkZkey::ShPlonkCommitment{
-                    index,
-                    commit,
-                    pol->getDegree() + 1,
-                    pol->coef
-                };
-                zkey->fCommitments[index] = shPlonkCommitment;
-            }
+            computeFCommitments(zkey, domainSize);
         }
 
         // Precalculate x_n and x_2ns
         x_n = new FrElement[domainSize];
         x_2ns = new FrElement[domainSizeExt];
             
+        zklog.info("> Computing roots");
         for (uint64_t i = 0; i < domainSize; i++) {
-            auto w = fft->root(zkey->power, i);
-            x_n[i] = w;
+            x_n[i] = fft->root(zkey->power, i);
         }
 
         for (uint64_t i = 0; i < domainSizeExt; i++) {
             x_2ns[i] = fft->root(nBitsExt, i);
         }
 
-        zklog.info("Fflonk setup finished");
-        zklog.info("Writing zkey file");
+        zklog.info("> Writing zkey file");
 
         PilFflonkZkey::writePilFflonkZkey(zkey,
                                         constPolsEvals, this->constPolsEvalsSize,
@@ -232,7 +151,7 @@ namespace PilFflonk
                                         x_2ns, domainSizeExt,
                                         zkeyFilename, PTau, maxFiDegree);
 
-        zklog.info("Zkey file written");
+        zklog.info("PILFFLONK SETUP FINISHED");
     }
 
     void PilFflonkSetup::parseShKey(json shKeyJson) {
@@ -375,6 +294,88 @@ namespace PilFflonk
         }
 
         return result;
+    }
+
+    void PilFflonkSetup::computeFCommitments(PilFflonkZkey::PilFflonkZkey* zkey, uint64_t domainSize){
+        int stage = 0;
+        std::map <std::string, CommitmentAndPolynomial*> polynomialCommitments;
+        for (auto it = zkey->f.begin(); it != zkey->f.end(); ++it)
+        {
+            PilFflonkZkey::ShPlonkPol *pol = it->second;
+
+            u_int32_t *stages = new u_int32_t[pol->nStages];
+            for (u_int32_t i = 0; i < pol->nStages; ++i)
+            {
+                stages[i] = pol->stages[i].stage;
+            }
+
+            int stagePos = find(stages, pol->nStages, 0);
+
+            if (stagePos != -1)
+            {
+                PilFflonkZkey::ShPlonkStage *stagePol = &pol->stages[stagePos];
+
+                u_int64_t *lengths = new u_int64_t[pol->nPols]{};
+                u_int64_t *polsIds = new u_int64_t[pol->nPols]{};
+
+                for (u_int32_t j = 0; j < stagePol->nPols; ++j)
+                {
+                    std::string name = stagePol->pols[j].name;
+                    int index = find(pol->pols, pol->nPols, name);
+                    if (index == -1)
+                    {
+                        throw std::runtime_error("Polynomial " + std::string(name) + " missing");
+                    }
+
+                    polsIds[j] = findPolId(zkey, stage, name);
+                    lengths[index] = findDegree(zkey, it->first, name);
+                }
+
+                std::string index = "f" + std::to_string(pol->index);
+
+                auto cPol = new CPolynomial<AltBn128::Engine>(E, fflonkInfo->nConstants);
+
+                for (uint64_t i = 0; i < fflonkInfo->nConstants; i++) {
+                    std::string name = (*zkey->polsNamesStage[0])[i];
+                    auto polynomial = getPolFromBuffer(constPolsCoefs, fflonkInfo->nConstants, domainSize, i);
+                    cPol->addPolynomial(polsIds[i], polynomial);
+
+                }
+
+                auto polynomial = cPol->getPolynomial();
+                G1PointAffine commitAffine;
+                G1Point commit = multiExponentiation(polynomial);
+                E.g1.copy(commitAffine, commit);
+
+                polynomialCommitments[index] = new CommitmentAndPolynomial{ commitAffine, polynomial };
+
+                delete[] lengths;
+                delete[] polsIds;
+            }
+
+            delete[] stages;
+        }
+
+        for (auto it = polynomialCommitments.begin(); it != polynomialCommitments.end(); ++it)
+        {
+            auto index = it->first;
+            auto commit = it->second->commitment;
+            auto pol = it->second->polynomial;
+
+            auto pos = index.find("_");
+            if (pos != std::string::npos)
+            {
+                index = index.substr(0, pos);
+            }
+
+            auto shPlonkCommitment = new PilFflonkZkey::ShPlonkCommitment{
+                index,
+                commit,
+                pol->getDegree() + 1,
+                pol->coef
+            };
+            zkey->fCommitments[index] = shPlonkCommitment;
+        }
     }
 
     G1Point PilFflonkSetup::multiExponentiation(Polynomial<AltBn128::Engine> *polynomial)

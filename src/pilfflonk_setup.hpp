@@ -8,10 +8,10 @@
 #include <nlohmann/json.hpp>
 #include "compare_fe.hpp"
 #include <sodium.h>
+#include "zkey.hpp"
 #include "zkey_pilfflonk.hpp"
 #include "shplonk.hpp"
 #include "polynomial/polynomial.hpp"
-#include "zkey.hpp"
 #include "fflonk_info.hpp"
 #include "keccak_256_transcript.hpp"
 #include "chelpers/pilfflonk_steps.hpp"
@@ -19,9 +19,7 @@
 #include <alt_bn128.hpp>
 #include "fft.hpp"
 #include "utils.hpp"
-#include "zkey_pilfflonk.hpp"
-#include "fflonk_info.hpp"
-#include "zkey_pilfflonk.hpp"
+
 
 using json = nlohmann::json;
 
@@ -38,6 +36,7 @@ namespace PilFflonk
         using FrElement = typename AltBn128::Engine::FrElement;
         using G1Point = typename AltBn128::Engine::G1Point;
         using G1PointAffine = typename AltBn128::Engine::G1PointAffine;
+        using G2PointAffine = typename AltBn128::Engine::G2PointAffine;
 
         AltBn128::Engine &E;
 
@@ -75,6 +74,8 @@ namespace PilFflonk
         G1Point multiExponentiation(Polynomial<AltBn128::Engine> *polynomial);
 
         Polynomial<AltBn128::Engine>* getPolFromBuffer(FrElement* buff, uint32_t nPols, uint64_t N, int32_t id);
+
+        void computeFCommitments(PilFflonkZkey::PilFflonkZkey* zkey, uint64_t domainSize);
 
         u_int32_t findDegree(PilFflonkZkey::PilFflonkZkey* zkey, u_int32_t fIndex, std::string name);
 

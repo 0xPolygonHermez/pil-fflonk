@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include "zkey_pilfflonk.hpp"
+#include "zklog.hpp"
 
 using namespace std;
 namespace PilFflonkZkey
@@ -29,29 +30,68 @@ namespace PilFflonkZkey
     {
         BinFileUtils::BinFileWriter* binFile = new BinFileUtils::BinFileWriter(zkeyFilename, "zkey", 1, ZKEY_PF_NSECTIONS);
 
+        zklog.info("> Writing PILFFLONK zkey file");
+        std::ostringstream ss;
+        ss << "··· Writing Section " << Zkey::ZKEY_HEADER_SECTION << ". Zkey Header";
+        zklog.info(ss.str());
         writeZkeyHeaderSection(binFile, zkey);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_HEADER_SECTION << ". Zkey Pil-Fflonk Header";
+        zklog.info(ss.str());
         writePilFflonkHeaderSection(binFile, zkey);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_F_SECTION << ". F Section";
+        zklog.info(ss.str());
         writeFSection(binFile, zkey);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_F_COMMITMENTS_SECTION << ". F commitments Section";
+        zklog.info(ss.str());
         writeFCommitmentsSection(binFile, zkey);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_POLSNAMESSTAGE_SECTION << ". Pols names stage Section";
+        zklog.info(ss.str());
         writePolsNamesStageSection(binFile, zkey);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_CONST_POLS_EVALS_SECTION << ". Const Pols Evaluations";
+        zklog.info(ss.str());
         writeConstPolsEvalsSection(binFile, constPols, constPolsSize);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_CONST_POLS_COEFS_SECTION << ". Const Pols Coefs";
+        zklog.info(ss.str());
         writeConstPolsCoefsSection(binFile, constPolsCoefs, constPolsCoefsSize);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_CONST_POLS_EVALS_EXT_SECTION << ". Const Pols Extended Evaluations";
+        zklog.info(ss.str());
         writeConstPolsEvalsExtSection(binFile, constPolsExt, constPolsExtSize);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_X_N_SECTION << ". X_n evaluations";
+        zklog.info(ss.str());
         writeXnSection(binFile, x_n, domainSize);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_X_EXT_SECTION << ". X_Ext evaluations";
+        zklog.info(ss.str());
         writeX2nsSection(binFile, x_2ns, domainSizeExt);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_OMEGAS_SECTION << ". Omegas Section";
+        zklog.info(ss.str());
         writeOmegasSection(binFile, zkey);
 
+        ss.str("");
+        ss << "··· Writing Section " << ZKEY_PF_PTAU_SECTION << ". Powers of Tau Section";
+        zklog.info(ss.str());
         writePTauSection(binFile, PTau, pTauSize);  
+
+        zklog.info("> Writing PILFFLONK zkey file finished");
 
         binFile->close();
     }
