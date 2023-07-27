@@ -5,12 +5,17 @@
 #include <map>
 #include <gmp.h>
 #include <binfile_utils.hpp>
+#include <binfile_writer.hpp>
 #include <thread_utils.hpp>
 #include "zkey.hpp"
 #include <alt_bn128.hpp>
 
 namespace PilFflonkZkey
 {
+    using FrElement = typename AltBn128::Engine::FrElement;
+    using G1Point = typename AltBn128::Engine::G1Point;
+    using G1PointAffine = typename AltBn128::Engine::G1PointAffine;
+
     const int ZKEY_PF_NSECTIONS = 12;
 
     const int ZKEY_PF_HEADER_SECTION = 2;
@@ -50,6 +55,14 @@ namespace PilFflonkZkey
         ShPlonkStage *stages;
     };
 
+    struct ShPlonkCommitment
+    {
+        std::string name;
+        G1Point commit;
+        uint64_t lenPol;
+        FrElement *pol;
+    };
+
     class PilFflonkZkey
     {
     public:
@@ -71,8 +84,43 @@ namespace PilFflonkZkey
 
         std::map<std::string, AltBn128::FrElement> omegas;
 
+        std::map<std::string, ShPlonkCommitment *> fCommitments;
+
         ~PilFflonkZkey();
     };
+
+    void writePilFflonkZkey(PilFflonkZkey* zkey,
+                            FrElement* constPols, uint64_t constPolsSize,
+                            FrElement* constPolsExt, uint64_t constPolsExtSize,
+                            FrElement* constPolsCoefs, uint64_t constPolsCoefsSize,
+                            FrElement*  x_n, uint64_t domainSize,
+                            FrElement* x_2ns, uint64_t domainSizeExt,
+                            std::string zkeyFilename,
+                            G1PointAffine* PTau, uint64_t pTauSize);
+
+    void writeZkeyHeaderSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey);
+
+    void writePilFflonkHeaderSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey);
+
+    void writeFSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey);
+
+    void writeFCommitmentsSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey);
+
+    void writePolsNamesStageSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey);
+
+    void writeConstPolsEvalsSection(BinFileUtils::BinFileWriter* binFile, FrElement* constPols, uint64_t constPolsSize);
+
+    void writeConstPolsCoefsSection(BinFileUtils::BinFileWriter* binFile, FrElement* constPolsCoefs, uint64_t constPolsCoefsSize);
+
+    void writeConstPolsEvalsExtSection(BinFileUtils::BinFileWriter* binFile, FrElement* constPolsExt, uint64_t constPolsExtSize);
+
+    void writeXnSection(BinFileUtils::BinFileWriter* binFile, FrElement* x_n, uint64_t domainSize);
+
+    void writeX2nsSection(BinFileUtils::BinFileWriter* binFile, FrElement* x_2ns, uint64_t domainSizeExt);
+
+    void writeOmegasSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey);
+
+    void writePTauSection(BinFileUtils::BinFileWriter* binFile, G1PointAffine* PTau, uint64_t pTauSize);
 
     PilFflonkZkey *loadPilFflonkZkey(BinFileUtils::BinFile *fdZKey);
 

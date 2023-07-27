@@ -23,6 +23,7 @@ ASFLAGS := -felf64
 
 # Targets
 TARGET_PFP := pfProver
+TARGET_SETUP := pfSetup
 TARGET_TEST := pfProverTest
 
 INC_DIRS := depends/ffiasm/c depends/json/single_include/nlohmann depends/xkcp/Standalone/CompactFIPS202/C src/chelpers
@@ -30,21 +31,35 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # Files
 SRCS_PFP := $(shell find $(SRC_DIRS) -name *.cpp)
-SRCS_PFP += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp binfile_utils.cpp naf.cpp splitparstr.cpp)
+SRCS_PFP += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp binfile_utils.cpp binfile_writer.cpp naf.cpp splitparstr.cpp)
 SRCS_PFP += $(shell find $(DPNDS_DIR) -name *.asm)
 OBJS_PFP := $(patsubst %,$(BUILD_DIR)/%.o,$(SRCS_PFP))
+OBJS_PFP := $(filter-out $(BUILD_DIR)/src/main_setup.cpp.o, $(OBJS_PFP)) # Exclude main.cpp from test build
+OBJS_PFP := $(filter-out $(BUILD_DIR)/src/main_test.cpp.o, $(OBJS_PFP)) # Exclude main.cpp from test build
 DEPS_PFP := $(OBJS_PFP:.o=.d)
+
+# Setup Files
+SRCS_SETUP := $(shell find $(SRC_DIRS) -name *.cpp)
+SRCS_SETUP += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp binfile_utils.cpp binfile_writer.cpp naf.cpp splitparstr.cpp)
+SRCS_SETUP += $(shell find $(DPNDS_DIR) -name *.asm)
+OBJS_SETUP := $(patsubst %,$(BUILD_DIR)/%.o,$(SRCS_SETUP))
+OBJS_SETUP := $(filter-out $(BUILD_DIR)/src/main.cpp.o, $(OBJS_SETUP)) # Exclude main.cpp from test build
+OBJS_SETUP := $(filter-out $(BUILD_DIR)/src/main_test.cpp.o, $(OBJS_SETUP)) # Exclude main.cpp from test build
+DEPS_SETUP := $(OBJS_SETUP:.o=.d)
 
 # Test Files
 SRCS_TEST := $(shell find $(TEST_DIRS) -name *.cpp)
-SRCS_TEST += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp binfile_utils.cpp naf.cpp splitparstr.cpp)
+SRCS_TEST += $(addprefix $(DPNDS_DIR)/, alt_bn128.cpp fr.cpp fq.cpp misc.cpp binfile_utils.cpp binfile_writer.cpp naf.cpp splitparstr.cpp)
 SRCS_TEST += $(shell find $(DPNDS_DIR) -name *.asm)
 OBJS_TEST := $(patsubst %,$(BUILD_DIR)/%.o,$(SRCS_TEST))
 OBJS_TEST := $(filter-out $(BUILD_DIR)/src/main.cpp.o, $(OBJS_TEST)) # Exclude main.cpp from test build
+OBJS_TEST := $(filter-out $(BUILD_DIR)/src/main_setup.cpp.o, $(OBJS_TEST)) # Exclude main.cpp from test build
 DEPS_TEST := $(OBJS_TEST:.o=.d)
 
 # Default target
 all: $(BUILD_DIR)/$(TARGET_PFP)
+
+setup: $(BUILD_DIR)/$(TARGET_SETUP)
 
 test: $(BUILD_DIR)/$(TARGET_TEST)
 
@@ -60,6 +75,11 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 $(BUILD_DIR)/%.asm.o: %.asm
 	$(MKDIR_P) $(dir $@)
 	$(AS) $(ASFLAGS) $< -o $@
+
+### SETUP
+# Build pilfflonk setup target
+$(BUILD_DIR)/$(TARGET_SETUP): $(OBJS_SETUP)
+	$(CXX) $(OBJS_SETUP) $(CXXFLAGS) $(LDFLAGS) -o $@
 
 ### TEST
 # Build pilFflonkProver test target

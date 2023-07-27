@@ -19,6 +19,223 @@ namespace PilFflonkZkey
         omegas.clear();
     }
 
+    void writePilFflonkZkey(PilFflonkZkey *zkey,
+                            FrElement* constPols, uint64_t constPolsSize,
+                            FrElement* constPolsExt, uint64_t constPolsExtSize,
+                            FrElement* constPolsCoefs, uint64_t constPolsCoefsSize,
+                            FrElement*  x_n, uint64_t domainSize,
+                            FrElement* x_2ns, uint64_t domainSizeExt,
+                            std::string zkeyFilename, G1PointAffine *PTau, uint64_t pTauSize)
+    {
+        BinFileUtils::BinFileWriter* binFile = new BinFileUtils::BinFileWriter(zkeyFilename, "zkey", 1, ZKEY_PF_NSECTIONS);
+
+        // writeZkeyHeaderSection(binFile, zkey);
+
+        // writePilFflonkHeaderSection(binFile, zkey);
+
+        // writeFSection(binFile, zkey);
+
+        writeFCommitmentsSection(binFile, zkey);
+
+        // writePolsNamesStageSection(binFile, zkey);
+
+        // writeConstPolsEvalsSection(binFile, constPols, constPolsSize);
+
+        // writeConstPolsCoefsSection(binFile, constPolsCoefs, constPolsCoefsSize);
+
+        // writeConstPolsEvalsExtSection(binFile, constPolsExt, constPolsExtSize);
+
+        // writeXnSection(binFile, x_n, domainSize);
+
+        // writeX2nsSection(binFile, x_2ns, domainSizeExt);
+
+        // writeOmegasSection(binFile, zkey);
+
+        // writePTauSection(binFile, PTau, pTauSize);  
+
+        binFile->close();
+    }
+
+    void writeZkeyHeaderSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey)
+    {
+        binFile->startWriteSection(Zkey::ZKEY_HEADER_SECTION);
+        binFile->writeU32LE(Zkey::PILFFLONK_PROTOCOL_ID);
+        binFile->endWriteSection();
+    }
+
+    void writePilFflonkHeaderSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey)
+    {
+        binFile->startWriteSection(ZKEY_PF_HEADER_SECTION);
+
+        binFile->writeU32LE(pilFflonkZkey->n8q);
+        uint8_t scalarQ[pilFflonkZkey->n8q];
+        memset(scalarQ, 0, pilFflonkZkey->n8q);
+        mpz_export((void *)scalarQ, NULL, -1, 8, -1, 0, pilFflonkZkey->qPrime);
+        binFile->write(scalarQ, pilFflonkZkey->n8q);
+
+        binFile->writeU32LE(pilFflonkZkey->n8r);
+        uint8_t scalarR[pilFflonkZkey->n8r];
+        memset(scalarR, 0, pilFflonkZkey->n8r);
+        mpz_export((void *)scalarR, NULL, -1, 8, -1, 0, pilFflonkZkey->rPrime);
+        binFile->write(scalarR, pilFflonkZkey->n8r);
+
+        binFile->writeU32LE(pilFflonkZkey->power);
+        binFile->writeU32LE(pilFflonkZkey->powerW);
+        binFile->writeU32LE(pilFflonkZkey->nPublics);
+        binFile->writeU32LE(pilFflonkZkey->maxQDegree);
+
+        binFile->write(pilFflonkZkey->X2, pilFflonkZkey->n8q * 4);
+
+        binFile->endWriteSection();
+    }
+
+    void writeFSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey)
+    {
+        binFile->startWriteSection(ZKEY_PF_F_SECTION);
+
+        const u_int32_t lenF = pilFflonkZkey->f.size();
+        binFile->writeU32LE(lenF);
+
+        for(uint32_t i = 0; i < lenF; i++)
+        {
+            ShPlonkPol *fi = pilFflonkZkey->f[i];
+
+            binFile->writeU32LE(fi->index);
+            binFile->writeU32LE(fi->degree);
+
+            binFile->writeU32LE(fi->nOpeningPoints);
+            for (uint32_t j = 0; j < fi->nOpeningPoints; j++)
+            {
+                binFile->writeU32LE(fi->openingPoints[j]);
+            }
+
+            binFile->writeU32LE(fi->nPols);
+
+            for (uint32_t j = 0; j < fi->nPols; j++)
+            {
+                binFile->writeString(fi->pols[j]);
+            }
+
+            binFile->writeU32LE(fi->nStages);
+            for (uint32_t j = 0; j < fi->nStages; j++)
+            {
+                ShPlonkStage *stage = &(fi->stages[j]);
+                binFile->writeU32LE(stage->stage);
+                binFile->writeU32LE(stage->nPols);
+                for (uint32_t k = 0; k < stage->nPols; k++)
+                {
+                    ShPlonkStagePol *pol = &(stage->pols[k]);
+                    binFile->writeString(pol->name);
+                    binFile->writeU32LE(pol->degree);
+                }
+            }
+        }
+
+        binFile->endWriteSection();
+    }
+
+    void writeFCommitmentsSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey)
+    {
+        binFile->startWriteSection(ZKEY_PF_F_COMMITMENTS_SECTION);
+
+        // auto commitments = shKeyJson.items();
+
+        // for (auto &el : omegas)
+        // {
+        //     auto key = el.key();
+        //     if (key.find("w") == 0)
+        //     {
+        //         FrElement omega;;
+        //         E.fr.fromString(omega, el.value());
+        //         zkey->omegas[key] = omega;
+        //     }
+        // }
+
+
+
+        binFile->endWriteSection();        
+    }
+
+    void writePolsNamesStageSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey)
+    {
+        binFile->startWriteSection(ZKEY_PF_POLSNAMESSTAGE_SECTION);
+
+        auto len = pilFflonkZkey->polsNamesStage.size();
+        
+        binFile->writeU32LE(len);
+
+        for (auto const &x : pilFflonkZkey->polsNamesStage)
+        {
+            binFile->writeU32LE(x.first);
+
+            binFile->writeU32LE(x.second->size());
+
+            for (auto const &y : *(x.second))
+            {
+                binFile->writeString(y.second);
+            }
+        }
+        binFile->endWriteSection();
+    }
+
+    void writeConstPolsEvalsSection(BinFileUtils::BinFileWriter* binFile, FrElement* constPols, uint64_t constPolsSize)
+    {
+        binFile->startWriteSection(ZKEY_PF_CONST_POLS_EVALS_SECTION);
+        binFile->write(constPols, constPolsSize * sizeof(FrElement));
+        binFile->endWriteSection();
+    }
+
+    void writeConstPolsCoefsSection(BinFileUtils::BinFileWriter* binFile, FrElement* constPolsCoefs, uint64_t constPolsCoefsSize)
+    {
+        binFile->startWriteSection(ZKEY_PF_CONST_POLS_COEFS_SECTION);
+        binFile->write(constPolsCoefs, constPolsCoefsSize * sizeof(FrElement));
+        binFile->endWriteSection();
+    }
+
+    void writeConstPolsEvalsExtSection(BinFileUtils::BinFileWriter* binFile, FrElement* constPolsExt, uint64_t constPolsExtSize)
+    {
+        binFile->startWriteSection(ZKEY_PF_CONST_POLS_EVALS_EXT_SECTION);
+        binFile->write(constPolsExt, constPolsExtSize * sizeof(FrElement));
+        binFile->endWriteSection();
+    }
+
+    void writeXnSection(BinFileUtils::BinFileWriter* binFile, FrElement* x_n, uint64_t domainSize)
+    {
+        binFile->startWriteSection(ZKEY_PF_X_N_SECTION);
+        binFile->write(x_n, domainSize * sizeof(FrElement));
+        binFile->endWriteSection();
+    }
+
+    void writeX2nsSection(BinFileUtils::BinFileWriter* binFile, FrElement* x_2ns, uint64_t domainSizeExt)
+    {
+        binFile->startWriteSection(ZKEY_PF_X_EXT_SECTION);
+        binFile->write(x_2ns, domainSizeExt * sizeof(FrElement));
+        binFile->endWriteSection();
+    }
+
+    void writeOmegasSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey)
+    {
+        binFile->startWriteSection(ZKEY_PF_OMEGAS_SECTION);
+
+        auto len = pilFflonkZkey->omegas.size();
+
+        binFile->writeU32LE(len);
+
+        for (auto const &x : pilFflonkZkey->omegas)
+        {
+            binFile->writeString(x.first);
+            binFile->write((void *)&x.second, sizeof(FrElement));
+        }
+        binFile->endWriteSection();
+    }
+
+    void writePTauSection(BinFileUtils::BinFileWriter* binFile, G1PointAffine* PTau, uint64_t pTauSize)
+    {
+        binFile->startWriteSection(ZKEY_PF_PTAU_SECTION);
+        binFile->write(PTau, pTauSize * sizeof(G1PointAffine));
+        binFile->endWriteSection();
+    }
+
     PilFflonkZkey *loadPilFflonkZkey(BinFileUtils::BinFile *fdZKey)
     {
         auto pilFflonkZkey = new PilFflonkZkey();

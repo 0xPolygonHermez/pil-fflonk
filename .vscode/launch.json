@@ -27,7 +27,32 @@
             ],
             // "preLaunchTask": "Build pfProver",
             "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "setup",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/pfSetup",
+            "args": [ "../pil-stark/tmp/simple2p.shkey.json", "../pil-stark/tmp/simple2p.fflonkinfo.json", "../pil-stark/tmp/powersOfTau28_hez_final_19.ptau", "../pil-stark/tmp/simple2p.cnst", "../pil-stark/tmp/simple2p.ext.cnst", "./simple2p.xxx.zkey"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            // "preLaunchTask": "Build pfProver",
+            "miDebuggerPath": "/usr/bin/gdb"
         }
-
     ]
 }
