@@ -83,8 +83,6 @@ namespace PilFflonk
 
         int find(std::string* arr, u_int32_t n, std::string x);
 
-        int find(u_int32_t* arr, u_int32_t n, u_int32_t x);
-
     public:
         PilFflonkSetup(AltBn128::Engine &_E) : E(_E) {};
 
