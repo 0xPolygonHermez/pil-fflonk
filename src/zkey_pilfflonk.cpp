@@ -196,7 +196,7 @@ namespace PilFflonkZkey
             binFile->write(pol, lenPol * sizeof(FrElement));
         }
 
-        binFile->endWriteSection();        
+        binFile->endWriteSection();
     }
 
     void writePolsNamesStageSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey)
@@ -356,6 +356,27 @@ namespace PilFflonkZkey
             pilFflonkZkey->f[fi->index] = fi;
         }
 
+        fdZKey->endReadSection();
+    }
+
+    void readFCommitmentsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey)
+    {
+        fdZKey->startReadSection(ZKEY_PF_F_COMMITMENTS_SECTION);
+
+        u_int32_t lenF = fdZKey->readU32LE();
+        int nThreads = omp_get_max_threads() / 2;
+        for (uint32_t i = 0; i < lenF; i++)
+        {
+            string name = fdZKey->readString();
+            G1PointAffine commit = *((G1PointAffine *)fdZKey->read(pilFflonkZkey->n8q * 2));
+            uint64_t lenPolBytes = fdZKey->readU32LE();
+            uint64_t lenPol = lenPolBytes * sizeof(FrElement);
+            FrElement *pol = new FrElement[lenPol];
+
+            ThreadUtils::parcpy(pol, fdZKey->read(lenPolBytes), lenPolBytes, nThreads);
+
+            pilFflonkZkey->fCommitments[name] = new ShPlonkCommitment{name, commit, lenPol, pol};
+        }
         fdZKey->endReadSection();
     }
 

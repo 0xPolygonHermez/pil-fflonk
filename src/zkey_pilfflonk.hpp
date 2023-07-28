@@ -126,6 +126,8 @@ namespace PilFflonkZkey
 
     void readFSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 
+    void readFCommitmentsSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
+
     void readPolsNamesStageSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
 
     void readOmegasSection(BinFileUtils::BinFile *fdZKey, PilFflonkZkey *pilFflonkZkey);
