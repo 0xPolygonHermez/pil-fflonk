@@ -39,7 +39,7 @@ namespace PilFflonk
 
     void PilFflonkSetup::generateZkey(std::string shKeyFilename, std::string fflonkInfoFileName,
                                       std::string pTauFilename, std::string cnstPolsFilename,
-                                      std::string cnstPolsExtFilename, std::string zkeyFilename)
+                                      std::string zkeyFilename)
     {
         // STEP 1. Read shKey JSON file
         zkey = new PilFflonkZkey::PilFflonkZkey();
@@ -92,11 +92,6 @@ namespace PilFflonk
         this->constPolsEvals = constPolsEvals;
         this->constPolsEvalsSize = constPolsEvalsSize / sizeof(FrElement);
 
-        zklog.info("> Loading const polynomials ext file");
-        const auto [constPolsEvalsExt, constPolsEvalsExtSize] = loadFromFileFr(cnstPolsExtFilename);
-        this->constPolsEvalsExt = constPolsEvalsExt;
-        this->constPolsEvalsExtSize = constPolsEvalsExtSize / sizeof(FrElement);
-
         auto nBits = zkey->power;
         uint64_t domainSize = 1 << nBits;
 
@@ -109,6 +104,7 @@ namespace PilFflonk
         uint64_t domainSizeExt = 1 << nBitsExt;
 
         constPolsCoefs = new FrElement[fflonkInfo->nConstants * domainSize];
+        constPolsEvalsExt = new FrElement[fflonkInfo->nConstants * domainSizeExt];
 
         if (fflonkInfo->nConstants > 0)
         {

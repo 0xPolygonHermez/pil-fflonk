@@ -90,7 +90,7 @@ namespace PilFflonk
 
         void generateZkey(std::string shKeyFilename, std::string fflonkInfoFileName,
                           std::string pTauFilename, std::string cnstPolsFilename,
-                          std::string cnstPolsExtFilename, std::string zkeyFilename);
+                          std::string zkeyFilename);
 
     };
 }

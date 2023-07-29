@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if (argc != 7)
+    if (argc != 6)
     {
         cerr << "Invalid number of parameters: " << argc << endl;
         cerr << "Usage: " << argv[0] << " <my.shkey> <fflonkInfo.json> <powers.ptau> <polynomials.cnst> <polynomials.ext.cnst> <my.zkey>" << endl;
@@ -56,8 +56,7 @@ int main(int argc, char **argv)
     string fflonkInfoFileName = argv[2];
     string pTauFilename = argv[3];
     string cnstPolsFilename = argv[4];
-    string cnstPolsExtFilename = argv[5];
-    string zkeyFilename = argv[6];
+    string zkeyFilename = argv[5];
 
     TimerStart(SETUP_PROCESS);
 
@@ -87,12 +86,6 @@ int main(int argc, char **argv)
         bError = true;
     }
 
-    if (!fileExists(cnstPolsExtFilename))
-    {
-        cerr << "Error: constant ext polynomials file '" << cnstPolsExtFilename << "' does not exist" << endl;
-        bError = true;
-    }
-
     if (bError) return -1;
 
     PilFflonkSetup* setup = new PilFflonkSetup(AltBn128::Engine::engine);
@@ -100,7 +93,6 @@ int main(int argc, char **argv)
                         fflonkInfoFileName,
                         pTauFilename,
                         cnstPolsFilename,
-                        cnstPolsExtFilename,
                         zkeyFilename);
 
     TimerStopAndLog(SETUP_PROCESS);
