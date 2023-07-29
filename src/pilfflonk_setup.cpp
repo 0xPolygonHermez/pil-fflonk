@@ -323,7 +323,8 @@ namespace PilFflonk
 
             auto cPol = new CPolynomial<AltBn128::Engine>(E, fflonkInfo->nConstants);
 
-            for (uint64_t i = 0; i < fflonkInfo->nConstants; i++)
+
+            for (uint64_t i = 0; i < stagePol->nPols; i++)
             {
                 auto polynomial = getPolFromBuffer(constPolsCoefs, fflonkInfo->nConstants, domainSize, i);
                 cPol->addPolynomial(polsIds[i], polynomial);
