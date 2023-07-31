@@ -351,16 +351,15 @@ namespace CircomPilFflonk
       for (uint64_t i = 0; i < sizeWitness; i++) {
           FrElement aux;
           ctx->getWitness(i, &aux);
-          tmp[i] = aux; //HOW ARE WE SUPPOSED TO DO THAT ??
+          //TODO: Optimize!!!!
+          std::string wtnsVal = Fr_element2str(&aux);
+          E.fr.fromString(tmp[i], wtnsVal);
       }
       delete ctx;
 
       for (uint64_t i = 0; i < exec.nAdds; i++){
-          u_int64_t idx1 = std::stoull(E.fr.toString(exec.p_adds[i * 4]));
-          u_int64_t idx2 = std::stoull(E.fr.toString(exec.p_adds[i * 4 + 1]));
-
-          AltBn128::FrElement tmp1 = E.fr.mul(tmp[idx1], exec.p_adds[i * 4 + 2]);
-          AltBn128::FrElement tmp2 = E.fr.mul(tmp[idx2], exec.p_adds[i * 4 + 2]);
+          AltBn128::FrElement tmp1 = E.fr.mul(tmp[exec.p_adds[i*2]], exec.p_adds_fr[i * 2]);
+          AltBn128::FrElement tmp2 = E.fr.mul(tmp[exec.p_adds[i*2 + 1]], exec.p_adds_fr[i * 2 + 1]);
 
           tmp[sizeWitness + i] = E.fr.add(tmp1, tmp2);
       }
@@ -369,13 +368,14 @@ namespace CircomPilFflonk
       for (uint i = 0; i < exec.nSMap; i++) {
           for (uint j = 0; j < nPols; j++)
           {
-              u_int64_t idx1 = std::stoull(E.fr.toString(exec.p_sMap[i*nPols + j]));
+              u_int64_t idx1 = exec.p_sMap[i*nPols + j];
               if (idx1 != 0) {
                 committedPols[i*nPols + j] = tmp[idx1];
               }
           }
       }
 
+      cout << E.fr.toString(committedPols[0]) << endl;
       delete[] tmp;
 
       TimerStopAndLog(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);

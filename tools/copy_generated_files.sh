@@ -9,8 +9,8 @@ fileExists () {
     fi
 }
 
-NAME=${1:-all}
-WORKING_DIR=${2:-../pil-stark/tmp}
+NAME=${1:-fibonacci.final}
+WORKING_DIR=${2:-../../pil-stark/tmp}
 
 CIRCOM_NAME=${3:-fibonacci.c12.custom.verifier}
 CIRCOM_NAME_ZKIN=${4:-fibonacci.c12}
