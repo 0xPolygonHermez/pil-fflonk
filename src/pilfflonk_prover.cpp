@@ -232,7 +232,6 @@ namespace PilFflonk
                 G1Point commit;
                 E.g1.copy(commit, *((G1PointAffine *)C));
 
-                cout << name << " " << E.g1.toString(commit) << endl;
                 shPlonkProver->addPolynomialCommitment(name, commit);
                 u_int32_t lenPol = fdZkey->readU32LE();
 

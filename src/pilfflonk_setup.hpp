@@ -48,8 +48,6 @@ namespace PilFflonk
         void parsePolsNamesStageShKey(json shKeyJson);
         void parseOmegasShKey(json shKeyJson);
 
-        void parseFflonkInfo(json fflonkInfoJson);
-
         FrElement* constPolsEvals;
         uint64_t constPolsEvalsSize;
         FrElement* constPolsEvalsExt;
@@ -67,13 +65,9 @@ namespace PilFflonk
         NTT_AltBn128 *ntt;
         NTT_AltBn128 *nttExtended;
 
-        std::tuple<FrElement*, uint64_t> loadFromFileFr(std::string filename);
-
         FrElement* polynomialFromMontgomery(Polynomial<AltBn128::Engine> *polynomial);
 
-        G1Point multiExponentiation(Polynomial<AltBn128::Engine> *polynomial);
-
-        Polynomial<AltBn128::Engine>* getPolFromBuffer(FrElement* buff, uint32_t nPols, uint64_t N, int32_t id);
+        G1Point multiExponentiation(Polynomial<AltBn128::Engine> *polynomial, u_int32_t nx, u_int64_t x[]);
 
         void computeFCommitments(PilFflonkZkey::PilFflonkZkey* zkey, uint64_t domainSize);
 

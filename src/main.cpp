@@ -46,9 +46,8 @@ int main(int argc, char **argv)
 
     // Get the input arguments
     string zkeyFilename = "config/pilfflonk.zkey";
-    string shkeyFilename = "config/pilfflonk.shkey.json";
     string fflonkInfoFileName = "config/pilfflonk.fflonkinfo.json";
-    string cmtdFilename =  "config/pilfflonk.cmmt";
+    string cmtdFilename =  "config/pilfflonk.commit";
     string proofFilename =  "runtime/proof.json";
     string publicFilename = "runtime/public.json";
 
@@ -70,19 +69,13 @@ int main(int argc, char **argv)
     {
         cerr << "Error: fflonk info file '" << fflonkInfoFileName << "' does not exist" << endl;
         bError = true;
-    }
+    }  
 
-     if (!fileExists(shkeyFilename))
-    {
-        cerr << "Error: shkey file '" << shkeyFilename << "' does not exist" << endl;
-        bError = true;
-    }
-
-    if (!fileExists(cmtdFilename))
-    {
-        cerr << "Error: committed polynomials file '" << cmtdFilename << "' does not exist" << endl;
-        bError = true;
-    }
+    // if (!fileExists(cmtdFilename))
+    // {
+    //     cerr << "Error: committed polynomials file '" << cmtdFilename << "' does not exist" << endl;
+    //     bError = true;
+    // }
 
     if (bError) return -1; // exitProcess();
 
@@ -97,8 +90,8 @@ int main(int argc, char **argv)
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine,
                                                  zkeyFilename, fflonkInfoFileName);
 
-    // auto [proofJson, publicSignalsJson] = prover->prove(cmtdFilename);
-    auto [proofJson, publicSignalsJson] = prover->prove(execFilename, circomVerifier, zkinFilename);
+    auto [proofJson, publicSignalsJson] = prover->prove(cmtdFilename);
+    //auto [proofJson, publicSignalsJson] = prover->prove(execFilename, circomVerifier, zkinFilename);
 
     std::ofstream file;
     file.open(proofFilename);

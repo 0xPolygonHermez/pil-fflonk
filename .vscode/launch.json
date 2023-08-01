@@ -33,7 +33,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/pfSetup",
-            "args": [ "../pil-stark/tmp/simple2p.shkey.json", "../pil-stark/tmp/simple2p.fflonkinfo.json", "../pil-stark/tmp/powersOfTau28_hez_final_19.ptau", "../pil-stark/tmp/simple2p.cnst", "../pil-stark/tmp/simple2p.ext.cnst", "./simple2p.xxx.zkey"],
+            "args": ["../../zkevm-proverjs/build/powersOfTau28_hez_final.ptau"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

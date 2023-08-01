@@ -44,19 +44,19 @@ int main(int argc, char **argv)
         }
     }
 
-    if (argc != 6)
+    if (argc != 2)
     {
         cerr << "Invalid number of parameters: " << argc << endl;
-        cerr << "Usage: " << argv[0] << " <my.shkey> <fflonkInfo.json> <powers.ptau> <polynomials.cnst> <polynomials.ext.cnst> <my.zkey>" << endl;
+        cerr << "Usage: " << argv[0] << " <powers.ptau>" << endl;
         return -1;
     }
 
-    // Get the input arguments
-    string shKeyFilename = argv[1];
-    string fflonkInfoFileName = argv[2];
-    string pTauFilename = argv[3];
-    string cnstPolsFilename = argv[4];
-    string zkeyFilename = argv[5];
+    string pTauFilename = argv[1];
+    string zkeyFilename = "config/pilfflonk.zkey";
+    string shKeyFilename = "config/pilfflonk.shkey.json";
+    string fflonkInfoFileName = "config/pilfflonk.fflonkinfo.json";
+    string cnstPolsFilename =  "config/pilfflonk.const";
+
 
     TimerStart(SETUP_PROCESS);
 
