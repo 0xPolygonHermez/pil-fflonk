@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if (argc != 2)
+    if (argc < 2)
     {
         cerr << "Invalid number of parameters: " << argc << endl;
         cerr << "Usage: " << argv[0] << " <powers.ptau>" << endl;
@@ -52,10 +52,10 @@ int main(int argc, char **argv)
     }
 
     string pTauFilename = argv[1];
-    string zkeyFilename = "config/pilfflonk.zkey";
-    string shKeyFilename = "config/pilfflonk.shkey.json";
-    string fflonkInfoFileName = "config/pilfflonk.fflonkinfo.json";
-    string cnstPolsFilename =  "config/pilfflonk.const";
+    string zkeyFilename = argc >= 3 ? argv[2] : "config/pilfflonk.zkey";
+    string shKeyFilename = argc >= 4 ? argv[3] : "config/pilfflonk.shkey.json";
+    string fflonkInfoFileName = argc >= 5 ? argv[4] : "config/pilfflonk.fflonkinfo.json";
+    string cnstPolsFilename =  argc == 6 ? argv[5] :"config/pilfflonk.const";
 
 
     TimerStart(SETUP_PROCESS);
