@@ -1,5 +1,5 @@
-#ifndef __CIRCOM_FINAL_H
-#define __CIRCOM_FINAL_H
+#ifndef __CIRCOM_PILFFLONK_FINAL_H
+#define __CIRCOM_PILFFLONK_FINAL_H
 
 #include <map>
 #include <gmp.h>

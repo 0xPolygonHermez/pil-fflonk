@@ -1,5 +1,5 @@
-#ifndef EXEC_FILE
-#define EXEC_FILE
+#ifndef EXEC_PILFFLONK_FILE
+#define EXEC_PILFFLONK_FILE
 
 #define EXEC_FILE_SIZE
 #include <iostream>
@@ -9,7 +9,7 @@
 
 #include "../zklog.hpp"
 
-class ExecFile
+class ExecFilePilFflonk
 {
     const int EXEC_PF_NSECTIONS = 5;
 
@@ -28,7 +28,7 @@ public:
     AltBn128::FrElement *p_adds_fr;
     u_int64_t *p_sMap;
 
-    ExecFile(AltBn128::Engine &E, std::string execFileName, uint64_t nCommittedPols)
+    ExecFilePilFflonk(AltBn128::Engine &E, std::string execFileName, uint64_t nCommittedPols)
     {
         execFile = BinFileUtils::openExisting(execFileName, "exec", 1);
 
@@ -53,7 +53,7 @@ public:
         p_sMap = new u_int64_t[nSMap * nCommittedPols];
         ThreadUtils::parcpy(p_sMap, (u_int64_t *)fdExec->getSectionData(EXEC_SMAP_SECTION), lenSMap, omp_get_num_threads() / 2);
     }
-    ~ExecFile()
+    ~ExecFilePilFflonk()
     {
         delete[] p_adds;
         delete[] p_sMap;

@@ -34,7 +34,7 @@ namespace PilFflonkZkey
 
         zklog.info("> Writing PILFFLONK zkey file");
         std::ostringstream ss;
-        ss << "··· Writing Section " << Zkey::ZKEY_HEADER_SECTION << ". Zkey Header";
+        ss << "··· Writing Section " << ZKEY_HEADER_SECTION << ". Zkey Header";
         zklog.info(ss.str());
         writeZkeyHeaderSection(binFile, zkey);
 
@@ -100,8 +100,8 @@ namespace PilFflonkZkey
 
     void writeZkeyHeaderSection(BinFileUtils::BinFileWriter* binFile, PilFflonkZkey *pilFflonkZkey)
     {
-        binFile->startWriteSection(Zkey::ZKEY_HEADER_SECTION);
-        binFile->writeU32LE(Zkey::PILFFLONK_PROTOCOL_ID);
+        binFile->startWriteSection(ZKEY_HEADER_SECTION);
+        binFile->writeU32LE(PILFFLONK_PROTOCOL_ID);
         binFile->endWriteSection();
     }
 
@@ -467,5 +467,13 @@ namespace PilFflonkZkey
         AltBn128::FrElement *buffer = ptrDst;
 
         ThreadUtils::parcpy(&buffer[0], (FrElement *)fdZKey->getSectionData(idSection), size, omp_get_num_threads() / 2);
+    }
+
+    int getProtocolIdFromZkeyPilFflonk(BinFileUtils::BinFile *fd) {
+        fd->startReadSection(ZKEY_HEADER_SECTION);
+        uint32_t protocolId = fd->readU32LE();
+        fd->endReadSection();
+
+        return protocolId;
     }
 }

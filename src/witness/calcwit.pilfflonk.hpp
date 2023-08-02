@@ -1,5 +1,5 @@
-#ifndef CIRCOM_CALCWIT_FINAL_H
-#define CIRCOM_CALCWIT_FINAL_H
+#ifndef CIRCOM_CALCWIT_PILFFLONK_FINAL_H
+#define CIRCOM_CALCWIT_PILFFLONK_FINAL_H
 
 #include <mutex>
 #include <condition_variable>

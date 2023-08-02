@@ -1,5 +1,5 @@
-#ifndef ZKEVM_VERIFIER_MAIN_FINAL_HPP
-#define ZKEVM_VERIFIER_MAIN_FINAL_HPP
+#ifndef PILFFLONK_MAIN_FINAL_HPP
+#define PILFFLONK_MAIN_FINAL_HPP
 
 #include <string>
 #include <nlohmann/json.hpp>
@@ -7,7 +7,7 @@
 #include "circom.pilfflonk.hpp"
 #include "fr.hpp"
 #include <alt_bn128.hpp>
-#include "execFile.hpp"
+#include "execFilePilFflonk.hpp"
 
 namespace CircomPilFflonk
 {

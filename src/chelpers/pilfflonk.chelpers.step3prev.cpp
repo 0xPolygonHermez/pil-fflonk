@@ -1,7 +1,7 @@
 #include <alt_bn128.hpp>
 #include "pilfflonk_steps.hpp"
 
-void PilFflonkSteps::step3prev_first(AltBn128::Engine &E, StepsParams &params, uint64_t i) {
+void PilFflonkSteps::step3prev_first(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i) {
      AltBn128::FrElement tmp_74 = params.cm1_n[12 + i*15];
      AltBn128::FrElement tmp_75 = params.cm1_n[13 + ((i + 1)%256)*15];
      AltBn128::FrElement tmp_76 = E.fr.mul(params.cm1_n[12 + i*15], params.cm1_n[13 + ((i + 1)%256)*15]);
@@ -105,7 +105,7 @@ void PilFflonkSteps::step3prev_first(AltBn128::Engine &E, StepsParams &params, u
      params.tmpExp_n[6 + i*7] = E.fr.mul(tmp_102, tmp_73);
 }
 
-void PilFflonkSteps::step3prev_i(AltBn128::Engine &E, StepsParams &params, uint64_t i) {
+void PilFflonkSteps::step3prev_i(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i) {
      AltBn128::FrElement tmp_74 = params.cm1_n[12 + i*15];
      AltBn128::FrElement tmp_75 = params.cm1_n[13 + ((i + 1)%256)*15];
      AltBn128::FrElement tmp_76 = E.fr.mul(params.cm1_n[12 + i*15], params.cm1_n[13 + ((i + 1)%256)*15]);
@@ -209,7 +209,7 @@ void PilFflonkSteps::step3prev_i(AltBn128::Engine &E, StepsParams &params, uint6
      params.tmpExp_n[6 + i*7] = E.fr.mul(tmp_102, tmp_73);
 }
 
-void PilFflonkSteps::step3prev_last(AltBn128::Engine &E, StepsParams &params, uint64_t i) {
+void PilFflonkSteps::step3prev_last(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i) {
      AltBn128::FrElement tmp_74 = params.cm1_n[12 + i*15];
      AltBn128::FrElement tmp_75 = params.cm1_n[13 + ((i + 1)%256)*15];
      AltBn128::FrElement tmp_76 = E.fr.mul(params.cm1_n[12 + i*15], params.cm1_n[13 + ((i + 1)%256)*15]);

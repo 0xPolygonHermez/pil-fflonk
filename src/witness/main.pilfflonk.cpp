@@ -14,13 +14,13 @@ using json = nlohmann::json;
 
 #include "calcwit.pilfflonk.hpp"
 #include "circom.pilfflonk.hpp"
+#include "execFilePilFflonk.hpp"
+#include <alt_bn128.hpp>
 
 #include "../utils.hpp"
 #include "../timer.hpp"
 #include "../zklog.hpp"
 #include "../exit_process.hpp"
-#include "execFile.hpp"
-#include <alt_bn128.hpp>
 
 
 
@@ -342,7 +342,7 @@ namespace CircomPilFflonk
       //-------------------------------------------
       TimerStart(CIRCOM_WITNESS_AND_COMMITED_POLS_FINAL_PROOF);
   
-      ExecFile exec(E, execFile, nPols);
+      ExecFilePilFflonk exec(E, execFile, nPols);
 
       if(N != exec.nSMap) throw std::runtime_error("Invalid exec"); 
 

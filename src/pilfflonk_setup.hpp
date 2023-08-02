@@ -6,14 +6,13 @@
 #include <binfile_utils.hpp>
 #include <binfile_writer.hpp>
 #include <nlohmann/json.hpp>
-#include "compare_fe.hpp"
+#include "compare_fe_fr.hpp"
 #include <sodium.h>
-#include "zkey.hpp"
 #include "zkey_pilfflonk.hpp"
 #include "shplonk.hpp"
 #include "polynomial/polynomial.hpp"
 #include "fflonk_info.hpp"
-#include "keccak_256_transcript.hpp"
+#include "pilfflonk_transcript.hpp"
 #include "chelpers/pilfflonk_steps.hpp"
 #include "ntt_bn128.hpp"
 #include <alt_bn128.hpp>
@@ -41,7 +40,7 @@ namespace PilFflonk
         AltBn128::Engine &E;
 
         PilFflonkZkey::PilFflonkZkey* zkey;
-        FflonkInfo* fflonkInfo;
+        FflonkInfo::FflonkInfo* fflonkInfo;
 
         void parseShKey(json shKeyJson);
         void parseFShKey(json shKeyJson);

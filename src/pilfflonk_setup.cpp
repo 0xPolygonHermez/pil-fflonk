@@ -1,7 +1,6 @@
 #include "pilfflonk_setup.hpp"
 #include "timer.hpp"
 #include <stdio.h>
-#include "zkey.hpp"
 #include <math.h>
 
 #include <sys/mman.h>
@@ -53,7 +52,7 @@ namespace PilFflonk
 
         // STEP 2. Read fflonkInfo JSON file
         zklog.info("> Reading fflonkInfo JSON file");
-        fflonkInfo = new FflonkInfo(this->E, fflonkInfoFileName);
+        fflonkInfo = new FflonkInfo::FflonkInfo(this->E, fflonkInfoFileName);
 
         zklog.info("> Opening PTau file");
         auto fdPtau = BinFileUtils::openExisting(pTauFilename, "ptau", 1);

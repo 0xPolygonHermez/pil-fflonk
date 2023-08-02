@@ -9,9 +9,8 @@
 #include "polynomial/polynomial.hpp"
 #include "polynomial/cpolynomial.hpp"
 #include "zkey_pilfflonk.hpp"
-#include "zkey.hpp"
 #include "shplonk.hpp"
-#include "keccak_256_transcript.hpp"
+#include "pilfflonk_transcript.hpp"
 #include <alt_bn128.hpp>
 #include "fft.hpp"
 
@@ -30,7 +29,7 @@ namespace ShPlonk {
 
         PilFflonkZkey::PilFflonkZkey *zkeyPilFflonk;
         
-        Keccak256Transcript *transcript;
+        PilFflonkTranscript *transcript;
 
         FrElement challengeXiSeed;
         FrElement challengeXi;

@@ -5,14 +5,13 @@
 #include <string.h>
 #include <binfile_utils.hpp>
 #include <nlohmann/json.hpp>
-#include "compare_fe.hpp"
+#include "compare_fe_fr.hpp"
 #include <sodium.h>
 #include "zkey_pilfflonk.hpp"
 #include "shplonk.hpp"
 #include "polynomial/polynomial.hpp"
-#include "zkey.hpp"
 #include "fflonk_info.hpp"
-#include "keccak_256_transcript.hpp"
+#include "pilfflonk_transcript.hpp"
 #include "chelpers/pilfflonk_steps.hpp"
 #include "ntt_bn128.hpp"
 #include <alt_bn128.hpp>
@@ -76,11 +75,11 @@ namespace PilFflonk
         std::map<std::string, u_int64_t> mapBufferConstant;
         std::map<std::string, u_int64_t> mapBufferShPlonk;
 
-        FflonkInfo *fflonkInfo;
+        FflonkInfo::FflonkInfo *fflonkInfo;
 
         ShPlonk::ShPlonkProver *shPlonkProver;
 
-        Keccak256Transcript *transcript;
+        PilFflonkTranscript *transcript;
 
         G1PointAffine *PTau;
 
@@ -114,15 +113,15 @@ namespace PilFflonk
     protected:
         std::tuple<json, json> prove();
 
-        void stage0(StepsParams &params);
+        void stage0(PilFflonkStepsParams &params);
 
-        void stage1(StepsParams &params);
+        void stage1(PilFflonkStepsParams &params);
 
-        void stage2(StepsParams &params);
+        void stage2(PilFflonkStepsParams &params);
 
-        void stage3(StepsParams &params);
+        void stage3(PilFflonkStepsParams &params);
 
-        void stage4(StepsParams &params);
+        void stage4(PilFflonkStepsParams &params);
 
         void extend(u_int32_t stage, u_int32_t nPols);
 

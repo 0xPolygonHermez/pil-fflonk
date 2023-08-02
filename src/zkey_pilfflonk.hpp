@@ -7,7 +7,6 @@
 #include <binfile_utils.hpp>
 #include <binfile_writer.hpp>
 #include <thread_utils.hpp>
-#include "zkey.hpp"
 #include <alt_bn128.hpp>
 
 namespace PilFflonkZkey
@@ -15,6 +14,9 @@ namespace PilFflonkZkey
     using FrElement = typename AltBn128::Engine::FrElement;
     using G1Point = typename AltBn128::Engine::G1Point;
     using G1PointAffine = typename AltBn128::Engine::G1PointAffine;
+
+    const int PILFFLONK_PROTOCOL_ID = 12;
+    const int ZKEY_HEADER_SECTION = 1;
 
     const int ZKEY_PF_NSECTIONS = 12;
 
@@ -145,7 +147,8 @@ namespace PilFflonkZkey
     void readX2nsSection(BinFileUtils::BinFile *fdZKey, AltBn128::FrElement *x_2ns);
 
     void readBuffer(BinFileUtils::BinFile *fdZKey, int idSection, AltBn128::FrElement *ptrDst);
-   
+    
+    int getProtocolIdFromZkeyPilFflonk(BinFileUtils::BinFile *fd);
 }
 
 #endif

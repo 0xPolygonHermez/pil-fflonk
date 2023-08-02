@@ -1,27 +1,36 @@
-#include "keccak_256_transcript.hpp"
+#include "pilfflonk_transcript.hpp"
 #include <cstring>
-#include "keccak_wrapper.hpp"
+#include "Keccak-more-compact.c"
 
-Keccak256Transcript::Keccak256Transcript(AltBn128::Engine &_E) : E(_E)
+PilFflonkTranscript::PilFflonkTranscript(AltBn128::Engine &_E) : E(_E)
 {
     reset();
 }
 
-void Keccak256Transcript::addScalar(FrElement value)
+int64_t PilFflonkTranscript::keccak(void *data, int64_t dataSize, void *hash, int64_t hashSize)
+{
+    if (hashSize < 32) {
+        return -1;
+    }
+    Keccak(1088, 512, (unsigned char *) data, dataSize, 0x01, (unsigned char *) hash, 32);
+    return 32;
+}
+
+void PilFflonkTranscript::addScalar(FrElement value)
 {
     ElementTypeStruct e = {.type = FrType, .element = value};
     elements.push_back(e);
     fieldElements++;
 }
 
-void Keccak256Transcript::addPolCommitment(G1Point value)
+void PilFflonkTranscript::addPolCommitment(G1Point value)
 {
     ElementTypeStruct e = {.type = G1Type, .element = value};
     elements.push_back(e);
     groupElements++;
 }
 
-void Keccak256Transcript::reset()
+void PilFflonkTranscript::reset()
 {
     fieldElements = 0;
     groupElements = 0;
@@ -29,7 +38,7 @@ void Keccak256Transcript::reset()
     this->elements.clear();
 }
 
-typename AltBn128::Engine::FrElement Keccak256Transcript::getChallenge()
+typename AltBn128::Engine::FrElement PilFflonkTranscript::getChallenge()
 {
     const u_int32_t length = E.fr.bytes() * fieldElements + E.g1.F.bytes() * groupElements * 2 * 3;
     u_int8_t data[length];
@@ -56,7 +65,7 @@ typename AltBn128::Engine::FrElement Keccak256Transcript::getChallenge()
     return res;
 }
 
-u_int64_t Keccak256Transcript::toRprBE(G1Point &point, uint8_t *data, int64_t seek, int64_t size)
+u_int64_t PilFflonkTranscript::toRprBE(G1Point &point, uint8_t *data, int64_t seek, int64_t size)
 {
     int64_t bytes = E.g1.F.bytes() * 2;
     typename AltBn128::Engine::G1PointAffine p;
@@ -68,7 +77,7 @@ u_int64_t Keccak256Transcript::toRprBE(G1Point &point, uint8_t *data, int64_t se
     return bytes;
 }
 
-void Keccak256Transcript::hashToFr(FrElement &element, u_int8_t *data, int64_t size)
+void PilFflonkTranscript::hashToFr(FrElement &element, u_int8_t *data, int64_t size)
 {
     u_int8_t hash[32];
     keccak(data, size, hash, sizeof(hash));

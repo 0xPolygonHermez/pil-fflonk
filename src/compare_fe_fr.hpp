@@ -1,14 +1,14 @@
-#ifndef COMPARE_FE_HPP
-#define COMPARE_FE_HPP
+#ifndef COMPARE_FE_FR_HPP
+#define COMPARE_FE_FR_HPP
 
 #include <alt_bn128.hpp>
 
 
-struct CompareFe
+struct CompareFeFr
 {
     AltBn128::Engine& E;
     
-    CompareFe(AltBn128::Engine& _E) : E(_E) {}
+    CompareFeFr(AltBn128::Engine& _E) : E(_E) {}
     
     bool operator()(const AltBn128::FrElement& a, const AltBn128::FrElement& b) const
     {

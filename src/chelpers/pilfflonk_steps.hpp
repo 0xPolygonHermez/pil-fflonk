@@ -3,7 +3,7 @@
 
 #include <alt_bn128.hpp>
 
-struct StepsParams
+struct PilFflonkStepsParams
 {
     AltBn128::FrElement* cm1_n;
     AltBn128::FrElement* cm2_n;
@@ -28,27 +28,27 @@ class PilFflonkSteps {
         
         u_int64_t getNumConstValues();
 
-        void setConstValues(AltBn128::Engine &E, StepsParams &params);
+        void setConstValues(AltBn128::Engine &E, PilFflonkStepsParams &params);
 
-        void publics_first(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub);
-        void publics_i(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub);
-        void publics_last(AltBn128::Engine &E, StepsParams &params, uint64_t i, uint64_t pub);
+        void publics_first(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i, uint64_t pub);
+        void publics_i(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i, uint64_t pub);
+        void publics_last(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i, uint64_t pub);
 
-        void step2prev_first(AltBn128::Engine &E, StepsParams &params, uint64_t i);
-        void step2prev_i(AltBn128::Engine &E, StepsParams &params, uint64_t i);
-        void step2prev_last(AltBn128::Engine &E, StepsParams &params, uint64_t i);
+        void step2prev_first(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
+        void step2prev_i(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
+        void step2prev_last(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
 
-        void step3prev_first(AltBn128::Engine &E, StepsParams &params, uint64_t i);
-        void step3prev_i(AltBn128::Engine &E, StepsParams &params, uint64_t i);
-        void step3prev_last(AltBn128::Engine &E, StepsParams &params, uint64_t i);
+        void step3prev_first(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
+        void step3prev_i(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
+        void step3prev_last(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
 
-        void step3_first(AltBn128::Engine &E, StepsParams &params, uint64_t i);
-        void step3_i(AltBn128::Engine &E, StepsParams &params, uint64_t i);
-        void step3_last(AltBn128::Engine &E, StepsParams &params, uint64_t i);
+        void step3_first(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
+        void step3_i(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
+        void step3_last(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
 
-        void step42ns_first(AltBn128::Engine &E, StepsParams &params, uint64_t i);
-        void step42ns_i(AltBn128::Engine &E, StepsParams &params, uint64_t i);
-        void step42ns_last(AltBn128::Engine &E, StepsParams &params, uint64_t i);
+        void step42ns_first(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
+        void step42ns_i(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
+        void step42ns_last(AltBn128::Engine &E, PilFflonkStepsParams &params, uint64_t i);
 };
 
 #endif // STARKS_RECURSIVE_1_STEPS_HPP

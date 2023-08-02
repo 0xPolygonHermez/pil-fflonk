@@ -9,7 +9,7 @@ namespace ShPlonk {
     ShPlonkProver::ShPlonkProver(AltBn128::Engine &_E, PilFflonkZkey::PilFflonkZkey *zkey) : E(_E) {
         zkeyPilFflonk = zkey;
 
-        transcript = new Keccak256Transcript(_E);
+        transcript = new PilFflonkTranscript(_E);
 
         this->reset();
     }

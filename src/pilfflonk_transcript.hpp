@@ -1,13 +1,15 @@
-#ifndef KECCAK_256_TRANSCRIPT_HPP
-#define KECCAK_256_TRANSCRIPT_HPP
+#ifndef PILFFLONK_TRANSCRIPT_HPP
+#define PILFFLONK_TRANSCRIPT_HPP
 
 #include <any>
 #include <vector>
 #include <sstream>
 #include <alt_bn128.hpp>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
-
-class Keccak256Transcript {
+class PilFflonkTranscript {
     using FrElement = typename AltBn128::Engine::FrElement;
     using G1Point = typename AltBn128::Engine::G1Point;
 
@@ -31,7 +33,7 @@ class Keccak256Transcript {
     void hashToFr(FrElement &element, u_int8_t *data, int64_t size);
 
 public:
-    Keccak256Transcript(AltBn128::Engine &E);
+    PilFflonkTranscript(AltBn128::Engine &E);
 
     void addScalar(FrElement value);
 
@@ -42,6 +44,8 @@ public:
     int nElements() { return elements.size(); }
 
     typename AltBn128::Engine::FrElement getChallenge();
+
+    int64_t keccak (void *data, int64_t dataSize, void *hash, int64_t HashSize);
 };
 
 #endif

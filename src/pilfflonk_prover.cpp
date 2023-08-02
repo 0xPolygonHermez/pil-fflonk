@@ -1,7 +1,6 @@
 #include "pilfflonk_prover.hpp"
 #include "timer.hpp"
 #include <stdio.h>
-#include "zkey.hpp"
 #include <math.h>
 
 namespace PilFflonk
@@ -53,14 +52,14 @@ namespace PilFflonk
             zkeyBinFile = BinFileUtils::openExisting(zkeyFilename, "zkey", 1);
             auto fdZkey = zkeyBinFile.get();
 
-            if (Zkey::getProtocolIdFromZkey(fdZkey) != Zkey::PILFFLONK_PROTOCOL_ID)
+            if (PilFflonkZkey::getProtocolIdFromZkeyPilFflonk(fdZkey) != PilFflonkZkey::PILFFLONK_PROTOCOL_ID)
             {
                 throw std::invalid_argument("zkey file is not pilfflonk");
             }
 
             zkey = PilFflonkZkey::loadPilFflonkZkey(fdZkey);
 
-            fflonkInfo = new FflonkInfo(E, fflonkInfoFile);
+            fflonkInfo = new FflonkInfo::FflonkInfo(E, fflonkInfoFile);
 
             shPlonkProver = new ShPlonk::ShPlonkProver(AltBn128::Engine::engine, zkey);
 
@@ -79,7 +78,7 @@ namespace PilFflonk
             ntt = new NTT_AltBn128(E, N);
             nttExtended = new NTT_AltBn128(E, NExt);
 
-            transcript = new Keccak256Transcript(E);
+            transcript = new PilFflonkTranscript(E);
 
             mpz_t altBbn128r;
             mpz_init(altBbn128r);
@@ -125,19 +124,19 @@ namespace PilFflonk
             // //////////////////////////////////////////////////
             // BIG BUFFER
             // //////////////////////////////////////////////////
-            mapBufferCommitted["cm1_n"] = N * fflonkInfo->mapSectionsN.section[cm1_n];
-            mapBufferCommitted["cm2_n"] = N * fflonkInfo->mapSectionsN.section[cm2_n];
-            mapBufferCommitted["cm3_n"] = N * fflonkInfo->mapSectionsN.section[cm3_n];
-            mapBufferCommitted["tmpExp_n"] = N * fflonkInfo->mapSectionsN.section[tmpExp_n];
+            mapBufferCommitted["cm1_n"] = N * fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n];
+            mapBufferCommitted["cm2_n"] = N * fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_n];
+            mapBufferCommitted["cm3_n"] = N * fflonkInfo->mapSectionsN.section[FflonkInfo::cm3_n];
+            mapBufferCommitted["tmpExp_n"] = N * fflonkInfo->mapSectionsN.section[FflonkInfo::tmpExp_n];
 
-            mapBufferCommitted["cm1_2ns"] = NExt * fflonkInfo->mapSectionsN.section[cm1_2ns];
-            mapBufferCommitted["cm2_2ns"] = NExt * fflonkInfo->mapSectionsN.section[cm2_2ns];
-            mapBufferCommitted["cm3_2ns"] = NExt * fflonkInfo->mapSectionsN.section[cm3_2ns];
+            mapBufferCommitted["cm1_2ns"] = NExt * fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_2ns];
+            mapBufferCommitted["cm2_2ns"] = NExt * fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_2ns];
+            mapBufferCommitted["cm3_2ns"] = NExt * fflonkInfo->mapSectionsN.section[FflonkInfo::cm3_2ns];
             mapBufferCommitted["q_2ns"] = NExt * fflonkInfo->qDim;
             mapBufferCommitted["publics"] = fflonkInfo->nPublics;
-            mapBufferCommitted["cm1_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm1_n];
-            mapBufferCommitted["cm2_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm2_n];
-            mapBufferCommitted["cm3_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[cm3_n];
+            mapBufferCommitted["cm1_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n];
+            mapBufferCommitted["cm2_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_n];
+            mapBufferCommitted["cm3_coefs"] = NCoefs * fflonkInfo->mapSectionsN.section[FflonkInfo::cm3_n];
 
             lengthBufferCommitted = 0;
             for (auto const &[key, value] : mapBufferCommitted) {
@@ -181,7 +180,7 @@ namespace PilFflonk
             mapBufferShPlonk["Wp"] = lengthW;
             
             // Add tmp buffer
-            u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[cm1_n], max(fflonkInfo->mapSectionsN.section[cm2_n], fflonkInfo->mapSectionsN.section[cm3_n]));
+            u_int64_t maxNPols = max(fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n], max(fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_n], fflonkInfo->mapSectionsN.section[FflonkInfo::cm3_n]));
             u_int64_t tmpLength = max(NExt * maxNPols, lengthW);
             mapBufferShPlonk["tmp"] = tmpLength;
 
@@ -259,7 +258,7 @@ namespace PilFflonk
     std::tuple<json, json> PilFflonkProver::prove(std::string committedPolsFilename) {
         TimerStart(LOAD_COMMITTED_POLS_TO_MEMORY);
 
-        u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[cm1_n] * sizeof(FrElement) * N;
+        u_int64_t cmtdPolsSize = fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n] * sizeof(FrElement) * N;
 
         auto pCommittedPolsAddress = copyFile(committedPolsFilename, cmtdPolsSize);
         zklog.info("PilFflonk::PilFflonk() successfully copied " + to_string(cmtdPolsSize) + " bytes from constant file " + committedPolsFilename);
@@ -273,14 +272,14 @@ namespace PilFflonk
 
     std::tuple<json, json> PilFflonkProver::prove(std::string execFilename, std::string circomVerifier, std::string zkinFilename) {
         
-        CircomPilFflonk::getCommittedPols(E, ptrCommitted["cm1_n"], circomVerifier, execFilename, zkinFilename, fflonkInfo->mapSectionsN.section[cm1_n], N);
+        CircomPilFflonk::getCommittedPols(E, ptrCommitted["cm1_n"], circomVerifier, execFilename, zkinFilename, fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n], N);
 
         return this->prove();
     }
 
     std::tuple<json, json> PilFflonkProver::prove(std::string execFilename, std::string circomVerifier, nlohmann::json &zkin) {
        
-        CircomPilFflonk::getCommittedPols(E, ptrCommitted["cm1_n"], circomVerifier, execFilename, zkin, fflonkInfo->mapSectionsN.section[cm1_n], N);
+        CircomPilFflonk::getCommittedPols(E, ptrCommitted["cm1_n"], circomVerifier, execFilename, zkin, fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n], N);
 
         return this->prove();
     }
@@ -300,7 +299,7 @@ namespace PilFflonk
             AltBn128::FrElement* constValues = new AltBn128::FrElement[pilFflonkSteps.getNumConstValues()];
 
             // Initialize vars
-            StepsParams params = {
+            PilFflonkStepsParams params = {
                 cm1_n : ptrCommitted["cm1_n"],
                 cm2_n : ptrCommitted["cm2_n"],
                 cm3_n : ptrCommitted["cm3_n"],
@@ -342,19 +341,19 @@ namespace PilFflonk
             ss << "  Const  pols:     " << fflonkInfo->nConstants;
             zklog.info(ss.str());
             ss.str("");
-            ss << "  Stage 1 pols:    " << fflonkInfo->mapSectionsN.section[cm1_n];
+            ss << "  Stage 1 pols:    " << fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n];
             zklog.info(ss.str());
             ss.str("");
-            ss << "  Stage 2 pols:    " << fflonkInfo->mapSectionsN.section[cm2_n];
+            ss << "  Stage 2 pols:    " << fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_n];
             zklog.info(ss.str());
             ss.str("");
-            ss << "  Stage 3 pols:    " << fflonkInfo->mapSectionsN.section[cm3_n];
+            ss << "  Stage 3 pols:    " << fflonkInfo->mapSectionsN.section[FflonkInfo::cm3_n];
             zklog.info(ss.str());
             ss.str("");
             ss << "  Stage 4 pols:    " << zkey->polsNamesStage[4]->size();
             zklog.info(ss.str());
             ss.str("");
-            ss << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[tmpExp_n];
+            ss << "  Temp exp pols:   " << fflonkInfo->mapSectionsN.section[FflonkInfo::tmpExp_n];
             zklog.info("-----------------------------");
 
             transcript->reset();
@@ -432,7 +431,7 @@ namespace PilFflonk
         }
     }
 
-    void PilFflonkProver::stage0(StepsParams &params) 
+    void PilFflonkProver::stage0(PilFflonkStepsParams &params) 
     {
         if (fflonkInfo->nConstants > 0)
         {
@@ -451,10 +450,10 @@ namespace PilFflonk
         TimerStart(PIL_FFLONK_CALCULATE_EXPS_PUBLICS);
         for (u_int32_t i = 0; i < fflonkInfo->nPublics; i++)
         {
-            Publics publicPol = fflonkInfo->publics[i];
+            FflonkInfo::Publics publicPol = fflonkInfo->publics[i];
             if ("cmP" == publicPol.polType)
             {
-                u_int64_t offset = (fflonkInfo->publics[i].idx * fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->publics[i].polId);
+                u_int64_t offset = (fflonkInfo->publics[i].idx * fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n] + fflonkInfo->publics[i].polId);
                 ptrCommitted["publics"][i] = ptrCommitted["cm1_n"][offset];
             }
             else if ("imP" == publicPol.polType)
@@ -476,15 +475,15 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_CALCULATE_EXPS_PUBLICS);
     }
 
-    void PilFflonkProver::stage1(StepsParams &params)
+    void PilFflonkProver::stage1(PilFflonkStepsParams &params)
     {
         TimerStart(PIL_FFLONK_STAGE_1);
     
         // STEP 1.3 - Compute commit polynomials (coefficients + evaluations) and commit them
-        if (fflonkInfo->mapSectionsN.section[cm1_n])
+        if (fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n])
         {
             TimerStart(PIL_FFLONK_STAGE_1_EXTEND);
-            extend(1, fflonkInfo->mapSectionsN.section[cm1_n]);
+            extend(1, fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n]);
             TimerStopAndLog(PIL_FFLONK_STAGE_1_EXTEND);
 
             // STEP 1.4 - Commit stage 1 polynomials
@@ -503,10 +502,10 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_1);
     }
 
-    void PilFflonkProver::stage2(StepsParams &params)
+    void PilFflonkProver::stage2(PilFflonkStepsParams &params)
     {
 
-        if(fflonkInfo->mapSectionsN.section[cm2_n] == 0 && fflonkInfo->peCtx.size() == 0) return;
+        if(fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_n] == 0 && fflonkInfo->peCtx.size() == 0) return;
 
         TimerStart(PIL_FFLONK_STAGE_2);
             
@@ -524,7 +523,7 @@ namespace PilFflonk
         transcript->reset();
         transcript->addScalar(challenges[1]);
 
-        if (fflonkInfo->mapSectionsN.section[cm2_n])
+        if (fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_n])
         {
             // STEP 2.2 - Compute stage 2 polynomials --> h1, h2
             TimerStart(PIL_FFLONK_STAGE_2_CALCULATE_EXPS);
@@ -535,7 +534,7 @@ namespace PilFflonk
             }
             TimerStopAndLog(PIL_FFLONK_STAGE_2_CALCULATE_EXPS);
 
-            auto nCm2 = fflonkInfo->mapSectionsN.section[cm1_n];
+            auto nCm2 = fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n];
 
             TimerStart(PIL_FFLONK_STAGE_2_CALCULATE_H1H2);
             for (uint64_t i = 0; i < fflonkInfo->puCtx.size(); i++)
@@ -551,7 +550,7 @@ namespace PilFflonk
             TimerStopAndLog(PIL_FFLONK_STAGE_2_CALCULATE_H1H2);
 
             TimerStart(PIL_FFLONK_STAGE_2_EXTEND);
-            extend(2, fflonkInfo->mapSectionsN.section[cm2_n]);
+            extend(2, fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_n]);
             TimerStopAndLog(PIL_FFLONK_STAGE_2_EXTEND);
 
             // STEP 2.3 - Commit stage 2 polynomials
@@ -570,9 +569,9 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_2);
     }
 
-    void PilFflonkProver::stage3(StepsParams &params)
+    void PilFflonkProver::stage3(PilFflonkStepsParams &params)
     {
-        if(fflonkInfo->mapSectionsN.section[cm3_n] == 0) return;
+        if(fflonkInfo->mapSectionsN.section[FflonkInfo::cm3_n] == 0) return;
 
         TimerStart(PIL_FFLONK_STAGE_3);
 
@@ -604,7 +603,7 @@ namespace PilFflonk
         }
         TimerStopAndLog(PIL_FFLONK_STAGE_3_PREV_CALCULATE_EXPS);
 
-        auto nCm3 = fflonkInfo->mapSectionsN.section[cm1_n] + fflonkInfo->mapSectionsN.section[cm2_n];
+        auto nCm3 = fflonkInfo->mapSectionsN.section[FflonkInfo::cm1_n] + fflonkInfo->mapSectionsN.section[FflonkInfo::cm2_n];
 
         TimerStart(PIL_FFLONK_STAGE_3_CALCULATE_Z);
         for (uint64_t i = 0; i < nPlookups; i++)
@@ -647,7 +646,7 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_3_CALCULATE_EXPS);
 
         TimerStart(PIL_FFLONK_STAGE_3_EXTEND);
-        extend(3, fflonkInfo->mapSectionsN.section[cm3_n]);
+        extend(3, fflonkInfo->mapSectionsN.section[FflonkInfo::cm3_n]);
         TimerStopAndLog(PIL_FFLONK_STAGE_3_EXTEND);
 
         TimerStart(PIL_FFLONK_STAGE_3_COMMIT);
@@ -664,7 +663,7 @@ namespace PilFflonk
         TimerStopAndLog(PIL_FFLONK_STAGE_3);
     }
 
-    void PilFflonkProver::stage4(StepsParams &params)
+    void PilFflonkProver::stage4(PilFflonkStepsParams &params)
     {
         TimerStart(PIL_FFLONK_STAGE_4);
 
@@ -779,7 +778,7 @@ namespace PilFflonk
 
     AltBn128::FrElement *PilFflonkProver::getPolynomial(uint64_t polId, uint64_t offset)
     {
-        eSection section = fflonkInfo->varPolMap[polId].section;
+        FflonkInfo::eSection section = fflonkInfo->varPolMap[polId].section;
         std::string sectionName = fflonkInfo->getSectionName(section);
         u_int64_t pos = fflonkInfo->varPolMap[polId].sectionPos;
         u_int64_t nPols = fflonkInfo->mapSections.section[section].size();
@@ -796,8 +795,8 @@ namespace PilFflonk
     void PilFflonkProver::calculateZ(u_int64_t numId, u_int64_t denId, u_int64_t zId)
     {
         
-        PolInfo num = fflonkInfo->getPolInfo(numId);
-        PolInfo z = fflonkInfo->getPolInfo(zId);
+        FflonkInfo::PolInfo num = fflonkInfo->getPolInfo(numId);
+        FflonkInfo::PolInfo z = fflonkInfo->getPolInfo(zId);
 
         TimerStart(BATCH_INVERSE);
         batchInverse(denId);
@@ -834,7 +833,7 @@ namespace PilFflonk
 
     void PilFflonkProver::batchInverse(const u_int64_t denId)
     {
-        const PolInfo& den = fflonkInfo->getPolInfo(denId);
+        const FflonkInfo::PolInfo& den = fflonkInfo->getPolInfo(denId);
 
         AltBn128::FrElement* tmp = ptrShPlonk["tmp"];
         
@@ -873,8 +872,8 @@ namespace PilFflonk
 
     void PilFflonkProver::calculateH1H2(AltBn128::FrElement *fPol, AltBn128::FrElement *tPol, uint64_t h1Id, uint64_t h2Id)
     {
-        map<AltBn128::FrElement, uint64_t, CompareFe> idx_t(E);
-        multimap<AltBn128::FrElement, uint64_t, CompareFe> s(E);
+        map<AltBn128::FrElement, uint64_t, CompareFeFr> idx_t(E);
+        multimap<AltBn128::FrElement, uint64_t, CompareFeFr> s(E);
         multimap<AltBn128::FrElement, uint64_t>::iterator it;
         uint64_t i = 0;
 
