@@ -20,7 +20,7 @@ CIRCOM_NAME=${5:-fibonacci.c12.custom.verifier}
 CIRCOM_NAME_ZKIN=${6:-fibonacci.c12}
 
 CIRCOM_VERIFIER=${7:-false}
-CIRCOM_VERIFIER_ZKIN=${8:-true}
+CIRCOM_VERIFIER_ZKIN=${8:-false}
 
 
 CIRCOM_HEADER="#pragma GCC diagnostic push\n#pragma GCC diagnostic ignored \"-Wunused-variable\"\n#pragma GCC push_options\n#pragma GCC optimize (\"O0\")\n#include <stdio.h>\n#include <iostream>\n#include <assert.h>\n#include <cassert>\n"

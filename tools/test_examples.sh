@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define working dir
-WORKING_DIR=${1:-../pil-stark/tmp}
+WORKING_DIR=${1:-../../pil-stark/tmp}
 
 GENERATE_TESTS=${2:-false}
 

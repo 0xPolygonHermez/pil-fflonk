@@ -91,7 +91,7 @@ int main(int argc, char **argv)
                                                  zkeyFilename, fflonkInfoFileName);
 
     auto [proofJson, publicSignalsJson] = prover->prove(cmtdFilename);
-    //auto [proofJson, publicSignalsJson] = prover->prove(execFilename, circomVerifier, zkinFilename);
+    // auto [proofJson, publicSignalsJson] = prover->prove(execFilename, circomVerifier, zkinFilename);
 
     std::ofstream file;
     file.open(proofFilename);
