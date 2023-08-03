@@ -43,17 +43,27 @@ int main(int argc, char **argv)
         }
     }
 
+    bool exec = false;
+    
+    if(argc >= 2) {
+        exec = (std::string(argv[1]) == "true");
+    }
+
+    cout << exec << endl;
 
     // Get the input arguments
-    string zkeyFilename = "config/pilfflonk.zkey";
-    string fflonkInfoFileName = "config/pilfflonk.fflonkinfo.json";
-    string cmtdFilename =  "config/pilfflonk.commit";
-    string proofFilename =  "runtime/proof.json";
-    string publicFilename = "runtime/public.json";
+    string proofFilename = argc >= 3 ? argv[2] : "runtime/proof.json";
+    string publicFilename = argc >= 4 ? argv[3] : "runtime/public.json";
 
-    string execFilename = "config/pilfflonk.exec";
-    string circomVerifier = "config/verifier.dat";
-    string zkinFilename = "config/verifier.proof.zkin.json";
+    string zkeyFilename = argc >= 5 ? argv[4] : "config/pilfflonk.zkey";
+    string fflonkInfoFileName = argc >= 6 ? argv[5] : "config/pilfflonk.fflonkinfo.json";
+
+    cout << zkeyFilename << endl;
+    string cmtdFilename = argc >= 7 ? argv[6] : "config/pilfflonk.commit";
+
+    string execFilename = argc >= 7 ? argv[6] : "config/pilfflonk.exec";
+    string circomVerifier = argc >= 8 ? argv[7] : "config/verifier.dat";
+    string zkinFilename = argc >= 9 ? argv[8] :"config/verifier.proof.zkin.json";
 
     TimerStart(WHOLE_PROCESS);
 
@@ -90,8 +100,14 @@ int main(int argc, char **argv)
     auto prover = new PilFflonk::PilFflonkProver(AltBn128::Engine::engine,
                                                  zkeyFilename, fflonkInfoFileName);
 
-    auto [proofJson, publicSignalsJson] = prover->prove(cmtdFilename);
-    // auto [proofJson, publicSignalsJson] = prover->prove(execFilename, circomVerifier, zkinFilename);
+    auto proofJson = nlohmann::json{}; // Assuming proofJson is of type nlohmann::json
+    auto publicSignalsJson = nlohmann::json{}; // Assuming publicSignalsJson is of type nlohmann::json
+
+    if (exec) {
+        std::tie(proofJson, publicSignalsJson) = prover->prove(execFilename, circomVerifier, zkinFilename);
+    } else {
+        std::tie(proofJson, publicSignalsJson) = prover->prove(cmtdFilename);
+    }
 
     std::ofstream file;
     file.open(proofFilename);
