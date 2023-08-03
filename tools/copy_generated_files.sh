@@ -10,7 +10,7 @@ fileExists () {
 }
 
 NAME=${1:-fibonacci.final}
-WORKING_DIR=${2:-../../pil-stark/tmp}
+WORKING_DIR=${2:-../pil-stark/tmp}
 
 SETUP=${3:-false}
 

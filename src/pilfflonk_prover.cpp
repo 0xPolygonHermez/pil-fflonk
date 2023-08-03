@@ -695,12 +695,10 @@ namespace PilFflonk
         }
 
         if(zkey->maxQDegree) {
-            FrElement rand1 = E.fr.set(2);
-            FrElement rand2 = E.fr.set(3);
-            // FrElement rand1;
-            // FrElement rand2;
-            // randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
-            // randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
+            FrElement rand1;
+            FrElement rand2;
+            randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
+            randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
 
             u_int64_t nQ = std::ceil(domainSizeQ - (fflonkInfo->maxPolsOpenings * (fflonkInfo->qDeg + 1)) / (zkey->maxQDegree * N));
 
@@ -715,11 +713,8 @@ namespace PilFflonk
                 if(i < nQ - 1) {
                     u_int64_t len = zkey->maxQDegree * N;
 
-                    rand1 = E.fr.set(2);
-                    rand2 = E.fr.set(3);
-
-                    // randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
-                    // randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
+                    randombytes_buf((void *)&(rand1), sizeof(FrElement)-1);
+                    randombytes_buf((void *)&(rand2), sizeof(FrElement)-1);
 
                     shPlonkProver->addRandomCoef("Q" + std::to_string(i), len, rand1);
                     shPlonkProver->addRandomCoef("Q" + std::to_string(i), len + 1, rand2);
@@ -760,8 +755,7 @@ namespace PilFflonk
             for (u_int32_t j = 0; j < openings; ++j)
             {
                 FrElement b;
-                // randombytes_buf((void *)&(b), sizeof(FrElement)-1);
-                b = E.fr.set(2);
+                randombytes_buf((void *)&(b), sizeof(FrElement)-1);
 
                 buffCoefs[j * nPols + i] = E.fr.add(buffCoefs[j * nPols + i], E.fr.neg(b));
                 buffCoefs[(j + N) * nPols + i] = E.fr.add(buffCoefs[(j + N) * nPols + i], b);
